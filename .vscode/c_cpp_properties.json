@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "macFrameworkPath": [
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "cStandard": "c17",
+            "intelliSenseMode": "macos-clang-x64",
+            "compilerPath": "/usr/bin/g++",
+            "compilerArgs": [
+                "-std=c++17 ",
+                "-O3 ",
+                "-march=native"
+            ],
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
