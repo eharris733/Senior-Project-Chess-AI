@@ -15,7 +15,7 @@
             "compilerArgs": [
                 "-std=c++17 ",
                 "-O3 ",
-                "-march=native"
+                "-march=native "
             ],
             "cppStandard": "c++17"
         }

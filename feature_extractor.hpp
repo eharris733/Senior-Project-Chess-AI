@@ -7,102 +7,22 @@
     // detecting for lazy evaluation
     // not recalculating attacks, and certain bitboards
 
-#include "chess.hpp"
+// important distinction: These are the raw features, not the features weighted by the evaluation function, that is a whole different story. 
 
+#include "chess.hpp"
+#include "features.hpp" 
 
 using namespace chess;
 // command to run in terminal: g++ -std=c++17 -O3 -march=native -o example chess.cpp
 
-// a list of features to extract, based from the 2008 paper,
-// also contains the values they determined, but mine probably won't be the same
-// right now, I will focus on optimal extractions using bit operations
-
-// Structure to hold expected feature values for a FEN
-struct Features {
-    float pawns; // The value of Pawn's on their respective square
-    float knights; // The value of Kinght's on their respective square
-    float bishops; // The value of Bishop's on their respective square
-    float rooks; // The value of Rook's on their respective square
-    float queens; // The value of Queen's on their respective square
-    float passedPawnMult; // Pawn with no other pawns in its way
-    float doubledPawnPenalty; // Pawns stacked on the same file
-    float isolatedPawnPenalty; // Pawn with no adjacent pawns
-    float backwardPawnPenalty; // Pawn with all adjacent pawns advanced
-    float weakSquarePenalty; // Square on your side where no pawns can attack
-    float passedPawnEnemyKingSquare; // Rule of the square
-    float knightOutpostMult; // Knight is on a weak square
-    float bishopMobility; // How many squares a bishop can move to
-    float bishopPair; // Possessing both colored bishops
-    float rookAttackKingFile; // Rook is on same file as enemy king
-    float rookAttackKingAdjFile; // Rook is on adjacent file to enemy king
-    float rook7thRank; // Rook is on second to last rank
-    float rookConnected; // Rooks can guard each other
-    float rookMobility; // How many squares a rook has
-    float rookBehindPassedPawn; // Rook is behind a passed pawn
-    float rookOpenFile; // Rook has no pawns in its file
-    float rookSemiOpenFile; // Rook has no friendly pawns in its file
-    float rookAtckWeakPawnOpenColumn; // Rook can directly attack a weak enemy pawn
-    float kingFriendlyPawn; // How many and how close are friendly pawns
-    float kingNoEnemyPawnNear; // King is far away from enemy pawns
-    float kingPressureMult; // Multiplier for king pressure
-};
-
 
 class FeatureExtractor {
 private:
-    std::unordered_map<std::string, std::function<Bitboard(const Board&)>> features;
+    Features features;
+    const Board& board;
 
-public:
-    FeatureExtractor() {
-        // Register all features and their extraction functions here
-        features["pawns"] = [](const Board& board) -> Bitboard {
-            return countPiece(board, PieceType::PAWN, Color::WHITE) - countPiece(board, PieceType::PAWN, Color::BLACK);
-        };
-        features["knights"] = [](const Board& board) -> Bitboard {
-            return countPiece(board, PieceType::KNIGHT, Color::WHITE) - countPiece(board, PieceType::KNIGHT, Color::BLACK);
-        };
-        features["bishops"] = [](const Board& board) -> Bitboard {
-            return countPiece(board, PieceType::BISHOP, Color::WHITE) - countPiece(board, PieceType::BISHOP, Color::BLACK);
-        };
-        features["rooks"] = [](const Board& board) -> Bitboard {
-            return countPiece(board, PieceType::ROOK, Color::WHITE) - countPiece(board, PieceType::ROOK, Color::BLACK);
-        };
-        features["queens"] = [](const Board& board) -> Bitboard {
-            return countPiece(board, PieceType::QUEEN, Color::WHITE) - countPiece(board, PieceType::QUEEN, Color::BLACK);
-        };
-        features["passedPawnMult"] = [](const Board& board) -> Bitboard {
-            return detectPassedPawns(board, Color::WHITE) - detectPassedPawns(board, Color::BLACK);
-        };
-        
-        features["doubledPawnPenalty"] = [](const Board& board) -> Bitboard {
-            return detectDoubledPawns(board, Color::WHITE) - detectDoubledPawns(board, Color::BLACK);
-        };
-        features["isolatedPawnPenalty"] = [](const Board& board) -> Bitboard {
-            return detectIsolatedPawns(board, Color::WHITE) - detectIsolatedPawns(board, Color::BLACK);
-        };
-        features["backwardPawnPenalty"] = [](const Board& board) -> Bitboard {
-            return detectBackwardPawns(board, Color::WHITE) - detectBackwardPawns(board, Color::BLACK);
-        };
-    }
-
-    void extractAndCompare(const std::vector<std::string>& fens, const std::vector<Features>& expectedFeatures) {
-        for (size_t i = 0; i < fens.size(); ++i) {
-            Board board(fens[i]);
-            for (const auto& feature : features) {
-                std::cout << "Extracting feature " << feature.first << " for FEN " << fens[i] << std::endl;
-                float result = feature.second(board);
-                std::cout << "Result: " << result << std::endl;
-                std::cout << "Expected: " << expectedFeatures[i] << std::endl;
-                std::cout << "Result == Expected: " << (result == expectedFeatures[i]) << std::endl;
-            }
-        }
-    }
-};
-
-
-
-
-Color opposite_color(Color color) {
+    //helper functions
+    Color opposite_color(Color color) {
     return (color == Color::WHITE) ? Color::BLACK : Color::WHITE;
 }
 
@@ -215,12 +135,9 @@ Bitboard bPawnAttacks(Bitboard bpawns) {
     return leftAttacks | rightAttacks;
 }
 
+// feature extraction functions
 
-
-
-
-
-int detectPassedPawns(const Board& board, Color col) {
+int detectPassedPawns(Color col) {
     Bitboard pawns = board.pieces(PieceType::PAWN, col);
     Bitboard enemyPawns = board.pieces(PieceType::PAWN, opposite_color(col));
 
@@ -250,7 +167,7 @@ int detectPassedPawns(const Board& board, Color col) {
 
 
 
-int detectDoubledPawns(const Board& board, Color color) {
+int detectDoubledPawns(Color color) {
     Bitboard pawns = board.pieces(PieceType::PAWN, color);
     Bitboard checkedFiles = 0; // Bitboard to keep track of files that have been checked
     
@@ -279,7 +196,7 @@ int detectDoubledPawns(const Board& board, Color color) {
 }
 
 
-int detectIsolatedPawns(const Board& board, Color color) {
+int detectIsolatedPawns(Color color) {
     Bitboard pawns = board.pieces(PieceType::PAWN, color);
 
     int isolatedPawns = 0;
@@ -314,21 +231,22 @@ int detectIsolatedPawns(const Board& board, Color color) {
 
 
 // change to incorporate piece tables soon
-int countPiece(const Board& board, PieceType pieceType, Color color){
-    Bitboard b = board.pieces(pieceType, color);
-    int count = 0;
+std::vector<Square> findPieceSquares(PieceType pieceType, Color color) {
+    std::vector<Square> pieceSquares;
 
-    // Count the number of bits set in the bitboard
-    while (b) {
-        count += b & 1; // Increment count if the least significant bit is 1
-        b >>= 1;        // Shift bits to the right
+    Bitboard pieces = board.pieces(pieceType, color);
+
+    // Iterate over each piece
+    while (pieces) {
+        Square pieceSquare = chess::builtin::poplsb(pieces); // Get the least significant bit as Square
+        pieceSquares.push_back(pieceSquare);
     }
 
-    std::cout << count << pieceTypeToChar(pieceType) << "s for side " << (color == Color::WHITE ? "White" : "Black") << std::endl;
-    return count;
+    return pieceSquares;
 }
 
-int detectBackwardPawns(const Board& board, Color color) {
+
+int detectBackwardPawns(Color color) {
     int count = 0;
     Bitboard pawns = board.pieces(PieceType::PAWN, color);
     Bitboard enemyPawns = board.pieces(PieceType::PAWN, opposite_color(color));
@@ -353,43 +271,39 @@ int detectBackwardPawns(const Board& board, Color color) {
     return count;
 }
 
+public:
+    FeatureExtractor(const Board& board) : board(board) {
+    }
+
+    Features getFeatures() {
+        return features;
+    }
+
+    void extract() {
+        // Extract the features
+        features.wpawns = findPieceSquares(PieceType::PAWN, Color::WHITE);
+        features.bpawns = findPieceSquares(PieceType::PAWN, Color::BLACK);
+        features.wknights = findPieceSquares(PieceType::KNIGHT, Color::WHITE);
+        features.bknights = findPieceSquares(PieceType::KNIGHT, Color::BLACK);
+        features.wbishops = findPieceSquares(PieceType::BISHOP, Color::WHITE);
+        features.bbishops = findPieceSquares(PieceType::BISHOP, Color::BLACK);
+        features.wrooks = findPieceSquares(PieceType::ROOK, Color::WHITE);
+        features.brooks = findPieceSquares(PieceType::ROOK, Color::BLACK);
+        features.wqueen = findPieceSquares(PieceType::QUEEN, Color::WHITE);
+        features.bqueen = findPieceSquares(PieceType::QUEEN, Color::BLACK);
+        features.wking = findPieceSquares(PieceType::KING, Color::WHITE);
+        features.bking = findPieceSquares(PieceType::KING, Color::BLACK);
+        
+        features.backwardPawns = detectBackwardPawns(Color::WHITE) - detectBackwardPawns(Color::BLACK);
+        features.doubledPawns = detectDoubledPawns(Color::WHITE) - detectDoubledPawns(Color::BLACK);
+        features.isolatedPawns = detectIsolatedPawns(Color::WHITE) - detectIsolatedPawns(Color::BLACK);
+        features.passedPawns = detectPassedPawns(Color::WHITE) - detectPassedPawns(Color::BLACK);
+    }
+
+
+}; // end of FeatureExtractor class
 
 
 
 
-// prints out every move from a given position
-int main () {
 
-    //4k3/7P/P7/p7/8/8/4K2p/8 w - - 0 1 should have one passed pawn for each
-    //rnbqkb1r/1p2p1p1/1p2p2n/1p1P2p1/3P4/3P2P1/P2P2P1/RNBQKBNR w KQkq - 0 1
-    Board board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-
-    detectPassedPawns(board, Color::WHITE);
-    detectPassedPawns(board, Color::BLACK);
-
-    detectDoubledPawns(board, Color::WHITE);
-    detectDoubledPawns(board, Color::BLACK);
-
-    detectIsolatedPawns(board, Color::WHITE);
-    detectIsolatedPawns(board, Color::BLACK);
-
-    detectBackwardPawns(board, Color::WHITE);
-    detectBackwardPawns(board, Color::BLACK);
-
-    countPiece(board, PieceType::PAWN, Color::WHITE);
-    countPiece(board, PieceType::BISHOP, Color::WHITE);
-    countPiece(board, PieceType::KNIGHT, Color::WHITE);
-    countPiece(board, PieceType::ROOK, Color::WHITE);
-    countPiece(board, PieceType::KING, Color::WHITE);
-    countPiece(board, PieceType::QUEEN, Color::WHITE);
-
-    countPiece(board, PieceType::PAWN, Color::BLACK);
-    countPiece(board, PieceType::BISHOP, Color::BLACK);
-    countPiece(board, PieceType::KNIGHT, Color::BLACK);
-    countPiece(board, PieceType::ROOK, Color::BLACK);
-    countPiece(board, PieceType::KING, Color::BLACK);
-    countPiece(board, PieceType::QUEEN, Color::BLACK);
-
-    return 0;
-    
-}
