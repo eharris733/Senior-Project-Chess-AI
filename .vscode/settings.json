@@ -69,5 +69,13 @@
         "compare": "cpp",
         "concepts": "cpp",
         "algorithm": "cpp"
-    }
+    },
+    
+        "files.exclude": {
+            "**/*.dSYM": true
+        },
+        "search.exclude": {
+            "**/*.dSYM": true
+        }
+    
 }
