@@ -80,74 +80,178 @@ Features testposition2 = {
 
 
 bool compareFeatures(const Features& extractedFeatures, const Features& testPosition) {
+    bool isSame = true;
+
     // Compare the FEN strings
     if (extractedFeatures.fen != testPosition.fen) {
-        return false;
+        std::cout << "Different FEN strings." << std::endl;
+        isSame = false;
     }
 
     // Compare the pawn positions
-    if (extractedFeatures.wpawns != testPosition.wpawns ||
-        extractedFeatures.bpawns != testPosition.bpawns) {
-        return false;
+    if (extractedFeatures.wpawns != testPosition.wpawns) {
+        std::cout << "White pawn positions differ." << std::endl;
+        isSame = false;
+    }
+    if (extractedFeatures.bpawns != testPosition.bpawns) {
+        std::cout << "Black pawn positions differ." << std::endl;
+        isSame = false;
     }
 
     // Compare the knight positions
-    if (extractedFeatures.wknights != testPosition.wknights ||
-        extractedFeatures.bknights != testPosition.bknights) {
-        return false;
+    if (extractedFeatures.wknights != testPosition.wknights) {
+        std::cout << "White knight positions differ." << std::endl;
+        isSame = false;
+    }
+    if (extractedFeatures.bknights != testPosition.bknights) {
+        std::cout << "Black knight positions differ." << std::endl;
+        isSame = false;
     }
 
     // Compare the bishop positions
-    if (extractedFeatures.wbishops != testPosition.wbishops ||
-        extractedFeatures.bbishops != testPosition.bbishops) {
-        return false;
+    if (extractedFeatures.wbishops != testPosition.wbishops) {
+        std::cout << "White bishop positions differ." << std::endl;
+        isSame = false;
+    }
+    if (extractedFeatures.bbishops != testPosition.bbishops) {
+        std::cout << "Black bishop positions differ." << std::endl;
+        isSame = false;
     }
 
     // Compare the rook positions
-    if (extractedFeatures.wrooks != testPosition.wrooks ||
-        extractedFeatures.brooks != testPosition.brooks) {
-        return false;
+    if (extractedFeatures.wrooks != testPosition.wrooks) {
+        std::cout << "White rook positions differ." << std::endl;
+        isSame = false;
+    }
+    if (extractedFeatures.brooks != testPosition.brooks) {
+        std::cout << "Black rook positions differ." << std::endl;
+        isSame = false;
     }
 
     // Compare the queen positions
-    if (extractedFeatures.wqueen != testPosition.wqueen ||
-        extractedFeatures.bqueen != testPosition.bqueen) {
-        return false;
+    if (extractedFeatures.wqueen != testPosition.wqueen) {
+        std::cout << "White queen positions differ." << std::endl;
+        isSame = false;
+    }
+    if (extractedFeatures.bqueen != testPosition.bqueen) {
+        std::cout << "Black queen positions differ." << std::endl;
+        isSame = false;
     }
 
     // Compare the king positions
-    if (extractedFeatures.wking != testPosition.wking ||
-        extractedFeatures.bking != testPosition.bking) {
-        return false;
+    if (extractedFeatures.wking != testPosition.wking) {
+        std::cout << "White king positions differ." << std::endl;
+        isSame = false;
+    }
+    if (extractedFeatures.bking != testPosition.bking) {
+        std::cout << "Black king positions differ." << std::endl;
+        isSame = false;
     }
 
-    // Compare the remaining features
-    if (extractedFeatures.passedPawns != testPosition.passedPawns ||
-        extractedFeatures.doubledPawns != testPosition.doubledPawns ||
-        extractedFeatures.isolatedPawns != testPosition.isolatedPawns ||
-        extractedFeatures.backwardPawns != testPosition.backwardPawns ||
-        extractedFeatures.weakSquares != testPosition.weakSquares ||
-        extractedFeatures.passedPawnEnemyKingSquare != testPosition.passedPawnEnemyKingSquare ||
-        extractedFeatures.knightOutposts != testPosition.knightOutposts ||
-        extractedFeatures.bishopMobility != testPosition.bishopMobility ||
-        extractedFeatures.bishopPair != testPosition.bishopPair ||
-        extractedFeatures.rookAttackKingFile != testPosition.rookAttackKingFile ||
-        extractedFeatures.rookAttackKingAdjFile != testPosition.rookAttackKingAdjFile ||
-        extractedFeatures.rook7thRank != testPosition.rook7thRank ||
-        extractedFeatures.rookConnected != testPosition.rookConnected ||
-        extractedFeatures.rookMobility != testPosition.rookMobility ||
-        extractedFeatures.rookBehindPassedPawn != testPosition.rookBehindPassedPawn ||
-        extractedFeatures.rookOpenFile != testPosition.rookOpenFile ||
-        extractedFeatures.rookSemiOpenFile != testPosition.rookSemiOpenFile ||
-        extractedFeatures.rookAtckWeakPawnOpenColumn != testPosition.rookAtckWeakPawnOpenColumn ||
-        extractedFeatures.kingFriendlyPawn != testPosition.kingFriendlyPawn ||
-        extractedFeatures.kingNoEnemyPawnNear != testPosition.kingNoEnemyPawnNear ||
-        extractedFeatures.kingPressureScore != testPosition.kingPressureScore) {
-        return false;
+    // Add similar print statements for bishops, rooks, queens, kings
+
+    // Compare other features
+    if (extractedFeatures.passedPawns != testPosition.passedPawns) {
+        std::cout << "Passed pawns differ." << std::endl;
+        isSame = false;
     }
 
-    return true;
+    if (extractedFeatures.backwardPawns != testPosition.backwardPawns) {
+        std::cout << "Backward pawns differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.weakSquares != testPosition.weakSquares) {
+        std::cout << "Weak squares differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.passedPawnEnemyKingSquare != testPosition.passedPawnEnemyKingSquare) {
+        std::cout << "Passed pawn enemy king square differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.knightOutposts != testPosition.knightOutposts) {
+        std::cout << "Knight outposts differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.bishopMobility != testPosition.bishopMobility) {
+        std::cout << "Bishop mobility differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.bishopPair != testPosition.bishopPair) {
+        std::cout << "Bishop pair differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookAttackKingFile != testPosition.rookAttackKingFile) {
+        std::cout << "Rook attack king file differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookAttackKingAdjFile != testPosition.rookAttackKingAdjFile) {
+        std::cout << "Rook attack king adjacent file differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rook7thRank != testPosition.rook7thRank) {
+        std::cout << "Rook 7th rank differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookConnected != testPosition.rookConnected) {
+        std::cout << "Rook connected differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookMobility != testPosition.rookMobility) {
+        std::cout << "Rook mobility differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookBehindPassedPawn != testPosition.rookBehindPassedPawn) {
+        std::cout << "Rook behind passed pawn differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookOpenFile != testPosition.rookOpenFile) {
+        std::cout << "Rook open file differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookSemiOpenFile != testPosition.rookSemiOpenFile) {
+        std::cout << "Rook semi-open file differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.rookAtckWeakPawnOpenColumn != testPosition.rookAtckWeakPawnOpenColumn) {
+        std::cout << "Rook attack weak pawn open column differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.kingFriendlyPawn != testPosition.kingFriendlyPawn) {
+        std::cout << "King friendly pawn differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.kingNoEnemyPawnNear != testPosition.kingNoEnemyPawnNear) {
+        std::cout << "King no enemy pawn near differ." << std::endl;
+        isSame = false;
+    }
+
+    if (extractedFeatures.kingPressureScore != testPosition.kingPressureScore) {
+        std::cout << "King pressure score differ." << std::endl;
+        isSame = false;
+    }
+
+    
+    // Add similar print statements for other features like doubledPawns, isolatedPawns, etc.
+
+    return isSame;
 }
+
 
 int main() {
     // Test position 1

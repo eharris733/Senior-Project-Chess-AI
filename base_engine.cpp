@@ -6,16 +6,18 @@
 
 // Include necessary headers from Disservin's chess library
 #include "chess.hpp"
+#include "searcher.hpp"
+
 using namespace chess;
 using namespace std;
 
 // Function to handle the "position" command
-void setPosition(chess::Board& board, std::istringstream& iss) {
-    std::string token, fen;
+void setPosition(Board& board, istringstream& iss) {
+    string token, fen;
     iss >> token;
 
     if (token == "startpos") {
-        fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        fen = constants::STARTPOS;
         iss >> token; // Consume "moves" if present
     } else if (token == "fen") {
         while (iss >> token && token != "moves") {
@@ -33,40 +35,41 @@ void setPosition(chess::Board& board, std::istringstream& iss) {
 
 // Function to get a random move from the current position
 void getRandomMove(const chess::Board& board) {
-    chess::Movelist moves;
-    chess::movegen::legalmoves(moves, board);
+    Movelist moves;
+    movegen::legalmoves(moves, board);
 
     if (!moves.empty()) {
-        std::uniform_int_distribution<> dis(0, moves.size() - 1);
-        static std::mt19937 gen(std::random_device{}());
+        uniform_int_distribution<> dis(0, moves.size() - 1);
+        static mt19937 gen(random_device{}());
         Move random_move =  moves[dis(gen)];
         cout << "bestmove " << uci::moveToUci(random_move) << endl;
     } else {
         // No legal moves, should signal a checkmate or stalemate
-        std::cout << "bestmove 0000" << std::endl; // 0000 is used to signal no move (game over situation)
+        cout << "bestmove 0000" << endl; // 0000 is used to signal no move (game over situation)
     }
 }
 
 int main() {
     chess::Board board;
-    std::string line, token;
+    string line, token;
+    Searcher searcher(board);
 
-    while (getline(std::cin, line)) {
-        std::istringstream iss(line);
+    while (getline(cin, line)) {
+        istringstream iss(line);
         iss >> token;
 
         if (token == "uci") {
-            std::cout << "id name RandomChess" << std::endl;
-            std::cout << "id author YourName" << std::endl;
-            std::cout << "uciok" << std::endl;
+            cout << "id name RandomChess" << endl;
+            cout << "id author YourName" << endl;
+            cout << "uciok" << endl;
         } else if (token == "isready") {
-            std::cout << "readyok" << std::endl;
+            cout << "readyok" << endl;
         } else if (token == "ucinewgame") {
-            board.setFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            board.setFen(constants::STARTPOS);
         } else if (token == "position") {
             setPosition(board, iss);
         } else if (token == "go") {
-            getRandomMove(board);
+            searcher.negamax(3);
         } else if (token == "quit") {
             break;
         }

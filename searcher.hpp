@@ -6,18 +6,21 @@ using namespace chess;
 
 class Searcher {
 public:
-    int negamax(Board& board, int depth) {
-        if (depth == 0 || board.isGameOver()) {
-            return evaluate(board);
+    Searcher(Board& initialBoard) : board(initialBoard) {}
+
+    int negamax(int depth) {
+        if (depth == 0 || GameResult::NONE != board.isGameOver().second) {
+            return evaluate();
         }
 
         int bestScore = INT_MIN;
-        std::vector<Move> moves = board.generateLegalMoves();
+        Movelist moves;
+        movegen::legalmoves(moves, board);
 
         for (const Move& move : moves) {
             board.makeMove(move);
-            int score = -negamax(board, depth - 1);
-            board.undoMove();
+            int score = -negamax(depth - 1);
+            board.unmakeMove(move);
 
             if (score > bestScore) {
                 bestScore = score;
@@ -28,9 +31,13 @@ public:
     }
 
 private:
-    int evaluate(const Board& board) {
+    Board& board;
+
+    int evaluate() {
         // Random evaluation function for now
         srand(time(0));
         return rand() % 100;
-    }
+    } 
 };
+    
+

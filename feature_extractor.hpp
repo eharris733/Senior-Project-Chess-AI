@@ -271,6 +271,26 @@ int detectBackwardPawns(Color color) {
     return count;
 }
 
+Bitboard detectWeakSquares(Color color) {
+    Bitboard pawns = board.pieces(PieceType::PAWN, color);
+    Bitboard enemyPawns = board.pieces(PieceType::PAWN, opposite_color(color));
+
+    Bitboard stops = (color == Color::WHITE) ? pawns << 8 : pawns >> 8;
+    Bitboard attackSpans = (color == Color::WHITE) ? wAttackFrontSpans(pawns) : bAttackFrontSpans(pawns);
+    Bitboard enemyAttacks = (color == Color::WHITE) ? bPawnAttacks(enemyPawns) : wPawnAttacks(enemyPawns);
+
+    Bitboard weakSquares = (stops & enemyAttacks & ~attackSpans);
+    weakSquares = (color == Color::WHITE) ? weakSquares >> 8 : weakSquares << 8;
+
+    // Exclude edge columns (a and h)
+    Bitboard edgeColumns = file_of(Square::SQ_A1) | file_of(Square::SQ_H1);
+    weakSquares &= ~edgeColumns;
+
+    return weakSquares;
+}
+
+
+
 public:
     FeatureExtractor(const Board& board) : board(board) {
     }
@@ -298,6 +318,7 @@ public:
         features.doubledPawns = detectDoubledPawns(Color::WHITE) - detectDoubledPawns(Color::BLACK);
         features.isolatedPawns = detectIsolatedPawns(Color::WHITE) - detectIsolatedPawns(Color::BLACK);
         features.passedPawns = detectPassedPawns(Color::WHITE) - detectPassedPawns(Color::BLACK);
+        features.weakSquares = chess::builtin::popcount(detectWeakSquares(Color::WHITE)) - chess::builtin::popcount(detectWeakSquares(Color::BLACK));
     }
 
 
