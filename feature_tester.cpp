@@ -26,7 +26,44 @@ Features testposition1 = {
     .passedPawnEnemyKingSquare = 0, // No passed pawn in enemy king's square initially
     .knightOutposts = 0, // No knight outposts initially
     .bishopMobility = 0, // No bishop mobility initially
-    .bishopPair = 1, // Both bishops initially
+    .bishopPair = 0, // Both bishops initially for both sides
+    .rookAttackKingFile = 0, // No rook attacking king's file initially
+    .rookAttackKingAdjFile = 0, // No rook attacking adjacent to king's file initially
+    .rook7thRank = 0, // No rook on 7th rank initially
+    .rookConnected = 0, // No connected rooks initially
+    .rookMobility = 0, // No rook mobility initially
+    .rookBehindPassedPawn = 0, // No rook behind passed pawn initially
+    .rookOpenFile = 0, // No rook on open file initially
+    .rookSemiOpenFile = 0, // No rook on semi-open file initially
+    .rookAtckWeakPawnOpenColumn = 0, // No rook attacking weak pawn on open column initially
+    .kingFriendlyPawn = 0, // three friendly pawns nearby initially
+    .kingNoEnemyPawnNear = 0, // offset each other initially
+    .kingPressureScore = 0.0f // pressure is completely equal initially
+};
+
+Features testposition2 = {
+    .fen = "8/8/4k3/8/4K3/8/8/8 w - - 0 1", // FEN string for two lonely kings in the center
+    .wpawns = {}, // No white pawns
+    .bpawns = {}, // No black pawns
+    .wknights = {}, // No white knights
+    .bknights = {}, // No black knights
+    .wbishops = {}, // No white bishops
+    .bbishops = {}, // No black bishops
+    .wrooks = {}, // No white rooks
+    .brooks = {}, // No black rooks
+    .wqueen = {}, // No white queen
+    .bqueen = {}, // No black queen
+    .wking = {chess::SQ_E4}, // White king on e1
+    .bking = {chess::SQ_E6}, // Black king on e8
+    .passedPawns = 0, // No passed pawns initially
+    .doubledPawns = 0, // No doubled pawns initially
+    .isolatedPawns = 0, // No isolated pawns initially
+    .backwardPawns = 0, // No backward pawns initially
+    .weakSquares = 0, // No weak squares initially
+    .passedPawnEnemyKingSquare = 0, // No passed pawn in enemy king's square initially
+    .knightOutposts = 0, // No knight outposts initially
+    .bishopMobility = 0, // No bishop mobility initially
+    .bishopPair = 0, // No bishop pair initially
     .rookAttackKingFile = 0, // No rook attacking king's file initially
     .rookAttackKingAdjFile = 0, // No rook attacking adjacent to king's file initially
     .rook7thRank = 0, // No rook on 7th rank initially
@@ -41,8 +78,8 @@ Features testposition1 = {
     .kingPressureScore = 0.0f // No king pressure initially
 };
 
-Features testposition2 = {
-    .fen = "8/8/4k3/8/4K3/8/8/8 w - - 0 1", // FEN string for two lonely kings in the center
+Features testposition3 = {
+    .fen = "r1bq1r1k/6pp/p2pBb2/1p1Nn2Q/3NP2P/8/PPP5/1K1R3R b - - 2 20", // A random complicated position from the sicilian
     .wpawns = {}, // No white pawns
     .bpawns = {}, // No black pawns
     .wknights = {}, // No white knights
@@ -85,6 +122,8 @@ bool compareFeatures(const Features& extractedFeatures, const Features& testPosi
     // Compare the FEN strings
     if (extractedFeatures.fen != testPosition.fen) {
         std::cout << "Different FEN strings." << std::endl;
+        std::cout << "Expected: " << testPosition.fen << std::endl;
+        std::cout << "Got: " << extractedFeatures.fen << std::endl;
         isSame = false;
     }
 
@@ -243,6 +282,8 @@ bool compareFeatures(const Features& extractedFeatures, const Features& testPosi
 
     if (extractedFeatures.kingPressureScore != testPosition.kingPressureScore) {
         std::cout << "King pressure score differ." << std::endl;
+        cout << "Expected: " << testPosition.kingPressureScore << endl;
+        cout << "Got: " << extractedFeatures.kingPressureScore << endl;
         isSame = false;
     }
 
@@ -274,6 +315,17 @@ int main() {
         std::cout << "Test position 2: Features match!" << std::endl;
     } else {
         std::cout << "Test position 2: Features do not match!" << std::endl;
+    }
+
+    // Test position 3
+    Board board3 = Board(testposition3.fen);
+    FeatureExtractor extractor3 = FeatureExtractor(board3);
+    extractor3.extract();
+    Features extractedFeatures3 = extractor3.getFeatures();
+    if (compareFeatures(extractedFeatures3, testposition3)) {
+        std::cout << "Test position 3: Features match!" << std::endl;
+    } else {
+        std::cout << "Test position 3: Features do not match!" << std::endl;
     }
     return 0;
 }
