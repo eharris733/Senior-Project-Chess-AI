@@ -187,96 +187,131 @@ bool compareFeatures(const Features& extractedFeatures, const Features& testPosi
         isSame = false;
     }
 
-    // Add similar print statements for bishops, rooks, queens, kings
 
-    // Compare other features
+    // Compare more involved features
     if (extractedFeatures.passedPawns != testPosition.passedPawns) {
         std::cout << "Passed pawns differ." << std::endl;
+        cout << "Expected: " << testPosition.passedPawns << endl;
+        cout << "Got: " << extractedFeatures.passedPawns << endl;
         isSame = false;
     }
 
     if (extractedFeatures.backwardPawns != testPosition.backwardPawns) {
         std::cout << "Backward pawns differ." << std::endl;
+        cout << "Expected: " << testPosition.backwardPawns << endl;
+        cout << "Got: " << extractedFeatures.backwardPawns << endl;
         isSame = false;
     }
 
     if (extractedFeatures.weakSquares != testPosition.weakSquares) {
         std::cout << "Weak squares differ." << std::endl;
+        cout << "Expected: " << testPosition.weakSquares << endl;
+        cout << "Got: " << extractedFeatures.weakSquares << endl;
         isSame = false;
     }
 
     if (extractedFeatures.passedPawnEnemyKingSquare != testPosition.passedPawnEnemyKingSquare) {
         std::cout << "Passed pawn enemy king square differ." << std::endl;
+        cout << "Expected: " << testPosition.passedPawnEnemyKingSquare << endl;
+        cout << "Got: " << extractedFeatures.passedPawnEnemyKingSquare << endl;
         isSame = false;
     }
 
     if (extractedFeatures.knightOutposts != testPosition.knightOutposts) {
         std::cout << "Knight outposts differ." << std::endl;
+        cout << "Expected: " << testPosition.knightOutposts << endl;
+        cout << "Got: " << extractedFeatures.knightOutposts << endl;
         isSame = false;
     }
 
     if (extractedFeatures.bishopMobility != testPosition.bishopMobility) {
         std::cout << "Bishop mobility differ." << std::endl;
+        cout << "Expected: " << testPosition.bishopMobility << endl;
+        cout << "Got: " << extractedFeatures.bishopMobility << endl;
         isSame = false;
     }
 
     if (extractedFeatures.bishopPair != testPosition.bishopPair) {
         std::cout << "Bishop pair differ." << std::endl;
+        cout << "Expected: " << testPosition.bishopPair << endl;
+        cout << "Got: " << extractedFeatures.bishopPair << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookAttackKingFile != testPosition.rookAttackKingFile) {
         std::cout << "Rook attack king file differ." << std::endl;
+        cout << "Expected: " << testPosition.rookAttackKingFile << endl;
+        cout << "Got: " << extractedFeatures.rookAttackKingFile << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookAttackKingAdjFile != testPosition.rookAttackKingAdjFile) {
         std::cout << "Rook attack king adjacent file differ." << std::endl;
+        cout << "Expected: " << testPosition.rookAttackKingAdjFile << endl;
+        cout << "Got: " << extractedFeatures.rookAttackKingAdjFile << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rook7thRank != testPosition.rook7thRank) {
         std::cout << "Rook 7th rank differ." << std::endl;
+        cout << "Expected: " << testPosition.rook7thRank << endl;
+        cout << "Got: " << extractedFeatures.rook7thRank << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookConnected != testPosition.rookConnected) {
         std::cout << "Rook connected differ." << std::endl;
+        cout << "Expected: " << testPosition.rookConnected << endl;
+        cout << "Got: " << extractedFeatures.rookConnected << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookMobility != testPosition.rookMobility) {
         std::cout << "Rook mobility differ." << std::endl;
+        cout << "Expected: " << testPosition.rookMobility << endl;
+        cout << "Got: " << extractedFeatures.rookMobility << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookBehindPassedPawn != testPosition.rookBehindPassedPawn) {
         std::cout << "Rook behind passed pawn differ." << std::endl;
+        cout << "Expected: " << testPosition.rookBehindPassedPawn << endl;
+        cout << "Got: " << extractedFeatures.rookBehindPassedPawn << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookOpenFile != testPosition.rookOpenFile) {
         std::cout << "Rook open file differ." << std::endl;
+        cout << "Expected: " << testPosition.rookOpenFile << endl;
+        cout << "Got: " << extractedFeatures.rookOpenFile << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookSemiOpenFile != testPosition.rookSemiOpenFile) {
         std::cout << "Rook semi-open file differ." << std::endl;
+        cout << "Expected: " << testPosition.rookSemiOpenFile << endl;
+        cout << "Got: " << extractedFeatures.rookSemiOpenFile << endl;
         isSame = false;
     }
 
     if (extractedFeatures.rookAtckWeakPawnOpenColumn != testPosition.rookAtckWeakPawnOpenColumn) {
         std::cout << "Rook attack weak pawn open column differ." << std::endl;
+        cout << "Expected: " << testPosition.rookAtckWeakPawnOpenColumn << endl;
+        cout << "Got: " << extractedFeatures.rookAtckWeakPawnOpenColumn << endl;
         isSame = false;
     }
 
     if (extractedFeatures.kingFriendlyPawn != testPosition.kingFriendlyPawn) {
         std::cout << "King friendly pawn differ." << std::endl;
+        cout << "Expected: " << testPosition.kingFriendlyPawn << endl;
+        cout << "Got: " << extractedFeatures.kingFriendlyPawn << endl;
         isSame = false;
     }
 
     if (extractedFeatures.kingNoEnemyPawnNear != testPosition.kingNoEnemyPawnNear) {
         std::cout << "King no enemy pawn near differ." << std::endl;
+        cout << "Expected: " << testPosition.kingNoEnemyPawnNear << endl;
+        cout << "Got: " << extractedFeatures.kingNoEnemyPawnNear << endl;
         isSame = false;
     }
 

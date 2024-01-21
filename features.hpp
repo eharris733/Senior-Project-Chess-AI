@@ -28,7 +28,7 @@ struct Features {
     short passedPawns; // Pawn with no other pawns in its way
     short doubledPawns; // Pawns stacked on the same file
     short isolatedPawns; // Pawn with no adjacent pawns
-    short backwardPawns; // Pawn with all adjacent pawns advanced
+    short weakPawns; // Pawn with all adjacent pawns advanced
     short weakSquares; // Square on your side where no pawns can attack
     short passedPawnEnemyKingSquare; // Rule of the square
     short knightOutposts; // Knight is on a weak square
@@ -46,6 +46,7 @@ struct Features {
     short kingFriendlyPawn; // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
     short kingNoEnemyPawnNear; // How far king is from closest enemy pawn
     float kingPressureScore; // Multiplier for king pressure
+    float endgameScore; // Multiplier for endgame
 };
 
 #endif // FEATURES_HPP

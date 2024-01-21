@@ -1,4 +1,5 @@
 #include "chess.hpp"
+#include "evaluator.hpp"
 #include <cstdlib>
 #include <ctime>
 
@@ -6,7 +7,7 @@ using namespace chess;
 
 class Searcher {
 public:
-    Searcher(Board& initialBoard) : board(initialBoard) {}
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard) {}
 
     int negamax(int depth) {
         if (depth == 0 || GameResult::NONE != board.isGameOver().second) {
@@ -32,12 +33,11 @@ public:
 
 private:
     Board& board;
+    Evaluator evaluator;
 
     int evaluate() {
-        // Random evaluation function for now
-        srand(time(0));
-        return rand() % 100;
-    } 
+        return evaluator.evaluate();
+    }
 };
     
 

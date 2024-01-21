@@ -69,7 +69,7 @@ int main() {
         } else if (token == "position") {
             setPosition(board, iss);
         } else if (token == "go") {
-            searcher.negamax(3);
+            searcher.negamax(1);
         } else if (token == "quit") {
             break;
         }

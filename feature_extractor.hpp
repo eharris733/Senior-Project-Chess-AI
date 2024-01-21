@@ -233,8 +233,8 @@ std::vector<Square> findPieceSquares(PieceType pieceType, Color color) {
 }
 
 
-vector<Square> detectBackwardPawns(Color color) {
-    vector<Square> backwardPawnList;
+vector<Square> detectWeakPawns(Color color) {
+    vector<Square> weakPawnList;
     Bitboard pawns = board.pieces(PieceType::PAWN, color);
     Bitboard enemyPawns = board.pieces(PieceType::PAWN, opposite_color(color));
 
@@ -248,10 +248,10 @@ vector<Square> detectBackwardPawns(Color color) {
     while (backwardPawns) {
         Square pawnSquare = chess::builtin::poplsb(backwardPawns);
         std::cout << "Backward pawn at square " << squareToString[pawnSquare] << " for " << (color == Color::WHITE ? "White" : "Black") << std::endl;
-        backwardPawnList.push_back(pawnSquare);
+        weakPawnList.push_back(pawnSquare);
 
     }
-    return backwardPawnList;
+    return weakPawnList;
 }
 
 // a weak square is a square that cannot be defended by a pawn and is the key three ranks in the center and on the enemy side of the board
@@ -513,7 +513,7 @@ short rookAtckWeakPawnOpenColumn(Color color){
         Square rookSquare = rooks[i];
         int rookFile = file_of(rookSquare);
         Bitboard fileMask = fileBitboard(rookFile);
-        vector<Square> weakPawns = detectBackwardPawns(opposite_color(color));
+        vector<Square> weakPawns = detectWeakPawns(opposite_color(color));
         for(int j = 0; j < weakPawns.size(); j++){
             Square weakPawnSquare = weakPawns[j];
             if (fileMask & square_to_bitmap(weakPawnSquare)){
@@ -602,6 +602,34 @@ float kingPressureScore(Color color){
     return score;
 }
 
+// a function that returns a score for how late into the game we are, and how many pieces are left
+// again not optimal, because we've already calculated all these values
+float endgameScore(){
+    float score = 0;
+    int numPieces = 0;
+    vector<Square> whitePieces = findPieceSquares(PieceType::PAWN, Color::WHITE);
+    vector<Square> blackPieces = findPieceSquares(PieceType::PAWN, Color::BLACK);
+    numPieces += whitePieces.size();
+    numPieces += blackPieces.size();
+    whitePieces = findPieceSquares(PieceType::KNIGHT, Color::WHITE);
+    blackPieces = findPieceSquares(PieceType::KNIGHT, Color::BLACK);
+    numPieces += whitePieces.size() * 3;
+    numPieces += blackPieces.size() * 3;
+    whitePieces = findPieceSquares(PieceType::BISHOP, Color::WHITE);
+    blackPieces = findPieceSquares(PieceType::BISHOP, Color::BLACK);
+    numPieces += whitePieces.size() * 3;
+    numPieces += blackPieces.size() * 3;
+    whitePieces = findPieceSquares(PieceType::ROOK, Color::WHITE);
+    blackPieces = findPieceSquares(PieceType::ROOK, Color::BLACK);
+    numPieces += whitePieces.size() * 5;
+    numPieces += blackPieces.size() * 5;
+    whitePieces = findPieceSquares(PieceType::QUEEN, Color::WHITE);
+    blackPieces = findPieceSquares(PieceType::QUEEN, Color::BLACK);
+    numPieces += whitePieces.size() * 9;
+    numPieces += blackPieces.size() * 9;
+    return score;
+}
+
 
 public:
     FeatureExtractor(const Board& board) : board(board) {
@@ -627,7 +655,7 @@ public:
         features.wking = findPieceSquares(PieceType::KING, Color::WHITE);
         features.bking = findPieceSquares(PieceType::KING, Color::BLACK);
         
-        features.backwardPawns = detectBackwardPawns(Color::WHITE).size() - detectBackwardPawns(Color::BLACK).size();
+        features.weakPawns = detectWeakPawns(Color::WHITE).size() - detectWeakPawns(Color::BLACK).size();
         features.doubledPawns = detectDoubledPawns(Color::WHITE) - detectDoubledPawns(Color::BLACK);
         features.isolatedPawns = detectIsolatedPawns(Color::WHITE).size() - detectIsolatedPawns(Color::BLACK).size();
         features.passedPawns = detectPassedPawns(Color::WHITE).size() - detectPassedPawns(Color::BLACK).size();
@@ -648,6 +676,9 @@ public:
         features.kingFriendlyPawn = kingFriendlyPawn(Color::WHITE) - kingFriendlyPawn(Color::BLACK);
         features.kingNoEnemyPawnNear = kingNoEnemyPawnNear(Color::WHITE) - kingNoEnemyPawnNear(Color::BLACK);
         features.kingPressureScore = kingPressureScore(Color::WHITE) - kingPressureScore(Color::BLACK);
+        
+        // endgamescore is how late into the game we are, and how many pieces are left
+        features.endgameScore = endgameScore();
 
     }
 
