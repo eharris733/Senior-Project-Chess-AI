@@ -50,7 +50,7 @@ void getRandomMove(const chess::Board& board) {
 }
 
 int main() {
-    chess::Board board;
+    Board board;
     string line, token;
     Searcher searcher(board);
 
@@ -59,8 +59,8 @@ int main() {
         iss >> token;
 
         if (token == "uci") {
-            cout << "id name RandomChess" << endl;
-            cout << "id author YourName" << endl;
+            cout << "id name v0" << endl;
+            cout << "id author Elliot Harris" << endl;
             cout << "uciok" << endl;
         } else if (token == "isready") {
             cout << "readyok" << endl;
@@ -69,7 +69,7 @@ int main() {
         } else if (token == "position") {
             setPosition(board, iss);
         } else if (token == "go") {
-            searcher.negamax(1);
+            searcher.search(4);
         } else if (token == "quit") {
             break;
         }

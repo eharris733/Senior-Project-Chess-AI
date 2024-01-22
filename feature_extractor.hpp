@@ -150,7 +150,6 @@ vector<Square> detectPassedPawns(Color col) {
 
         // Check if no enemy pawns are on the blocking squares
         if ((blockingSquares & enemyPawns) == 0) {
-            std::cout << "Passed pawn at square " << squareToString[pawnSquare] << " for " << (col == Color::WHITE ? "White" : "Black") << std::endl;
             passedPawns.push_back(pawnSquare);
         }
     }
@@ -172,7 +171,6 @@ int detectDoubledPawns(Color color) {
 
             if (chess::builtin::popcount(pawnsOnFile) > 1) {
                 // There are doubled pawns on this file
-                std::cout << "Doubled pawns on file " << fileToString(file) << " for " << (color == Color::WHITE ? "White" : "Black") << std::endl;
                 if (color == Color::WHITE) {
                     doubledPawns ++;
                 }
@@ -207,7 +205,6 @@ vector<Square> detectIsolatedPawns(Color color) {
 
         // Check if there are no friendly pawns on adjacent files
         if (chess::builtin::popcount(adjacentPawns) == 0) {
-            std::cout << "Isolated pawn at square " << squareToString[pawnSquare] << " for " << (color == Color::WHITE ? "White" : "Black") << std::endl;
             isolatedPawns.push_back(pawnSquare);
         }
     }
@@ -247,7 +244,6 @@ vector<Square> detectWeakPawns(Color color) {
 
     while (backwardPawns) {
         Square pawnSquare = chess::builtin::poplsb(backwardPawns);
-        std::cout << "Backward pawn at square " << squareToString[pawnSquare] << " for " << (color == Color::WHITE ? "White" : "Black") << std::endl;
         weakPawnList.push_back(pawnSquare);
 
     }
@@ -605,7 +601,6 @@ float kingPressureScore(Color color){
 // a function that returns a score for how late into the game we are, and how many pieces are left
 // again not optimal, because we've already calculated all these values
 float endgameScore(){
-    float score = 0;
     int numPieces = 0;
     vector<Square> whitePieces = findPieceSquares(PieceType::PAWN, Color::WHITE);
     vector<Square> blackPieces = findPieceSquares(PieceType::PAWN, Color::BLACK);
@@ -627,7 +622,7 @@ float endgameScore(){
     blackPieces = findPieceSquares(PieceType::QUEEN, Color::BLACK);
     numPieces += whitePieces.size() * 9;
     numPieces += blackPieces.size() * 9;
-    return score;
+    return numPieces;
 }
 
 
