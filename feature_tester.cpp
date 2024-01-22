@@ -6,22 +6,10 @@
 
 Features testposition1 = {
     .fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // Default FEN string for the initial chess position
-    .wpawns = {chess::SQ_A2, chess::SQ_B2, chess::SQ_C2, chess::SQ_D2, chess::SQ_E2, chess::SQ_F2, chess::SQ_G2, chess::SQ_H2}, 
-    .bpawns = {chess::SQ_A7, chess::SQ_B7, chess::SQ_C7, chess::SQ_D7, chess::SQ_E7, chess::SQ_F7, chess::SQ_G7, chess::SQ_H7},
-    .wknights = {chess::SQ_B1, chess::SQ_G1},
-    .bknights = {chess::SQ_B8, chess::SQ_G8},
-    .wbishops = {chess::SQ_C1, chess::SQ_F1},
-    .bbishops = {chess::SQ_C8, chess::SQ_F8},
-    .wrooks = {chess::SQ_A1, chess::SQ_H1},
-    .brooks = {chess::SQ_A8, chess::SQ_H8},
-    .wqueen = {chess::SQ_D1},
-    .bqueen = {chess::SQ_D8},
-    .wking = {chess::SQ_E1},
-    .bking = {chess::SQ_E8},
     .passedPawns = 0, // No passed pawns initially
     .doubledPawns = 0, // No doubled pawns initially
     .isolatedPawns = 0, // No isolated pawns initially
-    .backwardPawns = 0, // No backward pawns initially
+    .weakPawns = 0, // No backward pawns initially
     .weakSquares = 0, // No weak squares initially
     .passedPawnEnemyKingSquare = 0, // No passed pawn in enemy king's square initially
     .knightOutposts = 0, // No knight outposts initially
@@ -43,22 +31,10 @@ Features testposition1 = {
 
 Features testposition2 = {
     .fen = "8/8/4k3/8/4K3/8/8/8 w - - 0 1", // FEN string for two lonely kings in the center
-    .wpawns = {}, // No white pawns
-    .bpawns = {}, // No black pawns
-    .wknights = {}, // No white knights
-    .bknights = {}, // No black knights
-    .wbishops = {}, // No white bishops
-    .bbishops = {}, // No black bishops
-    .wrooks = {}, // No white rooks
-    .brooks = {}, // No black rooks
-    .wqueen = {}, // No white queen
-    .bqueen = {}, // No black queen
-    .wking = {chess::SQ_E4}, // White king on e1
-    .bking = {chess::SQ_E6}, // Black king on e8
     .passedPawns = 0, // No passed pawns initially
     .doubledPawns = 0, // No doubled pawns initially
     .isolatedPawns = 0, // No isolated pawns initially
-    .backwardPawns = 0, // No backward pawns initially
+    .weakPawns = 0, // No backward pawns initially
     .weakSquares = 0, // No weak squares initially
     .passedPawnEnemyKingSquare = 0, // No passed pawn in enemy king's square initially
     .knightOutposts = 0, // No knight outposts initially
@@ -80,22 +56,10 @@ Features testposition2 = {
 
 Features testposition3 = {
     .fen = "r1bq1r1k/6pp/p2pBb2/1p1Nn2Q/3NP2P/8/PPP5/1K1R3R b - - 2 20", // A random complicated position from the sicilian
-    .wpawns = {}, // No white pawns
-    .bpawns = {}, // No black pawns
-    .wknights = {}, // No white knights
-    .bknights = {}, // No black knights
-    .wbishops = {}, // No white bishops
-    .bbishops = {}, // No black bishops
-    .wrooks = {}, // No white rooks
-    .brooks = {}, // No black rooks
-    .wqueen = {}, // No white queen
-    .bqueen = {}, // No black queen
-    .wking = {chess::SQ_E4}, // White king on e1
-    .bking = {chess::SQ_E6}, // Black king on e8
     .passedPawns = 0, // No passed pawns initially
     .doubledPawns = 0, // No doubled pawns initially
     .isolatedPawns = 0, // No isolated pawns initially
-    .backwardPawns = 0, // No backward pawns initially
+    .weakPawns = 0, // No backward pawns initially
     .weakSquares = 0, // No weak squares initially
     .passedPawnEnemyKingSquare = 0, // No passed pawn in enemy king's square initially
     .knightOutposts = 0, // No knight outposts initially
@@ -127,67 +91,6 @@ bool compareFeatures(const Features& extractedFeatures, const Features& testPosi
         isSame = false;
     }
 
-    // Compare the pawn positions
-    if (extractedFeatures.wpawns != testPosition.wpawns) {
-        std::cout << "White pawn positions differ." << std::endl;
-        isSame = false;
-    }
-    if (extractedFeatures.bpawns != testPosition.bpawns) {
-        std::cout << "Black pawn positions differ." << std::endl;
-        isSame = false;
-    }
-
-    // Compare the knight positions
-    if (extractedFeatures.wknights != testPosition.wknights) {
-        std::cout << "White knight positions differ." << std::endl;
-        isSame = false;
-    }
-    if (extractedFeatures.bknights != testPosition.bknights) {
-        std::cout << "Black knight positions differ." << std::endl;
-        isSame = false;
-    }
-
-    // Compare the bishop positions
-    if (extractedFeatures.wbishops != testPosition.wbishops) {
-        std::cout << "White bishop positions differ." << std::endl;
-        isSame = false;
-    }
-    if (extractedFeatures.bbishops != testPosition.bbishops) {
-        std::cout << "Black bishop positions differ." << std::endl;
-        isSame = false;
-    }
-
-    // Compare the rook positions
-    if (extractedFeatures.wrooks != testPosition.wrooks) {
-        std::cout << "White rook positions differ." << std::endl;
-        isSame = false;
-    }
-    if (extractedFeatures.brooks != testPosition.brooks) {
-        std::cout << "Black rook positions differ." << std::endl;
-        isSame = false;
-    }
-
-    // Compare the queen positions
-    if (extractedFeatures.wqueen != testPosition.wqueen) {
-        std::cout << "White queen positions differ." << std::endl;
-        isSame = false;
-    }
-    if (extractedFeatures.bqueen != testPosition.bqueen) {
-        std::cout << "Black queen positions differ." << std::endl;
-        isSame = false;
-    }
-
-    // Compare the king positions
-    if (extractedFeatures.wking != testPosition.wking) {
-        std::cout << "White king positions differ." << std::endl;
-        isSame = false;
-    }
-    if (extractedFeatures.bking != testPosition.bking) {
-        std::cout << "Black king positions differ." << std::endl;
-        isSame = false;
-    }
-
-
     // Compare more involved features
     if (extractedFeatures.passedPawns != testPosition.passedPawns) {
         std::cout << "Passed pawns differ." << std::endl;
@@ -196,10 +99,10 @@ bool compareFeatures(const Features& extractedFeatures, const Features& testPosi
         isSame = false;
     }
 
-    if (extractedFeatures.backwardPawns != testPosition.backwardPawns) {
+    if (extractedFeatures.weakPawns != testPosition.weakPawns) {
         std::cout << "Backward pawns differ." << std::endl;
-        cout << "Expected: " << testPosition.backwardPawns << endl;
-        cout << "Got: " << extractedFeatures.backwardPawns << endl;
+        cout << "Expected: " << testPosition.weakPawns << endl;
+        cout << "Got: " << extractedFeatures.weakPawns << endl;
         isSame = false;
     }
 
