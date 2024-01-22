@@ -13,18 +13,6 @@ struct Features;
 // Structure to hold expected feature values for a FEN
 struct Features {
     std::string fen; // The FEN string
-    std::vector<chess::Square> wpawns; // A list of all the white pawn locations
-    std::vector<chess::Square> bpawns; // A list of all the black pawn locations
-    std::vector<chess::Square> wknights; // A list of all the white knight locations
-    std::vector<chess::Square> bknights; // A list of all the black knight locations
-    std::vector<chess::Square> wbishops; // A list of all the white bishop locations
-    std::vector<chess::Square> bbishops; // A list of all the black bishop locations
-    std::vector<chess::Square> wrooks; // A list of all the white rook locations
-    std::vector<chess::Square> brooks; // A list of all the black rook locations
-    std::vector<chess::Square> wqueen; // A list of all the white queen locations
-    std::vector<chess::Square> bqueen; // A list of all the black queen locations
-    std::vector<chess::Square> wking; // A veector containing the one white king locations (vector for consistency)
-    std::vector<chess::Square> bking; // A vector containing the one black king locations (vector for consistency)
     short passedPawns; // Pawn with no other pawns in its way
     short doubledPawns; // Pawns stacked on the same file
     short isolatedPawns; // Pawn with no adjacent pawns

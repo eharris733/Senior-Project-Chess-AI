@@ -4,6 +4,8 @@
     int main() {
         Board board;
         board.setFen(constants::STARTPOS);
+        
+        
         Searcher searcher1(board);
         Searcher searcher2(board);
 

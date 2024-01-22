@@ -598,32 +598,7 @@ float kingPressureScore(Color color){
     return score;
 }
 
-// a function that returns a score for how late into the game we are, and how many pieces are left
-// again not optimal, because we've already calculated all these values
-float endgameScore(){
-    int numPieces = 0;
-    vector<Square> whitePieces = findPieceSquares(PieceType::PAWN, Color::WHITE);
-    vector<Square> blackPieces = findPieceSquares(PieceType::PAWN, Color::BLACK);
-    numPieces += whitePieces.size();
-    numPieces += blackPieces.size();
-    whitePieces = findPieceSquares(PieceType::KNIGHT, Color::WHITE);
-    blackPieces = findPieceSquares(PieceType::KNIGHT, Color::BLACK);
-    numPieces += whitePieces.size() * 3;
-    numPieces += blackPieces.size() * 3;
-    whitePieces = findPieceSquares(PieceType::BISHOP, Color::WHITE);
-    blackPieces = findPieceSquares(PieceType::BISHOP, Color::BLACK);
-    numPieces += whitePieces.size() * 3;
-    numPieces += blackPieces.size() * 3;
-    whitePieces = findPieceSquares(PieceType::ROOK, Color::WHITE);
-    blackPieces = findPieceSquares(PieceType::ROOK, Color::BLACK);
-    numPieces += whitePieces.size() * 5;
-    numPieces += blackPieces.size() * 5;
-    whitePieces = findPieceSquares(PieceType::QUEEN, Color::WHITE);
-    blackPieces = findPieceSquares(PieceType::QUEEN, Color::BLACK);
-    numPieces += whitePieces.size() * 9;
-    numPieces += blackPieces.size() * 9;
-    return numPieces;
-}
+
 
 
 public:
@@ -637,18 +612,6 @@ public:
     void extract() {
         // Extract the features
         features.fen = board.getFen();
-        features.wpawns = findPieceSquares(PieceType::PAWN, Color::WHITE);
-        features.bpawns = findPieceSquares(PieceType::PAWN, Color::BLACK);
-        features.wknights = findPieceSquares(PieceType::KNIGHT, Color::WHITE);
-        features.bknights = findPieceSquares(PieceType::KNIGHT, Color::BLACK);
-        features.wbishops = findPieceSquares(PieceType::BISHOP, Color::WHITE);
-        features.bbishops = findPieceSquares(PieceType::BISHOP, Color::BLACK);
-        features.wrooks = findPieceSquares(PieceType::ROOK, Color::WHITE);
-        features.brooks = findPieceSquares(PieceType::ROOK, Color::BLACK);
-        features.wqueen = findPieceSquares(PieceType::QUEEN, Color::WHITE);
-        features.bqueen = findPieceSquares(PieceType::QUEEN, Color::BLACK);
-        features.wking = findPieceSquares(PieceType::KING, Color::WHITE);
-        features.bking = findPieceSquares(PieceType::KING, Color::BLACK);
         
         features.weakPawns = detectWeakPawns(Color::WHITE).size() - detectWeakPawns(Color::BLACK).size();
         features.doubledPawns = detectDoubledPawns(Color::WHITE) - detectDoubledPawns(Color::BLACK);
@@ -671,9 +634,6 @@ public:
         features.kingFriendlyPawn = kingFriendlyPawn(Color::WHITE) - kingFriendlyPawn(Color::BLACK);
         features.kingNoEnemyPawnNear = kingNoEnemyPawnNear(Color::WHITE) - kingNoEnemyPawnNear(Color::BLACK);
         features.kingPressureScore = kingPressureScore(Color::WHITE) - kingPressureScore(Color::BLACK);
-        
-        // endgamescore is how late into the game we are, and how many pieces are left
-        features.endgameScore = endgameScore();
 
     }
 

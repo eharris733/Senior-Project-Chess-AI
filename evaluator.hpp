@@ -185,51 +185,61 @@ class Evaluator {
     Board& board;
     weightFeaturesByHand weightFeaturesByHand;
 
-    float getPieceValue(Piece piece, int position, float mgWeight, float egWeight) {
-            if (piece == Piece::NONE) {
-                return 0;
+            GamePhaseValue getPieceScore(Piece piece, int position, int* endgameScore) {
+                    if (piece == Piece::NONE) {
+                        return GamePhaseValue(0, 0);
+                    }
+                    else if (piece == Piece::WHITEPAWN) {
+                        *endgameScore += 1;
+                        return GamePhaseValue(weightFeaturesByHand.pawnsMG[position] + weightFeaturesByHand.pawn.middleGame, weightFeaturesByHand.pawnsEG[position] + weightFeaturesByHand.pawn.endGame);
+                    }
+                    else if (piece == Piece::BLACKPAWN) {
+                        *endgameScore += 1;
+                        return GamePhaseValue(weightFeaturesByHand.pawnsMG[FLIP(position)] + weightFeaturesByHand.pawn.middleGame, weightFeaturesByHand.pawnsEG[FLIP(position)] + weightFeaturesByHand.pawn.endGame);
+                    }
+                    else if (piece == Piece::WHITEKNIGHT) {
+                        *endgameScore += 3;
+                        return GamePhaseValue(weightFeaturesByHand.knightsMG[position] + weightFeaturesByHand.knight.middleGame, weightFeaturesByHand.knightsEG[position] + weightFeaturesByHand.knight.endGame);
+                    }
+                    else if (piece == Piece::BLACKKNIGHT) {
+                        *endgameScore += 3;
+                        return GamePhaseValue(weightFeaturesByHand.knightsMG[FLIP(position)] + weightFeaturesByHand.knight.middleGame, weightFeaturesByHand.knightsEG[FLIP(position)] + weightFeaturesByHand.knight.endGame);
+                    }
+                    else if (piece == Piece::WHITEBISHOP) {
+                        *endgameScore += 3;
+                        return GamePhaseValue(weightFeaturesByHand.bishopsMG[position] + weightFeaturesByHand.bishop.middleGame, weightFeaturesByHand.bishopsEG[position] + weightFeaturesByHand.bishop.endGame);
+                    }
+                    else if (piece == Piece::BLACKBISHOP) {
+                        *endgameScore += 3;
+                        return GamePhaseValue(weightFeaturesByHand.bishopsMG[FLIP(position)] + weightFeaturesByHand.bishop.middleGame, weightFeaturesByHand.bishopsEG[FLIP(position)] + weightFeaturesByHand.bishop.endGame);
+                    }
+                    else if (piece == Piece::WHITEROOK) {
+                        *endgameScore += 5;
+                        return GamePhaseValue(weightFeaturesByHand.rooksMG[position] + weightFeaturesByHand.rook.middleGame, weightFeaturesByHand.rooksEG[position] + weightFeaturesByHand.rook.endGame);
+                    }
+                    else if (piece == Piece::BLACKROOK) {
+                        *endgameScore += 5;
+                        return GamePhaseValue(weightFeaturesByHand.rooksMG[FLIP(position)] + weightFeaturesByHand.rook.middleGame, weightFeaturesByHand.rooksEG[FLIP(position)] + weightFeaturesByHand.rook.endGame);
+                    }
+                    else if (piece == Piece::WHITEQUEEN) {
+                        *endgameScore += 9;
+                        return GamePhaseValue(weightFeaturesByHand.queensMG[position] + weightFeaturesByHand.queen.middleGame, weightFeaturesByHand.queensEG[position] + weightFeaturesByHand.queen.endGame);
+                    }
+                    else if (piece == Piece::BLACKQUEEN) {
+                        *endgameScore += 9;
+                        return GamePhaseValue(weightFeaturesByHand.queensMG[FLIP(position)] + weightFeaturesByHand.queen.middleGame, weightFeaturesByHand.queensEG[FLIP(position)] + weightFeaturesByHand.queen.endGame);
+                    }
+                    else if (piece == Piece::WHITEKING) {
+                        return GamePhaseValue(weightFeaturesByHand.kingsMG[position] + weightFeaturesByHand.king.middleGame, weightFeaturesByHand.kingsEG[position] + weightFeaturesByHand.king.endGame);
+                    }
+                    else if (piece == Piece::BLACKKING) {
+                        return GamePhaseValue(weightFeaturesByHand.kingsMG[FLIP(position)] + weightFeaturesByHand.king.middleGame, weightFeaturesByHand.kingsEG[FLIP(position)] + weightFeaturesByHand.king.endGame);
+                    }
+                    else {
+                        // Handle any other piece types here
+                        return GamePhaseValue(0, 0);
+                    }
             }
-            else if(piece == Piece::WHITEPAWN){
-                return weightFeaturesByHand.pawnsMG[position] * mgWeight + weightFeaturesByHand.pawnsEG[position] * egWeight + weightFeaturesByHand.pawn.middleGame * mgWeight + weightFeaturesByHand.pawn.endGame * egWeight;
-            }
-            else if(piece == Piece::BLACKPAWN){
-                return weightFeaturesByHand.pawnsMG[FLIP(position)] * mgWeight + weightFeaturesByHand.pawnsEG[FLIP(position)] * egWeight + weightFeaturesByHand.pawn.middleGame * mgWeight + weightFeaturesByHand.pawn.endGame * egWeight;
-            }
-            else if(piece == Piece::WHITEKNIGHT){
-                return weightFeaturesByHand.knightsMG[position] * mgWeight + weightFeaturesByHand.knightsEG[position] * egWeight + weightFeaturesByHand.knight.middleGame * mgWeight + weightFeaturesByHand.knight.endGame * egWeight;
-            }
-            else if(piece == Piece::BLACKKNIGHT){
-                return weightFeaturesByHand.knightsMG[FLIP(position)] * mgWeight + weightFeaturesByHand.knightsEG[FLIP(position)] * egWeight + weightFeaturesByHand.knight.middleGame * mgWeight + weightFeaturesByHand.knight.endGame * egWeight;
-            }
-            else if(piece == Piece::WHITEBISHOP){
-                return weightFeaturesByHand.bishopsMG[position] * mgWeight + weightFeaturesByHand.bishopsEG[position] * egWeight + weightFeaturesByHand.bishop.middleGame * mgWeight + weightFeaturesByHand.bishop.endGame * egWeight;
-            }
-            else if(piece == Piece::BLACKBISHOP){
-                return weightFeaturesByHand.bishopsMG[FLIP(position)] * mgWeight + weightFeaturesByHand.bishopsEG[FLIP(position)] * egWeight + weightFeaturesByHand.bishop.middleGame * mgWeight + weightFeaturesByHand.bishop.endGame * egWeight;
-            }
-            else if(piece == Piece::WHITEROOK){
-                return weightFeaturesByHand.rooksMG[position] * mgWeight + weightFeaturesByHand.rooksEG[position] * egWeight + weightFeaturesByHand.rook.middleGame * mgWeight + weightFeaturesByHand.rook.endGame * egWeight;
-            }
-            else if(piece == Piece::BLACKROOK){
-                return weightFeaturesByHand.rooksMG[FLIP(position)] * mgWeight + weightFeaturesByHand.rooksEG[FLIP(position)] * egWeight + weightFeaturesByHand.rook.middleGame * mgWeight + weightFeaturesByHand.rook.endGame * egWeight;
-            }
-            else if(piece == Piece::WHITEQUEEN){
-                return weightFeaturesByHand.queensMG[position] * mgWeight + weightFeaturesByHand.queensEG[position] * egWeight + weightFeaturesByHand.queen.middleGame * mgWeight + weightFeaturesByHand.queen.endGame * egWeight;
-            }
-            else if(piece == Piece::BLACKQUEEN){
-                return weightFeaturesByHand.queensMG[FLIP(position)] * mgWeight + weightFeaturesByHand.queensEG[FLIP(position)] * egWeight + weightFeaturesByHand.queen.middleGame * mgWeight + weightFeaturesByHand.queen.endGame * egWeight;
-            }
-            else if(piece == Piece::WHITEKING){
-                return weightFeaturesByHand.kingsMG[position] * mgWeight + weightFeaturesByHand.kingsEG[position] * egWeight;
-            }
-            else if(piece == Piece::BLACKKING){
-                return weightFeaturesByHand.kingsMG[FLIP(position)] * mgWeight + weightFeaturesByHand.kingsEG[FLIP(position)] * egWeight;
-
-            }
-            else{
-                return 0;
-            }
-        }
 
         //helper function to get the color of a piece
         static Color color(Piece piece) {
@@ -248,34 +258,33 @@ class Evaluator {
         fe.extract();
         Features features = fe.getFeatures();
 
-        float gamePhase = 1; // completely middlegame
-        // create a value to represent how much of the endgame score we should use
-        if (features.endgameScore < 24){
-            gamePhase = 0; // completely endgame
-        }
-        else{
-            gamePhase = (features.endgameScore - 24) / 24; // somewhere in between
-            //normalize gamePhase to be between 0 and 1
-            if (gamePhase > 1){
-                gamePhase = 1;
-            }
-        }
-
-        float mgWeight = gamePhase;
-        float egWeight = 1 - gamePhase;
-
-        float score = 0;
+        // Initialize the endgame score
+    int taperedEndgameScore = 0; // Use a direct integer instead of a pointer for simplicity
+    int mgscore = 0;
+    int egscore = 0;
+    
+    for (int i = 0; i < 64; i++) {
+        Piece piece = board.at<Piece>(Square(i));
+        GamePhaseValue score = getPieceScore(piece, i, &taperedEndgameScore); // Pass the address of taperedEndgameScore
         
-        
-
-        for (int i = 0; i < 64; i++) {
-            Piece piece = board.at<Piece>(Square(i));
-            if (color(piece)== Color::WHITE)
-                score += getPieceValue(piece, i, mgWeight, egWeight);
-            else if (color(piece) == Color::BLACK)
-                score -= getPieceValue(piece, i, mgWeight, egWeight);
+        if (color(piece) == Color::WHITE) {
+            mgscore += score.middleGame;
+            egscore += score.endGame;
+        } else {
+            mgscore -= score.middleGame;
+            egscore -= score.endGame;
         }
-        
+    }
+    
+    // Calculate the game phase dynamically based on the endgame score
+    float gamePhase = std::max(0.0f, std::min(1.0f, (taperedEndgameScore - 24) / 24.0f)); // Ensure the game phase is between 0 and 1
+    
+    float mgWeight = gamePhase;
+    float egWeight = 1 - gamePhase;
+    
+        // Combine middle game and end game scores based on the current game phase
+        float score = mgscore * mgWeight + egscore * egWeight;
+
         score += features.passedPawns * weightFeaturesByHand.passedPawn.middleGame * mgWeight;
         score += features.passedPawns * weightFeaturesByHand.passedPawn.endGame * egWeight;
 
