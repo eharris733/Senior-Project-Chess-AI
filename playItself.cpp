@@ -11,8 +11,9 @@
 
         // Play a game against itself with a depth of 3
         while (board.isGameOver().second == GameResult::NONE) {
-            board.makeMove(searcher1.search(2));
-            board.makeMove(searcher2.search(2));
+            board.makeMove(searcher1.search(3));
+            board.makeMove(searcher2.search(3));
+            
         }
 
 

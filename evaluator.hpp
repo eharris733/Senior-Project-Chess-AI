@@ -147,35 +147,34 @@ struct weightFeaturesByHand{
 };
 
     //piece values
-    GamePhaseValue pawn = GamePhaseValue(100, 100);
-    GamePhaseValue knight = GamePhaseValue(320, 300);
-    GamePhaseValue bishop = GamePhaseValue(330, 300);
-    GamePhaseValue rook = GamePhaseValue(450, 550);
-    GamePhaseValue queen = GamePhaseValue(900, 900);
-    GamePhaseValue king = GamePhaseValue(100, 100);
+    GamePhaseValue pawn = GamePhaseValue(1000, 1000);
+    GamePhaseValue knight = GamePhaseValue(3050, 3000);
+    GamePhaseValue bishop = GamePhaseValue(3150, 3200);
+    GamePhaseValue rook = GamePhaseValue(4800, 5200);
+    GamePhaseValue queen = GamePhaseValue(9100, 9100);
 
     //values are completely guessed based on whims
     GamePhaseValue passedPawn = GamePhaseValue(40, 80);   // Passed pawn
-    GamePhaseValue doubledPawn = GamePhaseValue(10, 20); // Doubled pawn
-    GamePhaseValue isolatedPawn = GamePhaseValue(10, 20); // Isolated pawn
-    GamePhaseValue weakPawn = GamePhaseValue(20, 10); // Weak pawn
-    GamePhaseValue weakSquare = GamePhaseValue(5, 0); // Weak square
+    GamePhaseValue doubledPawn = GamePhaseValue(-10, -20); // Doubled pawn (not good)
+    GamePhaseValue isolatedPawn = GamePhaseValue(-20, -20); // Isolated pawn (not good)
+    GamePhaseValue weakPawn = GamePhaseValue(-40, -40); // Weak pawn
+    GamePhaseValue weakSquare = GamePhaseValue(-5, -2); // Weak square
     GamePhaseValue passedPawnEnemyKingSquare = GamePhaseValue(0, 50); // Rule of the square
-    GamePhaseValue knightOutposts = GamePhaseValue(20, 5); // Knight is on a weak square
-    GamePhaseValue bishopMobility = GamePhaseValue(20, 20); // How many squares a bishop can move to
-    GamePhaseValue bishopPair = GamePhaseValue(20, 20); // Possessing both colored bishops
+    GamePhaseValue knightOutposts = GamePhaseValue(40, 35); // Knight is on a weak square
+    GamePhaseValue bishopMobility = GamePhaseValue(3, 1); // How many squares a bishop can move to
+    GamePhaseValue bishopPair = GamePhaseValue(15, 20); // Possessing both colored bishops
     GamePhaseValue rookAttackKingFile = GamePhaseValue(15, 5); // Rook is on same file as enemy king
     GamePhaseValue rookAttackKingAdjFile = GamePhaseValue(10, 5); // Rook is on adjacent file to enemy king
     GamePhaseValue rook7thRank = GamePhaseValue(25, 35); // Rook is on second to last rank
-    GamePhaseValue rookConnected = GamePhaseValue(10, 10); // Rooks can guard each other
-    GamePhaseValue rookMobility = GamePhaseValue(20, 5); // How many squares a rook has
-    GamePhaseValue rookBehindPassedPawn = GamePhaseValue(10, 25); // Rook is behind a passed pawn
+    GamePhaseValue rookConnected = GamePhaseValue(20, 10); // Rooks can guard each other
+    GamePhaseValue rookMobility = GamePhaseValue(5, 1); // How many squares a rook has
+    GamePhaseValue rookBehindPassedPawn = GamePhaseValue(10, 35); // Rook is behind a passed pawn
     GamePhaseValue rookOpenFile = GamePhaseValue(15, 5); // Rook has no pawns in its file
-    GamePhaseValue rookSemiOpenFile = GamePhaseValue(10, 10); // Rook has no friendly pawns in its file
-    GamePhaseValue rookAtckWeakPawnOpenColumn = GamePhaseValue(25, 30); // Rook can directly attack a weak enemy pawn
-    GamePhaseValue kingFriendlyPawn = GamePhaseValue(30, 0); // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
-    GamePhaseValue kingNoEnemyPawnNear = GamePhaseValue(20, 5); // How far king is from closest enemy pawn
-    GamePhaseValue kingPressureScore = GamePhaseValue(15, 5); // Multiplier for king pressure
+    GamePhaseValue rookSemiOpenFile = GamePhaseValue(20, 10); // Rook has no friendly pawns in its file
+    GamePhaseValue rookAtckWeakPawnOpenColumn = GamePhaseValue(35, 30); // Rook can directly attack a weak enemy pawn
+    GamePhaseValue kingFriendlyPawn = GamePhaseValue(10, 0); // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
+    GamePhaseValue kingNoEnemyPawnNear = GamePhaseValue(-10, 0); // How far king is from closest enemy pawn
+    GamePhaseValue kingPressureScore = GamePhaseValue(10, 10); // Multiplier for king pressure
 
 
 };
@@ -230,10 +229,10 @@ class Evaluator {
                         return GamePhaseValue(weightFeaturesByHand.queensMG[FLIP(position)] + weightFeaturesByHand.queen.middleGame, weightFeaturesByHand.queensEG[FLIP(position)] + weightFeaturesByHand.queen.endGame);
                     }
                     else if (piece == Piece::WHITEKING) {
-                        return GamePhaseValue(weightFeaturesByHand.kingsMG[position] + weightFeaturesByHand.king.middleGame, weightFeaturesByHand.kingsEG[position] + weightFeaturesByHand.king.endGame);
+                        return GamePhaseValue(weightFeaturesByHand.kingsMG[position], weightFeaturesByHand.kingsEG[position]);
                     }
                     else if (piece == Piece::BLACKKING) {
-                        return GamePhaseValue(weightFeaturesByHand.kingsMG[FLIP(position)] + weightFeaturesByHand.king.middleGame, weightFeaturesByHand.kingsEG[FLIP(position)] + weightFeaturesByHand.king.endGame);
+                        return GamePhaseValue(weightFeaturesByHand.kingsMG[FLIP(position)], weightFeaturesByHand.kingsEG[FLIP(position)]);
                     }
                     else {
                         // Handle any other piece types here
@@ -247,17 +246,28 @@ class Evaluator {
     }
 
     public:
-    Evaluator(Board& b) : board(b) {}
+    Evaluator(Board& b) : board(b) {;}
 
     //rethink how Im breaking up feature extraction and evaluation
     // might just be better to grab the pieces directly from the board here
     // and keep feature extraction to just the more complicated functions
-    float evaluate(){
+    float evaluate(int depth){
+
+        //first check to see if it is a checkmate or stalemate
+        auto gameResult = board.isGameOver().second;
+        if (gameResult != GameResult::NONE) {
+            if (gameResult == GameResult::WIN) {
+                return -1000000 + depth;// large neg. num bc its negated
+            } else if (gameResult == GameResult::DRAW) {
+                // Score for stalemate could be 0 or based on evaluation
+                return 0;
+            }
+        }
         // extract features from the board
         FeatureExtractor fe = FeatureExtractor(board);
         fe.extract();
         Features features = fe.getFeatures();
-
+    float score = 0;
         // Initialize the endgame score
     int taperedEndgameScore = 0; // Use a direct integer instead of a pointer for simplicity
     int mgscore = 0;
@@ -265,16 +275,19 @@ class Evaluator {
     
     for (int i = 0; i < 64; i++) {
         Piece piece = board.at<Piece>(Square(i));
-        GamePhaseValue score = getPieceScore(piece, i, &taperedEndgameScore); // Pass the address of taperedEndgameScore
+        GamePhaseValue pscore = getPieceScore(piece, i, &taperedEndgameScore); // Pass the address of taperedEndgameScore
         
         if (color(piece) == Color::WHITE) {
-            mgscore += score.middleGame;
-            egscore += score.endGame;
+            mgscore += pscore.middleGame;
+            egscore += pscore.endGame;
         } else {
-            mgscore -= score.middleGame;
-            egscore -= score.endGame;
+            mgscore -= pscore.middleGame;
+            egscore -= pscore.endGame;
         }
     }
+    // divide by ten to make the piece tables less powerful
+     mgscore /= 10;
+     egscore /= 10;
     
     // Calculate the game phase dynamically based on the endgame score
     float gamePhase = std::max(0.0f, std::min(1.0f, (taperedEndgameScore - 24) / 24.0f)); // Ensure the game phase is between 0 and 1
@@ -283,7 +296,7 @@ class Evaluator {
     float egWeight = 1 - gamePhase;
     
         // Combine middle game and end game scores based on the current game phase
-        float score = mgscore * mgWeight + egscore * egWeight;
+        score = mgscore * mgWeight + egscore * egWeight;
 
         score += features.passedPawns * weightFeaturesByHand.passedPawn.middleGame * mgWeight;
         score += features.passedPawns * weightFeaturesByHand.passedPawn.endGame * egWeight;

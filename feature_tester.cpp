@@ -3,6 +3,7 @@
 #include "features.hpp"
 #include "chess.hpp"
 #include "feature_extractor.hpp"
+#include "evaluator.hpp"
 
 Features testposition1 = {
     .fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // Default FEN string for the initial chess position
@@ -56,27 +57,27 @@ Features testposition2 = {
 
 Features testposition3 = {
     .fen = "r1bq1r1k/6pp/p2pBb2/1p1Nn2Q/3NP2P/8/PPP5/1K1R3R b - - 2 20", // A random complicated position from the sicilian
-    .passedPawns = 0, // No passed pawns initially
-    .doubledPawns = 0, // No doubled pawns initially
-    .isolatedPawns = 0, // No isolated pawns initially
-    .weakPawns = 0, // No backward pawns initially
-    .weakSquares = 0, // No weak squares initially
-    .passedPawnEnemyKingSquare = 0, // No passed pawn in enemy king's square initially
-    .knightOutposts = 0, // No knight outposts initially
-    .bishopMobility = 0, // No bishop mobility initially
-    .bishopPair = 0, // No bishop pair initially
-    .rookAttackKingFile = 0, // No rook attacking king's file initially
-    .rookAttackKingAdjFile = 0, // No rook attacking adjacent to king's file initially
+    .passedPawns = 0, // No passed pawns 
+    .doubledPawns = 0, // No doubled pawns
+    .isolatedPawns = 1, // white has two, black has one
+    .weakPawns = 0, // No backward pawns 
+    .weakSquares = -1, //black has 5, white has 4
+    .passedPawnEnemyKingSquare = 0, // No passed pawns
+    .knightOutposts = 0, // each side has one
+    .bishopMobility = 2, // whites bishop has 6 open squares, blacks two each have two 
+    .bishopPair = -1, // only black has bishop pair
+    .rookAttackKingFile = 1, // only white is attacking black king's file
+    .rookAttackKingAdjFile = -1, // only black is
     .rook7thRank = 0, // No rook on 7th rank initially
-    .rookConnected = 0, // No connected rooks initially
-    .rookMobility = 0, // No rook mobility initially
-    .rookBehindPassedPawn = 0, // No rook behind passed pawn initially
-    .rookOpenFile = 0, // No rook on open file initially
-    .rookSemiOpenFile = 0, // No rook on semi-open file initially
-    .rookAtckWeakPawnOpenColumn = 0, // No rook attacking weak pawn on open column initially
-    .kingFriendlyPawn = 0, // No friendly pawns near king initially
-    .kingNoEnemyPawnNear = 0, // No enemy pawns near king initially
-    .kingPressureScore = 0.0f // No king pressure initially
+    .rookConnected = 1, // only white is
+    .rookMobility = 6, // white has eleven moves, black has 5
+    .rookBehindPassedPawn = 0, // No passed pawns
+    .rookOpenFile = -1, // Black's rook is on an open file
+    .rookSemiOpenFile = 1, //white's rook is
+    .rookAtckWeakPawnOpenColumn = 1, //whites rook is eyeing an isolated pawn
+    .kingFriendlyPawn = 3, // white has an extra friendly pawn nearby
+    .kingNoEnemyPawnNear = 0, // No enemy pawns near king 
+    .kingPressureScore = 0.0f // should be positive, white has more pressure
 };
 
 
@@ -225,6 +226,7 @@ bool compareFeatures(const Features& extractedFeatures, const Features& testPosi
         isSame = false;
     }
 
+
     
     // Add similar print statements for other features like doubledPawns, isolatedPawns, etc.
 
@@ -236,7 +238,9 @@ int main() {
     // Test position 1
     Board board1 = Board(testposition1.fen);
     FeatureExtractor extractor1 = FeatureExtractor(board1);
+    Evaluator evaluator1 = Evaluator(board1);
     extractor1.extract();
+    std::cout << "evaluation for position 1: " << evaluator1.evaluate(0) << std::endl;
     Features extractedFeatures1 = extractor1.getFeatures();
     if (compareFeatures(extractedFeatures1, testposition1)) {
         std::cout << "Test position 1: Features match!" << std::endl;
@@ -247,7 +251,9 @@ int main() {
     // Test position 2
     Board board2 = Board(testposition2.fen);
     FeatureExtractor extractor2 = FeatureExtractor(board2);
+    Evaluator evaluator2 = Evaluator(board2);
     extractor2.extract();
+    std::cout << "evaluation for position 2: " << evaluator2.evaluate(0) << std::endl;
     Features extractedFeatures2 = extractor2.getFeatures();
     if (compareFeatures(extractedFeatures2, testposition2)) {
         std::cout << "Test position 2: Features match!" << std::endl;
@@ -258,12 +264,17 @@ int main() {
     // Test position 3
     Board board3 = Board(testposition3.fen);
     FeatureExtractor extractor3 = FeatureExtractor(board3);
+    Evaluator evaluator3 = Evaluator(board3);
     extractor3.extract();
     Features extractedFeatures3 = extractor3.getFeatures();
+    std::cout << "evaluation for position 3: " << evaluator3.evaluate(0) << std::endl;
     if (compareFeatures(extractedFeatures3, testposition3)) {
         std::cout << "Test position 3: Features match!" << std::endl;
     } else {
         std::cout << "Test position 3: Features do not match!" << std::endl;
     }
-    return 0;
+
+
+
+   
 }

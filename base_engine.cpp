@@ -59,7 +59,7 @@ int main() {
         iss >> token;
 
         if (token == "uci") {
-            cout << "id name v0" << endl;
+            cout << "id name current" << endl;
             cout << "id author Elliot Harris" << endl;
             cout << "uciok" << endl;
         } else if (token == "isready") {
