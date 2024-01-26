@@ -259,7 +259,8 @@ class Evaluator {
         }
         if (noMoves) {
             if(board.inCheck()){
-                    return board.sideToMove() == Color::WHITE ? -100000 + depth : 100000 - depth;
+                // right now we should be subtracting depth, and adding depth
+                    return board.sideToMove() == Color::WHITE ? -100000 - depth : 100000 + depth;
             }
             else{
                 return 0;

@@ -24,7 +24,7 @@ public:
         int beta = INT_MAX;
         Move bestMove;
         Movelist moves;
-        movegen::legalmoves(moves, board);
+        movegen::legalmoves<MoveGenType::ALL>(moves, board);
         sortMoves(moves, board);
 
         if (moves.empty()) {
@@ -34,12 +34,11 @@ public:
 
         for (const Move& move : moves) {
             board.makeMove(move);
-            if(uci::moveToUci(move) == "h4h2"){
-                std::cout << "found move" << std::endl;
-                 int x = evaluator.evaluate(0, false);
-            }
             int eval = -negamax(depth - 1, -beta, -alpha);
             board.unmakeMove(move);
+
+            // for debugging purposes
+            //std::cout << " eval for move " << uci::moveToUci(move) << " is " << eval << std::endl;
 
             if (eval > bestScore) {
                 bestScore = eval;
@@ -79,7 +78,7 @@ private:
 
         int bestScore = INT_MIN + 1;
         Movelist moves;
-        movegen::legalmoves(moves, board);
+       movegen::legalmoves<MoveGenType::ALL>(moves, board);
         if (depth == 0 || moves.size() == 0) {
             return evaluate(depth, moves.size() == 0); // Call evaluate without parameters, assuming it calculates the score based on the current board state
         }
@@ -103,7 +102,7 @@ private:
 
 
     int evaluate(int depth, bool noMoves) {
-        int rawScore = evaluator.evaluate(depth); // Positive for White's advantage, negative for Black's
+        int rawScore = evaluator.evaluate(depth, noMoves); // Positive for White's advantage, negative for Black's
         return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
         // for testing purposes going to return a 0 on all positions
         //return 0;
