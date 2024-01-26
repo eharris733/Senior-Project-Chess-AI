@@ -5,6 +5,7 @@
 #include "chess.hpp"
 #include "features.hpp"
 #include "feature_extractor.hpp"
+#pragma once
 
 using namespace chess;
 using namespace std;
@@ -251,17 +252,19 @@ class Evaluator {
     //rethink how Im breaking up feature extraction and evaluation
     // might just be better to grab the pieces directly from the board here
     // and keep feature extraction to just the more complicated functions
-    float evaluate(int depth){
-
-        //first check to see if it is a checkmate or stalemate
-        auto gameResult = board.isGameOver().second;
-        if (gameResult != GameResult::NONE) {
-            if (gameResult == GameResult::WIN) {
-                return -1000000 + depth;// large neg. num bc its negated
-            } else if (gameResult == GameResult::DRAW) {
-                // Score for stalemate could be 0 or based on evaluation
+    // we should never call this on a position that is a game over state
+    float evaluate(int depth, bool noMoves = false){
+        if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
+            return 0; // Score representing a draw
+        }
+        if (noMoves) {
+            if(board.inCheck()){
+                    return board.sideToMove() == Color::WHITE ? -100000 + depth : 100000 - depth;
+            }
+            else{
                 return 0;
             }
+            
         }
         // extract features from the board
         FeatureExtractor fe = FeatureExtractor(board);
