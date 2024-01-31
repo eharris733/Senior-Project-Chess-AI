@@ -18,6 +18,9 @@
 #include "chess.hpp" // Include your Board class header
 #include "searcher.hpp" // Include your Searcher class header
 #include "basic_searcher.hpp" // Include your BasicSearcher class header
+#include <atomic>
+
+std::atomic<bool> stop(false);
 
 int main() {
     // Map of FEN strings to their best moves
@@ -34,24 +37,19 @@ int main() {
         // Add all other FEN strings and their best moves here
     };
 
-    
+    // Create a new Board object
     Board board;
-    Searcher searcher(board);
+    Searcher searcher(board); // Create a new Searcher object
 
     for (const auto& [fen, bestMove] : fenToBestMove) {
-        
         board.setFen(fen); // Initialize the board with the FEN string
-        
 
-        // Perform the search to get the best move. Adjust based on your implementation.
-        Move move = searcher.search(6); // This should be adjusted to match your implementation
+        SearchResult result = searcher.search(6); 
 
-        // Assuming Move.toString() converts the move to a string. Adjust as necessary.
-        std::string suggestedMove = uci::moveToUci(move); // Convert the suggested move to a string
+        std::string suggestedMove = uci::moveToUci(result.bestMove); // Convert the suggested move to UCI format
 
-        // Check if the suggested move matches the known best move
         if (suggestedMove == bestMove) {
-            std::cout << "Correct move for position: " << fen << std::endl;
+            std::cout << "Correct move for position: " << fen << " | " << suggestedMove << std::endl;
         } else {
             std::cout << "Incorrect move for position: " << fen << std::endl;
             std::cout << "Suggested move: " << suggestedMove << " | Best move: " << bestMove << std::endl;

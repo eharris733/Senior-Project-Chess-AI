@@ -1,3 +1,4 @@
+#pragma once
 #include "chess.hpp"
 #include "evaluator.hpp"
 #include <climits> // For INT_MIN and INT_MAX
@@ -6,91 +7,117 @@
 #include <iostream>
 #include <algorithm>
 
+
+
 using namespace chess;
+
+// Struct to hold the results of a search
+struct SearchResult {
+    Move bestMove;
+    int depth;
+    int score;
+    int nodes;
+};
+
+// variable that is called when the engine is told to stop searching
+// will also be used for time control
+extern std::atomic<bool> stop;
 
 class Searcher {
 public:
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard) {}
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard) {
+    }
 
-    Move search(int depth) {
-        if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
-            // Assuming Move() is a valid constructor for a 'null' move indicating a draw or no action can be taken.
-            std::cout << "bestmove " << '0000' << std::endl;
-            return Move();
-        }
+   SearchResult search(int depth) {
+    SearchResult result;
+    int currentDepth = 2; // Start with a depth of 1
+    result.bestMove = Move::NULL_MOVE;
+    result.depth = 0;
+    result.score = INT_MIN;
+    result.nodes = 0;
 
+    // while we haven't been told to stop, and we haven't reached the desired depth
+    while (currentDepth <= depth && !stop.load()) {
         int bestScore = INT_MIN + 1;
         int alpha = INT_MIN + 1;
         int beta = INT_MAX;
-        Move bestMove;
+
         Movelist moves;
         movegen::legalmoves<MoveGenType::ALL>(moves, board);
-        sortMoves(moves, board);
-
-        if (moves.empty()) {
-            // If there are no legal moves, directly return a 'null' move. The game state should be evaluated separately.
-            return Move();
-        }
+        sortMoves(moves, board, result.bestMove);
 
         for (const Move& move : moves) {
-            board.makeMove(move);
-            int eval = -negamax(depth - 1, -beta, -alpha);
-            board.unmakeMove(move);
+            if (stop.load()) break; // Check for stop signal
 
-            // for debugging purposes
-            //std::cout << " eval for move " << uci::moveToUci(move) << " is " << eval << std::endl;
+            board.makeMove(move);
+            int eval = -negamax(currentDepth, -beta, -alpha, result.bestMove); // Use currentDepth correctly
+            board.unmakeMove(move);
 
             if (eval > bestScore) {
                 bestScore = eval;
-                bestMove = move;
+                result.bestMove = move;
+                result.score = bestScore; // Update the score in result
             }
-            alpha = max(alpha, eval);
+
+            alpha = std::max(alpha, eval);
             if (alpha >= beta) {
-                break;
+                break; // Alpha-beta pruning
             }
+
+            result.nodes++; // Assuming this counts processed moves
         }
 
-        std::cout << "bestmove " << uci::moveToUci(bestMove) 
-                  << " info depth " << depth << " score cp " << bestScore << std::endl;
-
-        return bestMove; // Return the best move found
+        result.depth = currentDepth; // Update the depth after each iteration
+        currentDepth++; // Increment depth for the next iteration
     }
+
+    return result; // Return the search result
+}
+
 
 private:
     Board& board;
     Evaluator evaluator;
 
-    void sortMoves(Movelist& moves, Board& board) {
-        std::sort(moves.begin(), moves.end(), [&board](const Move& a, const Move& b) -> bool {
+    //sorts in order of 
+    // PV, then captures, then everything else
+    void sortMoves(Movelist& moves, Board& board, Move pv) {
+        std::sort(moves.begin(), moves.end(), [&board, &pv](const Move& a, const Move& b) -> bool {
+            if (pv != Move::NULL_MOVE) {
+                if (a == pv) {
+                    return true;
+                } else if (b == pv) {
+                    return false;
+                }
+            }
+
             bool aIsCapture = board.isCapture(a);
             bool bIsCapture = board.isCapture(b);
             return aIsCapture && !bIsCapture; // Prioritize captures over non-captures
         });
-        // Note: Implementing checks and other prioritizations would require additional logic here.
+        // May want to add other logic here later
     }
 
-    int negamax(int depth, int alpha, int beta) {
-        if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
+    int negamax(int depth, int alpha, int beta, Move pv) {
+        if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw() || stop.load()) {
             return 0; // Draw score
         }
 
-        
-
         int bestScore = INT_MIN + 1;
         Movelist moves;
-       movegen::legalmoves<MoveGenType::ALL>(moves, board);
+        movegen::legalmoves<MoveGenType::ALL>(moves, board);
         if (depth == 0 || moves.size() == 0) {
             return evaluate(depth, moves.size() == 0); // Call evaluate without parameters, assuming it calculates the score based on the current board state
         }
-        sortMoves(moves, board);
+        sortMoves(moves, board, pv);
 
         for (const Move& move : moves) {
             board.makeMove(move);
-            int eval = -negamax(depth - 1, -beta, -alpha);
+            int eval = -negamax(depth - 1, -beta, -alpha, pv);
             board.unmakeMove(move);
 
             bestScore = std::max(bestScore, eval);
-            alpha = max(alpha, eval);
+            alpha = std::max(alpha, eval);
             if (alpha >= beta) {
                 break; // Alpha-beta pruning
             }
@@ -99,8 +126,6 @@ private:
         return bestScore; // Return the alpha score as the best score achievable at this node
     }
 
-
-
     int evaluate(int depth, bool noMoves) {
         int rawScore = evaluator.evaluate(depth, noMoves); // Positive for White's advantage, negative for Black's
         return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
@@ -108,3 +133,4 @@ private:
         //return 0;
     }
 };
+

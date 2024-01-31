@@ -3,6 +3,10 @@
 #include <sstream>
 #include <string>
 #include <random>
+#include <thread> // For std::thread
+#include <mutex> // For std::mutex
+#include <atomic> // For std::atomic
+#include <memory> // For unique_ptr
 
 // Include necessary headers from Disservin's chess library
 #include "chess.hpp"
@@ -10,6 +14,12 @@
 
 using namespace chess;
 using namespace std;
+
+chess::Board board;
+unique_ptr<Searcher> searcher; // Use fully qualified name
+mutex searchThreadMutex;
+unique_ptr<std::thread> searchThread;
+atomic<bool> stop(false);
 
 // Function to handle the "position" command
 void setPosition(Board& board, istringstream& iss) {
@@ -33,52 +43,57 @@ void setPosition(Board& board, istringstream& iss) {
     }
 }
 
-// Function to get a random move from the current position
-void getRandomMove(const chess::Board& board) {
-    Movelist moves;
-    movegen::legalmoves(moves, board);
+void startSearch() {
+    if (searcher) {
+        lock_guard<mutex> guard(searchThreadMutex);
+        if (searchThread && searchThread->joinable()) {
+            searchThread->join(); // Ensure the previous search is finished
+        }
+        stop = false; // Reset the stop signal
+        // Create a new thread for the search operation
+        searchThread = make_unique<thread>([&]() {
+            SearchResult result = searcher->search(6); // Start search with depth 6
+            cout << "bestmove " << uci::moveToUci(result.bestMove)
+                 << " info depth " << result.depth << " score cp " << result.score << endl;
+        });
+    }
+}
 
-    if (!moves.empty()) {
-        uniform_int_distribution<> dis(0, moves.size() - 1);
-        static mt19937 gen(random_device{}());
-        Move random_move =  moves[dis(gen)];
-        cout << "bestmove " << uci::moveToUci(random_move) << endl;
-    } else {
-        // No legal moves, should signal a checkmate or stalemate
-        cout << "bestmove 0000" << endl; // 0000 is used to signal no move (game over situation)
+void stopSearch() {
+    stop = true; // Signal the search to stop
+    lock_guard<mutex> guard(searchThreadMutex);
+    if (searchThread && searchThread->joinable()) {
+        searchThread->join(); // Wait for the search to finish
     }
 }
 
 int main() {
-    Board board;
+    searcher = make_unique<Searcher>(board); // Use fully qualified name
     string line, token;
-    Searcher searcher(board);
 
     while (getline(cin, line)) {
         istringstream iss(line);
         iss >> token;
 
         if (token == "uci") {
-            cout << "id name current" << endl;
-            cout << "id author Elliot Harris" << endl;
+            cout << "id name MyChessEngine" << endl;
+            cout << "id author My Name" << endl;
+            // Output other UCI options here, if any
             cout << "uciok" << endl;
         } else if (token == "isready") {
             cout << "readyok" << endl;
-        } else if (token == "ucinewgame") {
-            board.setFen(constants::STARTPOS);
         } else if (token == "position") {
             setPosition(board, iss);
         } else if (token == "go") {
-            searcher.search(6);
+            startSearch();
+        } else if (token == "stop") {
+            stopSearch();
         } else if (token == "quit") {
-            break;
+            stopSearch(); // Ensure the search thread is properly joined before quitting
+            break; // Exit the loop and end the program
         }
-
-    // Implement other UCI commands as needed
-
+        // Handle other UCI commands as needed
     }
 
-    return 0;
+    return 0; // searcher is automatically deleted due to unique_ptr
 }
-
-

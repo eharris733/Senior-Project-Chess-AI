@@ -70,7 +70,8 @@
         "concepts": "cpp",
         "algorithm": "cpp",
         "numeric": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "thread": "cpp"
     },
     
         "files.exclude": {
