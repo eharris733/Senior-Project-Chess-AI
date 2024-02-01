@@ -27,20 +27,21 @@ class Searcher {
 public:
     Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard) {
     }
-
-   SearchResult search(int depth) {
     SearchResult result;
-    int currentDepth = 2; // Start with a depth of 1
+   SearchResult search(int depth) {
+    
     result.bestMove = Move::NULL_MOVE;
-    result.depth = 0;
+    result.depth = 2;
     result.score = INT_MIN;
     result.nodes = 0;
 
     // while we haven't been told to stop, and we haven't reached the desired depth
-    while (currentDepth <= depth && !stop.load()) {
+    while (result.depth <= depth && !stop.load()) {
         int bestScore = INT_MIN + 1;
         int alpha = INT_MIN + 1;
         int beta = INT_MAX;
+
+        
 
         Movelist moves;
         movegen::legalmoves<MoveGenType::ALL>(moves, board);
@@ -50,13 +51,14 @@ public:
             if (stop.load()) break; // Check for stop signal
 
             board.makeMove(move);
-            int eval = -negamax(currentDepth, -beta, -alpha, result.bestMove); // Use currentDepth correctly
+            int eval = -negamax(result.depth, -beta, -alpha, result.bestMove); // Use currentDepth correctly
             board.unmakeMove(move);
 
             if (eval > bestScore) {
                 bestScore = eval;
                 result.bestMove = move;
                 result.score = bestScore; // Update the score in result
+                
             }
 
             alpha = std::max(alpha, eval);
@@ -64,11 +66,11 @@ public:
                 break; // Alpha-beta pruning
             }
 
-            result.nodes++; // Assuming this counts processed moves
+            
+            
         }
-
-        result.depth = currentDepth; // Update the depth after each iteration
-        currentDepth++; // Increment depth for the next iteration
+        cout << " info depth " << result.depth << " score cp " << bestScore << " pv " << uci::moveToUci(result.bestMove) << " nodes " << result.nodes << endl;
+        result.depth ++; // Update the depth after each iteration
     }
 
     return result; // Return the search result
@@ -122,6 +124,8 @@ private:
                 break; // Alpha-beta pruning
             }
         }
+
+        result.nodes++; // Assuming this counts processed moves
 
         return bestScore; // Return the alpha score as the best score achievable at this node
     }

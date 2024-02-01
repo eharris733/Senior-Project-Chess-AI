@@ -52,7 +52,7 @@ void startSearch() {
         stop = false; // Reset the stop signal
         // Create a new thread for the search operation
         searchThread = make_unique<thread>([&]() {
-            SearchResult result = searcher->search(6); // Start search with depth 6
+            SearchResult result = searcher->search(5); // Start search with depth 6
             cout << "bestmove " << uci::moveToUci(result.bestMove)
                  << " info depth " << result.depth << " score cp " << result.score << endl;
         });
