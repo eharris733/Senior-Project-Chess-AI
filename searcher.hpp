@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+#include <chrono> // for timer
 
 
 
@@ -25,21 +26,36 @@ extern std::atomic<bool> stop;
 
 class Searcher {
 public:
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard) {
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard){
     }
-    SearchResult result;
-   SearchResult search(int depth) {
+SearchResult result;
+   SearchResult search(int timeRemaining, int timeIncrement, int movesToGo) {
+    
+    // crude time control
+    int timeForThisMove = timeRemaining / movesToGo + timeIncrement;
+
+    //start the timer
+    auto startTime = chrono::steady_clock::now();
     
     result.bestMove = Move::NULL_MOVE;
     result.depth = 2;
     result.score = INT_MIN;
     result.nodes = 0;
 
-    // while we haven't been told to stop, and we haven't reached the desired depth
-    while (result.depth <= depth && !stop.load()) {
+    // while we haven't been told to stop, and we haven't reached the desired think time
+    while (!stop.load()) {
         int bestScore = INT_MIN + 1;
         int alpha = INT_MIN + 1;
         int beta = INT_MAX;
+
+        //check to see if we have reached the desired think time
+        auto currentTime = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
+
+        if (elapsed >= timeForThisMove) {
+            stop = true; // Signal to stop the search
+            break;
+        }
 
         
 
@@ -73,6 +89,7 @@ public:
         result.depth ++; // Update the depth after each iteration
     }
 
+    stop = false; // Reset the stop signal
     return result; // Return the search result
 }
 
@@ -101,6 +118,7 @@ private:
     }
 
     int negamax(int depth, int alpha, int beta, Move pv) {
+        // if stop command, returning 0 is risky, will have to fix this later
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw() || stop.load()) {
             return 0; // Draw score
         }
