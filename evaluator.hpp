@@ -253,20 +253,7 @@ class Evaluator {
     // might just be better to grab the pieces directly from the board here
     // and keep feature extraction to just the more complicated functions
     // we should never call this on a position that is a game over state
-    float evaluate(int depth, bool noMoves = false){
-        if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
-            return 0; // Score representing a draw
-        }
-        if (noMoves) {
-            if(board.inCheck()){
-                // right now we should be subtracting depth, and adding depth
-                    return board.sideToMove() == Color::WHITE ? -100000 - depth : 100000 + depth;
-            }
-            else{
-                return 0;
-            }
-            
-        }
+    float evaluate(int depth){
         // extract features from the board
         FeatureExtractor fe = FeatureExtractor(board);
         fe.extract();

@@ -1,6 +1,7 @@
 #pragma once
 #include "chess.hpp"
 #include "evaluator.hpp"
+#include "t_table.hpp"
 #include <climits> // For INT_MIN and INT_MAX
 #include <cstdlib>
 #include <ctime>
@@ -15,6 +16,7 @@ using namespace chess;
 // Struct to hold the results of a search
 struct SearchResult {
     Move bestMove;
+    Move bestMove2; // last depth's best move
     int depth;
     int score;
     int nodes;
@@ -26,26 +28,30 @@ extern std::atomic<bool> stop;
 
 class Searcher {
 public:
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard){
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 20){
     }
-SearchResult result;
    SearchResult search(int timeRemaining, int timeIncrement, int movesToGo) {
     
     // crude time control
-    int timeForThisMove = timeRemaining / movesToGo + timeIncrement;
+    // we divide by 2 because the last depth is probably going to more than 5 times  as long as the rest
+    int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 5;
 
     //start the timer
     auto startTime = chrono::steady_clock::now();
     
     result.bestMove = Move::NULL_MOVE;
+    result.bestMove2 = Move::NULL_MOVE;
     result.depth = 2;
-    result.score = INT_MIN;
+    result.score = INT_MIN + 1;
     result.nodes = 0;
+
+    //clear the table for every search
+    tt.clear();
 
     // while we haven't been told to stop, and we haven't reached the desired think time
     while (!stop.load()) {
-        int bestScore = INT_MIN + 1;
-        int alpha = INT_MIN + 1;
+        int bestScore = result.score;
+        int alpha = result.score;
         int beta = INT_MAX;
 
         //check to see if we have reached the desired think time
@@ -58,34 +64,30 @@ SearchResult result;
         }
 
         
-
         Movelist moves;
         movegen::legalmoves<MoveGenType::ALL>(moves, board);
-        sortMoves(moves, board, result.bestMove);
+        sortMoves(moves, board, result); // we don't have a pv yet
 
         for (const Move& move : moves) {
             if (stop.load()) break; // Check for stop signal
 
             board.makeMove(move);
-            int eval = -negamax(result.depth, -beta, -alpha, result.bestMove); // Use currentDepth correctly
+            int eval = -negamax(result.depth, -beta, -alpha, true); //isroot = true
             board.unmakeMove(move);
 
             if (eval > bestScore) {
                 bestScore = eval;
                 result.bestMove = move;
                 result.score = bestScore; // Update the score in result
-                
             }
 
             alpha = std::max(alpha, eval);
             if (alpha >= beta) {
                 break; // Alpha-beta pruning
-            }
-
-            
+            }  
             
         }
-        cout << " info depth " << result.depth << " score cp " << bestScore << " pv " << uci::moveToUci(result.bestMove) << " nodes " << result.nodes << endl;
+        cout << " info depth " << result.depth << " score cp " << result.score << " pv " << uci::moveToUci(result.bestMove) << " nodes " << result.nodes << endl;
         result.depth ++; // Update the depth after each iteration
     }
 
@@ -95,17 +97,174 @@ SearchResult result;
 
 
 private:
-    Board& board;
-    Evaluator evaluator;
+    Board& board; // The board to search on
+    Evaluator evaluator; // our evaluation function
+    TranspositionTable tt; // Transposition table
+
+    // keep track of moves
+    SearchResult result;
+
+    // int negamax(int depth, int alpha, int beta, bool isRoot = false) {
+
+    //     //we don't need to check for stop here, as it is checked in the search function
+    //     // we can only stop between depths
+    //     // reason being... I'm lazy 
+    //     // Check for draw conditions
+    //     if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
+    //         return 0;
+    //     }
+
+    //     // // transposition table check first
+    //     // uint64_t zobristKey = board.zobrist();
+    //     // auto ttEntry = tt.retrieve(zobristKey);
+
+    // //     if (ttEntry.has_value() && ttEntry->depth >= depth) {
+    // //     if ((ttEntry->nodeType == NodeType::EXACT) ||
+    // //         (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
+    // //         (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
+    // //         // This entry has useful information
+    // //         return ttEntry->score;
+    // //     }
+    // // }
+
+
+        
+
+    //     int bestScore = INT_MIN + 1;
+    //     Move localBestMove = Move::NULL_MOVE;
+    //     Movelist moves;
+    //     movegen::legalmoves<MoveGenType::ALL>(moves, board);
+    //     if (moves.size() == 0) {
+    //         if(board.inCheck()){
+    //             // right now we should be subtracting depth, and adding depth
+    //                 return -100000 + depth;
+    //         }
+    //         else{
+    //             //stalemate = draw
+    //             return 0;
+    //         }
+            
+    //     }
+    //     // later this will be replaced with a quiescence search
+    //     if (depth == 0) {
+    //         return evaluate(depth); // Call evaluate without parameters, assuming it calculates the score based on the current board state
+    //         // evaluate DOES NOT check for terminal states
+    //     }
+    //     sortMoves(moves, board, result);
+    //     for (const Move& move : moves) {
+    //         board.makeMove(move);
+    //         int eval = -negamax(depth - 1, -beta, -alpha);
+    //         board.unmakeMove(move);
+
+    //         if (eval > bestScore) {
+    //             bestScore = eval;
+    //             localBestMove = move;
+    //         }
+    //         alpha = std::max(alpha, eval);
+    //         if (alpha >= beta) {
+    //             break; // Alpha-beta pruning
+    //         }
+    //     }
+
+    //     result.nodes++; // Assuming this counts processed moves
+
+    //     // if we reach the end of the search at the target depth, we want to store the best move
+    //     if(isRoot){
+    //         result.bestMove = localBestMove;
+    //     }
+    //     // Store the best move in the transposition table
+    //     NodeType nodeType;
+    //     if (bestScore <= alpha) {
+    //         nodeType = NodeType::UPPERBOUND; // Failed low, this is a beta node
+    //     } else if (bestScore >= beta) {
+    //         nodeType = NodeType::LOWERBOUND; // Failed high, this is an alpha node
+    //     } else {
+    //         nodeType = NodeType::EXACT; // Exact score
+    //     }
+
+    //     // tt.store(zobristKey, bestScore, depth, nodeType, localBestMove);
+        
+
+    //     return bestScore; // Return the alpha score as the best score achievable at this node
+    // }
+
+    NodeType determineNodeType(float bestScore, float alpha, float beta){
+        if (bestScore <= alpha) {
+            return NodeType::UPPERBOUND; // Failed low, this is a beta node
+        } else if (bestScore >= beta) {
+            return NodeType::LOWERBOUND; // Failed high, this is an alpha node
+        } else {
+            return NodeType::EXACT; // Exact score
+        }
+    }
+
+    int negamax(int depth, int alpha, int beta, bool isRoot = false) {
+    if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
+        return 0; // Draw score
+    }
+
+    uint64_t zobristKey = board.zobrist();
+    auto ttEntry = tt.retrieve(zobristKey);
+
+    if (ttEntry.has_value() && ttEntry->depth >= depth) {
+        if ((ttEntry->nodeType == NodeType::EXACT) ||
+            (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
+            (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
+            // If this is the root node and we have a best move stored, update result.bestMove.
+            if (isRoot && ttEntry->bestMove != Move::NULL_MOVE) {
+                result.bestMove = ttEntry->bestMove;
+            }
+            return ttEntry->score; // Use the score from the transposition table.
+        }
+    }
+
+    int bestScore = INT_MIN + 1;
+        Move localBestMove = Move::NULL_MOVE;
+        Movelist moves;
+        movegen::legalmoves<MoveGenType::ALL>(moves, board);
+
+    if (moves.size() == 0) {
+        // Check for checkmate or stalemate
+        return board.inCheck() ? (-100000 - depth) : 0;
+    }
+
+    if (depth == 0) {
+        return evaluate(depth); // Leaf node evaluation
+    }
+
+    sortMoves(moves, board, result); // Pre-sort moves based on heuristics
+
+    for (const Move& move : moves) {
+        board.makeMove(move);
+        int score = -negamax(depth - 1, -beta, -alpha, false); // Recurse with flipped bounds and not root.
+        board.unmakeMove(move);
+
+        if (score > bestScore) {
+            bestScore = score;
+            localBestMove = move; // Found a new best move.
+        }
+
+        alpha = std::max(alpha, score);
+        if (alpha >= beta) {
+            break; // Alpha-beta cutoff.
+        }
+    }
+
+    // Update the transposition table with the new best score and move found at this depth.
+    tt.save(zobristKey, depth, bestScore, determineNodeType(bestScore, alpha, beta), localBestMove);
+
+    return bestScore;
+}
+
 
     //sorts in order of 
     // PV, then captures, then everything else
-    void sortMoves(Movelist& moves, Board& board, Move pv) {
-        std::sort(moves.begin(), moves.end(), [&board, &pv](const Move& a, const Move& b) -> bool {
-            if (pv != Move::NULL_MOVE) {
-                if (a == pv) {
+    void sortMoves(Movelist& moves, Board& board, SearchResult& result) {
+        std::sort(moves.begin(), moves.end(), [&board, &result](const Move& a, const Move& b) -> bool {
+            if (result.bestMove != Move::NULL_MOVE) {
+                if (a == result.bestMove) {
                     return true;
-                } else if (b == pv) {
+                } else if (b == result.bestMove) {
                     return false;
                 }
             }
@@ -117,42 +276,9 @@ private:
         // May want to add other logic here later
     }
 
-    int negamax(int depth, int alpha, int beta, Move pv) {
-        // if stop command, returning 0 is risky, will have to fix this later
-        if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw() || stop.load()) {
-            return 0; // Draw score
-        }
-
-        int bestScore = INT_MIN + 1;
-        Movelist moves;
-        movegen::legalmoves<MoveGenType::ALL>(moves, board);
-        if (depth == 0 || moves.size() == 0) {
-            return evaluate(depth, moves.size() == 0); // Call evaluate without parameters, assuming it calculates the score based on the current board state
-        }
-        sortMoves(moves, board, pv);
-
-        for (const Move& move : moves) {
-            board.makeMove(move);
-            int eval = -negamax(depth - 1, -beta, -alpha, pv);
-            board.unmakeMove(move);
-
-            bestScore = std::max(bestScore, eval);
-            alpha = std::max(alpha, eval);
-            if (alpha >= beta) {
-                break; // Alpha-beta pruning
-            }
-        }
-
-        result.nodes++; // Assuming this counts processed moves
-
-        return bestScore; // Return the alpha score as the best score achievable at this node
-    }
-
-    int evaluate(int depth, bool noMoves) {
-        int rawScore = evaluator.evaluate(depth, noMoves); // Positive for White's advantage, negative for Black's
+    int evaluate(int depth) {
+        int rawScore = evaluator.evaluate(depth); // Positive for White's advantage, negative for Black's
         return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
-        // for testing purposes going to return a 0 on all positions
-        //return 0;
     }
 };
 

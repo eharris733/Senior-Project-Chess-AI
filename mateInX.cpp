@@ -44,7 +44,7 @@ int main() {
     for (const auto& [fen, bestMove] : fenToBestMove) {
         board.setFen(fen); // Initialize the board with the FEN string
 
-        SearchResult result = searcher.search(1000, 0, 1); // 1 move to go means use all the time on the clock, current is ten seconds each
+        SearchResult result = searcher.search(10000, 0, 1); // 1 move to go means use all the time on the clock, current is ten seconds each
 
         std::string suggestedMove = uci::moveToUci(result.bestMove); // Convert the suggested move to UCI format
 
