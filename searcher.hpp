@@ -46,7 +46,7 @@ public:
         tt.clear();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (!stop.load()) {
+        while (!stop.load() && result.depth <= MAX_DEPTH) {
             int bestScore = result.score;
             int alpha = result.score;
             int beta = INT_MAX;
@@ -94,6 +94,7 @@ private:
     Board& board; // The board to search on
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
+    int MAX_DEPTH = 100;
 
     // keep track of moves
     SearchResult result;
