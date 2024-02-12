@@ -5,6 +5,7 @@
 #include <climits> // For INT_MIN and INT_MAX
 #include <cstdlib>
 #include <ctime>
+#include <map>
 #include <iostream>
 #include <algorithm>
 #include <chrono> // for timer
@@ -15,6 +16,7 @@ using namespace chess;
 struct SearchResult {
     Move bestMove;
     Move bestMove2; // last depth's best move
+    Move killerMoves[2]; // store two killer moves
     int depth;
     int score;
     int nodes;
@@ -26,7 +28,7 @@ extern std::atomic<bool> stop;
 
 class Searcher {
 public:
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 20){
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 26){
     }
     SearchResult search(int timeRemaining, int timeIncrement, int movesToGo) {
         // crude time control
@@ -39,33 +41,33 @@ public:
         result.bestMove = Move::NULL_MOVE;
         result.bestMove2 = Move::NULL_MOVE;
         result.depth = 2;
-        result.score = INT_MIN + 1;
+        result.score = INT_MIN;
         result.nodes = 0;
 
         // clear the table for every search
-        tt.clear();
+        //tt.clear();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (!stop.load() && result.depth <= MAX_DEPTH) {
-            int bestScore = result.score;
-            int alpha = result.score;
+        while (result.depth < 7) {
+            int bestScore = INT_MIN;
+            int alpha = INT_MIN;
             int beta = INT_MAX;
 
-            // check to see if we have reached the desired think time
-            auto currentTime = chrono::steady_clock::now();
-            auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
+            // // check to see if we have reached the desired think time
+            // auto currentTime = chrono::steady_clock::now();
+            // auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
 
-            if (elapsed >= timeForThisMove) {
-                stop = true; // Signal to stop the search
-                break;
-            }
+            // if (elapsed >= timeForThisMove) {
+            //     stop = true; // Signal to stop the search
+            //     break;
+            // }
 
             Movelist moves;
             movegen::legalmoves<MoveGenType::ALL>(moves, board);
             sortMoves(moves, board, result); // we don't have a pv yet
 
             for (const Move& move : moves) {
-                if (stop.load()) break; // Check for stop signal
+                //if (stop.load()) break; // Check for stop signal
 
                 board.makeMove(move);
                 int eval = -negamax(result.depth, -beta, -alpha, true); // isroot = true
@@ -114,20 +116,16 @@ private:
             return 0; // Draw score
         }
 
-        uint64_t zobristKey = board.zobrist();
-        auto ttEntry = tt.retrieve(zobristKey);
+        // uint64_t zobristKey = board.zobrist();
+        // auto ttEntry = tt.retrieve(zobristKey);
 
-        if (ttEntry.has_value() && ttEntry->depth >= depth) {
-            if ((ttEntry->nodeType == NodeType::EXACT) ||
-                (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
-                (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
-                // If this is the root node and we have a best move stored, update result.bestMove.
-                if (isRoot && ttEntry->bestMove != Move::NULL_MOVE) {
-                    result.bestMove = ttEntry->bestMove;
-                }
-                return ttEntry->score; // Use the score from the transposition table.
-            }
-        }
+        // if (ttEntry.has_value() && ttEntry->depth >= depth) {
+        //     if ((ttEntry->nodeType == NodeType::EXACT) ||
+        //         (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
+        //         (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
+        //         return ttEntry->score; // Use the score from the transposition table.
+        //     }
+        // }
 
         int bestScore = INT_MIN + 1;
         Move localBestMove = Move::NULL_MOVE;
@@ -142,7 +140,7 @@ private:
         if (depth == 0) {
             return evaluate(depth); // Leaf node evaluation
         }
-
+        result.nodes ++;
         sortMoves(moves, board, result); // Pre-sort moves based on heuristics
 
         for (const Move& move : moves) {
@@ -157,34 +155,65 @@ private:
 
             alpha = std::max(alpha, score);
             if (alpha >= beta) {
+                // store history and killer moves if move is quiet here
+                    // update killer moves
+                    if (move != result.killerMoves[0]) {
+                        result.killerMoves[1] = result.killerMoves[0];
+                        result.killerMoves[0] = move;
+                    }
+
                 break; // Alpha-beta cutoff.
             }
         }
 
         // Update the transposition table with the new best score and move found at this depth.
-        tt.save(zobristKey, depth, bestScore, determineNodeType(bestScore, alpha, beta), localBestMove);
-
+        //tt.save(zobristKey, depth, bestScore, determineNodeType(bestScore, alpha, beta), localBestMove);
+        
         return bestScore;
     }
 
+
+    // MVV-LVA (Most Valuable Victim - Least Valuable Aggressor) score
+    // want to maybe change this to SEE eventually
+    int MVV_LVA_Score(const Move& move, const Board& board, const SearchResult& result) {
+
+        std::map<PieceType, int> PieceValue = {
+        {PieceType::PAWN, 100},
+        {PieceType::KNIGHT, 300},
+        {PieceType::BISHOP, 325},
+        {PieceType::ROOK, 500},
+        {PieceType::QUEEN, 900},
+        {PieceType::KING, 20000}
+    };
+
+        if (move == result.bestMove) return 100000; // PV move
+        if (move == result.killerMoves[0] || move == result.killerMoves[1]) return 1; // Killer move
+
+        // Assume Move has methods to get the positions and Board can give you the piece at a position
+        PieceType victim = board.at<PieceType>(move.to());
+        PieceType aggressor = board.at<PieceType>(move.from());
+
+
+        if (victim == PieceType::NONE) { // not a capture
+            return 0; // Quiet move
+        }
+
+        // MVV-LVA score is calculated as the value of the victim minus the value of the aggressor
+        // We multiply the victim's value by a large number to ensure that captures are always evaluated first
+        // and then subtract the aggressor's value to prioritize lower-value aggressors.
+        return PieceValue[victim] * 10 - PieceValue[aggressor];
+    }
+
+
     // sorts in order of 
     // PV, then captures, then everything else
-    void sortMoves(Movelist& moves, Board& board, SearchResult& result) {
-        std::sort(moves.begin(), moves.end(), [&board, &result](const Move& a, const Move& b) -> bool {
-            if (result.bestMove != Move::NULL_MOVE) {
-                if (a == result.bestMove) {
-                    return true;
-                } else if (b == result.bestMove) {
-                    return false;
-                }
-            }
-
-            bool aIsCapture = board.isCapture(a);
-            bool bIsCapture = board.isCapture(b);
-            return aIsCapture && !bIsCapture; // Prioritize captures over non-captures
-        });
-        // May want to add other logic here later
-    }
+    
+// Sorting moves with corrected lambda capture
+void sortMoves(Movelist& moves, const Board& board, const SearchResult& result) {
+    std::sort(moves.begin(), moves.end(), [this, &board, &result](const Move& a, const Move& b) {
+        return this->MVV_LVA_Score(a, board, result) > this->MVV_LVA_Score(b, board, result);
+    });
+}
 
     int evaluate(int depth) {
         int rawScore = evaluator.evaluate(depth); // Positive for White's advantage, negative for Black's
