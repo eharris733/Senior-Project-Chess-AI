@@ -108,20 +108,20 @@ private:
             return 0; // Draw score
         }
 
-        uint64_t zobristKey = board.zobrist();
-        auto ttEntry = tt.retrieve(zobristKey);
+        // uint64_t zobristKey = board.zobrist();
+        // auto ttEntry = tt.retrieve(zobristKey);
 
-        if (ttEntry.has_value() && ttEntry->depth >= depth) {
-            if ((ttEntry->nodeType == NodeType::EXACT) ||
-                (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
-                (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
-                if (isRoot){
-                    state.currentIterationBestMove = ttEntry->bestMove;
-                    state.currentIterationBestScore = ttEntry->score;
-                }
-                return ttEntry->score; // Use the score from the transposition table.
-            }
-        }
+        // if (ttEntry.has_value() && ttEntry->depth >= depth) {
+        //     if ((ttEntry->nodeType == NodeType::EXACT) ||
+        //         (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
+        //         (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
+        //         if (isRoot){
+        //             state.currentIterationBestMove = ttEntry->bestMove;
+        //             state.currentIterationBestScore = ttEntry->score;
+        //         }
+        //         return ttEntry->score; // Use the score from the transposition table.
+        //     }
+        // }
         Move localBestMove = Move::NULL_MOVE;
         NodeType nodeType = NodeType::UPPERBOUND;
         Movelist moves;
@@ -168,7 +168,7 @@ private:
         }
 
         // Update the transposition table with the new best score and move found at this depth.
-       tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
+       //tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
         
         return alpha;
     }
