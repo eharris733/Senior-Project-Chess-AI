@@ -3,10 +3,6 @@
 #include <sstream>
 #include <string>
 #include <random>
-#include <thread> // For std::thread
-#include <mutex> // For std::mutex
-#include <atomic> // For std::atomic
-#include <memory> // For unique_ptr
 
 // Include necessary headers from Disservin's chess library
 #include "chess.hpp"
@@ -15,139 +11,59 @@
 using namespace chess;
 using namespace std;
 
-chess::Board board;
-unique_ptr<Searcher> searcher; // Use fully qualified name
-mutex searchThreadMutex;
-unique_ptr<std::thread> searchThread;
-atomic<bool> stop(false);
+// Function to handle the "position" command
+void setPosition(Board& board, istringstream& iss) {
+    string token, fen;
+    iss >> token;
 
-
-void setPosition(const std::string& uci, const std::vector<std::string>& tokens) {
-    int ntokens = tokens.size();
-
-    // starting position
-    if (tokens[1] == "startpos")
-        board.setFen(constants::STARTPOS);
-    else if (tokens[1] == "fen")
-        board.setFen(uci.substr(13));   // get text after "fen"
-
-    int i = 1;
-    while (++i<ntokens)
-        if (tokens[i] == "moves")
-            break;
-    
-    // play moves
-    while (++i<ntokens)
-        board.makeMove(chess::uci::uciToMove(board, tokens[i]));
-}
-
-void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
-    if (searcher) {
-        lock_guard<mutex> guard(searchThreadMutex);
-        if (searchThread && searchThread->joinable()) {
-            searchThread->join(); // Ensure the previous search is finished
+    if (token == "startpos") {
+        fen = constants::STARTPOS;
+        iss >> token; // Consume "moves" if present
+    } else if (token == "fen") {
+        while (iss >> token && token != "moves") {
+            fen += token + " ";
         }
-        stop = false; // Reset the stop signal
-
-        // Create a new thread for the search operation
-        // Capture time control parameters by value in the lambda
-        searchThread = make_unique<thread>([=]() {
-            cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << endl;
-            SearchResult result = searcher->search(timeLeft, timeIncrement, movesToGo); 
-            cout << "bestmove " << uci::moveToUci(result.bestMove)
-                 << " info depth " << result.depth << " score cp " << result.score << endl;
-        });
     }
-}
 
+    board.setFen(fen);
 
-void stopSearch() {
-    stop = true; // Signal the search to stop
-    lock_guard<mutex> guard(searchThreadMutex);
-    if (searchThread && searchThread->joinable()) {
-        searchThread->join(); // Wait for the search to finish
+    // Apply moves if any
+    while (iss >> token) {
+        board.makeMove(uci::uciToMove(board, token)); // Assuming a function to convert UCI to Move
     }
-}
-
-// Splits strings into words seperated by delimiter, stolen from 
-//https://github.com/Orbital-Web/Raphael/blob/main/uci.cpp#L23
-vector<string> splitstr(const std::string& str, const char delim) {
-    std::vector<std::string> tokens;
-    std::stringstream ss(str);
-    std::string token;
-
-    while (getline(ss, token, delim)) 
-        tokens.push_back(token);
-
-    return tokens;
 }
 
 int main() {
-    searcher = make_unique<Searcher>(board); // Use fully qualified name
-    string uci;
-    bool quit = false;
-    bool isWhiteTurn = board.sideToMove() == Color::WHITE;
+    Board board;
+    string line, token;
+    Searcher searcher(board);
 
-while (!quit) {
-    // Get input
-    getline(std::cin, uci);
-    auto tokens = splitstr(uci, ' ');
-    auto keyword = tokens[0];
+    while (getline(cin, line)) {
+        istringstream iss(line);
+        iss >> token;
 
-    // Parse input
-    if (keyword == "uci") {
-        cout << "id name Gerald Current" << endl;
-        cout << "id author Elliot Harris" << endl;
-        // Output other UCI options here, if any
-        cout << "uciok" << endl;
-    } 
-    // else if (keyword == "setoption") { // don't have a setoption 
-    //     // handle setoption command
-    // }
-    else if (keyword == "isready") {
-        cout << "readyok" << endl;
-    } 
-    else if (keyword == "position") {
-        setPosition(uci, tokens);
-        isWhiteTurn = board.sideToMove() == Color::WHITE; // Update isWhiteTurn
-    } 
-    else if (keyword == "go") {
-    int timeLeft = 0;
-    int timeIncrement = 0;
-    int movesToGo = 30; // Default value
-
-    for (size_t i = 1; i < tokens.size(); ++i) {
-        std::cout << "Parsing token: " << tokens[i] << std::endl; // Debug print
-
-        if (tokens[i] == "wtime" && isWhiteTurn) {
-            timeLeft = std::stoi(tokens[i + 1]);
-        } else if (tokens[i] == "btime" && !isWhiteTurn) {
-            timeLeft = std::stoi(tokens[i + 1]);
-        } else if (tokens[i] == "winc" && isWhiteTurn) {
-            timeIncrement = std::stoi(tokens[i + 1]);
-        } else if (tokens[i] == "binc" && !isWhiteTurn) {
-            timeIncrement = std::stoi(tokens[i + 1]);
-        } else if (tokens[i] == "movestogo") {
-            movesToGo = std::stoi(tokens[i + 1]);
-        } else if (tokens[i] == "movetime") {
-            timeLeft = std::stoi(tokens[i + 1]);
-            movesToGo = 1;
+        if (token == "uci") {
+            cout << "id name current" << endl;
+            cout << "id author Elliot Harris" << endl;
+            cout << "uciok" << endl;
+        } else if (token == "isready") {
+            cout << "readyok" << endl;
+        } else if (token == "ucinewgame") {
+            searcher.clear();
+            board.setFen(constants::STARTPOS);
+        } else if (token == "position") {
+            setPosition(board, iss);
+        } else if (token == "go") {
+            // keep track of moves
+            Move move = searcher.search(8);
+            cout << " bestmove " << uci::moveToUci(move) << endl;
+        } else if (token == "quit") {
+            break;
         }
-        // Debug output
-        std::cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << std::endl;
+
+    // Implement other UCI commands as needed
+
     }
 
-    // Start the search with time management
-    startSearch(timeLeft, timeIncrement, movesToGo);
-    }
-    else if (keyword == "stop") {
-        stop = true;
-    } 
-    else if (keyword == "quit") {
-        quit = true;
-    }
-}
-
-
-    return 0; // searcher is automatically deleted due to unique_ptr
+    return 0;
 }
