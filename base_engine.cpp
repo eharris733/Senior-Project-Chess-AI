@@ -55,7 +55,7 @@ int main() {
             setPosition(board, iss);
         } else if (token == "go") {
             // keep track of moves
-            Move move = searcher.search(8);
+            Move move = searcher.search(7);
             cout << " bestmove " << uci::moveToUci(move) << endl;
         } else if (token == "quit") {
             break;

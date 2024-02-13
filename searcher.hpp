@@ -133,7 +133,7 @@ private:
         }
 
         if (depth == 0) {
-            return evaluate(depth); // Leaf node evaluation, add quiescence search here
+            return quiescence(alpha, beta); // Leaf node evaluation, add quiescence search here
         }
         state.nodes ++;
         sortMoves(moves, board); // Pre-sort moves based on heuristics
@@ -173,6 +173,31 @@ private:
         return alpha;
     }
 
+    int quiescence(int alpha, int beta) {
+        int stand_pat = evaluate(0);
+        if (stand_pat >= beta) {
+            return beta;
+        }
+        if (alpha < stand_pat) {
+            alpha = stand_pat;
+        }
+        Movelist moves;
+        movegen::legalmoves<MoveGenType::CAPTURE>(moves, board);
+        sortMoves(moves, board);
+        for (const Move& move : moves) {
+            board.makeMove(move);
+            int score = -quiescence(-beta, -alpha);
+            board.unmakeMove(move);
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+        return alpha;
+    }
+
 
         // Improved MVV-LVA scoring function
 int MVV_LVA_Score(const Move& move, const Board& board) {
@@ -199,6 +224,7 @@ int MVV_LVA_Score(const Move& move, const Board& board) {
         if (move == state.killerMoves[0] || move == state.killerMoves[1]){
             return 100; // Better than base score for killer moves
         }
+        
             
         return 10; // Base score for quiet moves to differentiate them from invalid moves
     }
