@@ -11,6 +11,7 @@
 #include <chrono> // for timer
 
 using namespace chess;
+using namespace std;
 
 // this version of iterative deepening is heavily influened 
 // by Sebastian Lague's chess engine tutorial
@@ -39,38 +40,49 @@ public:
     SearchState state;
     Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 26){
     }
-    Move search(int targetDepth) {
+    Move search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
         // crude time control
         // we divide by 2 because the last depth is probably going to be more than 5 times as long as the rest
-        // int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 5;
+        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 5;
 
         // // start the timer
-        // auto startTime = chrono::steady_clock::now();
+        auto startTime = chrono::steady_clock::now();
  
 
         // clear the table for every search
         //tt.clear();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (state.currentDepth < targetDepth) {
+        while (state.currentDepth < MAX_DEPTH && !stop.load()) {
             state.currentIterationBestMove = Move::NULL_MOVE;
             state.currentIterationBestScore = neg_infinity;
-            // // check to see if we have reached the desired think time
-            // auto currentTime = chrono::steady_clock::now();
-            // auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
+            
+            // check to see if we have reached the desired think time
+            auto currentTime = chrono::steady_clock::now();
+            auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
 
-            // if (elapsed >= timeForThisMove) {
-            //     stop = true; // Signal to stop the search
-            //     break;
-            // }
+            if (elapsed >= timeForThisMove) {
+                stop = true; // Signal to stop the search
+                break;
+            }
             // call the search function
             negamax(state.currentDepth, neg_infinity, infinity, true); // isroot = true
             //update results
-            state.bestScore = state.currentIterationBestScore;
-            state.bestMove = state.currentIterationBestMove; // Update result only once,
-            cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
-            state.currentDepth++; // Update the depth after each iteration
+
+            // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
+            if (!stop){
+                state.bestScore = state.currentIterationBestScore;
+                state.bestMove = state.currentIterationBestMove; // Update result only once,
+                cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
+                state.currentDepth++; // Update the depth after each iteration
+                
+            }
+            //otherwise we abort the iterative deepening loop
+            else{
+                break;
+            }
+            
         }
 
         //stop = false; // Reset the stop signal
@@ -104,6 +116,10 @@ private:
     }
 
     int negamax(int depth, int alpha, int beta, bool isRoot = false) {
+        if (stop.load()){
+            return 0;
+        }
+        
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
         }
