@@ -144,7 +144,7 @@ private:
             board.unmakeMove(move);
             
             if (eval >= beta) {
-                tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move); 
+                //tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move); 
                 // store history and killer moves if move is quiet here
                     // update killer moves
                     if (move != state.killerMoves[0]) {
@@ -198,7 +198,9 @@ private:
         return alpha;
     }
 
-
+constexpr int rank_of(Square sq) {
+    return static_cast<int>(sq) / 8; // Divide the square index by 8 to get the rank
+}
         // Improved MVV-LVA scoring function
 int MVV_LVA_Score(const Move& move, const Board& board) {
     if (move == state.bestMove) {
@@ -221,11 +223,13 @@ int MVV_LVA_Score(const Move& move, const Board& board) {
 
     // If there is no capture, return a low base score for quiet moves
     if (victim == PieceType::NONE) {
+        // check to see if it is a promotion
+        if (aggressor == PieceType::PAWN && (static_cast<int>(move.to()) / 8 == 0) == 0 || (static_cast<int>(move.to()) / 8 == 7) == 0){
+            return 200; // Base score for promotions
+        }
         if (move == state.killerMoves[0] || move == state.killerMoves[1]){
             return 100; // Better than base score for killer moves
-        }
-        
-            
+        }   
         return 10; // Base score for quiet moves to differentiate them from invalid moves
     }
 
