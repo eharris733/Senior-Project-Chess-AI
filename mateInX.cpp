@@ -22,6 +22,7 @@
 
 std::atomic<bool> stop(false);
 
+
 int main() {
     // Map of FEN strings to their best moves
     std::map<std::string, std::string> fenToBestMove = {
@@ -32,7 +33,13 @@ int main() {
         {"rn3r1k/p3qp2/bp2p2p/3pP3/P2NRQ2/1Pb2NPP/5PB1/2R3K1 w - - 1 22", "f4h6"},
         {"3qr2k/1p3rbp/2p3p1/p7/P2pBNn1/1P3n2/6P1/B1Q1RR1K b - - 1 30", "d8h4"}, //in 4
         {"4r2k/1p3rbp/2p3p1/p7/P2pB1nq/1P3n1N/6P1/B1Q1RR1K b - - 3 31", "h4g3"}, // in 3
-        {"4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33", "f8f4"} // in 2
+        {"4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33", "f8f4"}, // in 2
+        {"4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24", "f1f8"}, //in 5
+        
+        //quiet moves
+        {"rn3k1r/1p2bp1p/8/1p1pp3/8/5R2/PPPP1P1P/RNB1K3 w Q - 0 17", "b1c3"},
+        {"2k5/2p5/2n3N1/p7/2R5/2P3K1/2r5/8 b - - 5 36", "c8b7"} // questionable what the best move is here
+        
 
         // Add all other FEN strings and their best moves here
     };
@@ -44,9 +51,9 @@ int main() {
     for (const auto& [fen, bestMove] : fenToBestMove) {
         board.setFen(fen); // Initialize the board with the FEN string
 
-        SearchResult result = searcher.search(10000, 0, 1); // 1 move to go means use all the time on the clock, current is ten seconds each
+        Move b = searcher.search(10000, 0, 1); // 1 move to go means use all the time on the clock, current is ten seconds each
 
-        std::string suggestedMove = uci::moveToUci(result.bestMove); // Convert the suggested move to UCI format
+        std::string suggestedMove = uci::moveToUci(b); // Convert the suggested move to UCI format
 
         if (suggestedMove == bestMove) {
             std::cout << "Correct move for position: " << fen << " | " << suggestedMove << std::endl;
@@ -54,6 +61,10 @@ int main() {
             std::cout << "Incorrect move for position: " << fen << std::endl;
             std::cout << "Suggested move: " << suggestedMove << " | Best move: " << bestMove << std::endl;
         }
+        //reset the stop flag
+        stop = false;
+        // Clear the tt table
+        searcher.clear();
     }
 
     return 0;

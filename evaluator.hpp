@@ -181,7 +181,9 @@ struct weightFeaturesByHand{
 };
 
 class Evaluator {
+
     private:
+    float gamePhase;
     Board& board;
     weightFeaturesByHand weightFeaturesByHand;
 
@@ -248,6 +250,9 @@ class Evaluator {
 
     public:
     Evaluator(Board& b) : board(b) {;}
+     int getGamePhase(){
+        return gamePhase;
+    }
 
     //rethink how Im breaking up feature extraction and evaluation
     // might just be better to grab the pieces directly from the board here
@@ -281,7 +286,7 @@ class Evaluator {
      egscore /= 10;
     
     // Calculate the game phase dynamically based on the endgame score
-    float gamePhase = std::max(0.0f, std::min(1.0f, (taperedEndgameScore - 24) / 24.0f)); // Ensure the game phase is between 0 and 1
+    gamePhase = std::max(0.0f, std::min(1.0f, (taperedEndgameScore - 24) / 24.0f)); // Ensure the game phase is between 0 and 1
     
     float mgWeight = gamePhase;
     float egWeight = 1 - gamePhase;

@@ -1,54 +1,59 @@
-#pragma once
+// note, this is a bit over my head in terms of how it all works
+// mostly stolen from chat gpt's suggestions
+
+//note also thats its a vector as the data structure, perhaps a fixed sized array would be better?
 #include <vector>
 #include <optional>
 #include "chess.hpp"
 
-
 using namespace chess;
 using namespace std;
 
-
-// the kinds of nodes that can be stored in the table
 enum class NodeType {
     EXACT,
-    LOWERBOUND, // alpha node
-    UPPERBOUND  // beta node
+    LOWERBOUND,
+    UPPERBOUND
 };
-//struct to help the organization of the table
+
 struct TTEntry {
-    uint64_t zobristKey;
-    int depth;
-    int score;
+    uint64_t zobristKey = 0;
+    int depth = -1; // Use -1 to indicate an uninitialized entry
+    int score = 0;
     NodeType nodeType;
     Move bestMove;
+    bool valid = false; // Indicates if the entry is valid
 };
 
 class TranspositionTable {
 public:
-    TranspositionTable(size_t size) {
-        table.resize(size);
-    }
+    TranspositionTable(size_t size) : table(size) {}
 
     void save(uint64_t zobristKey, int depth, int score, NodeType nodeType, Move bestMove) {
         size_t index = zobristKey % table.size();
-        table[index] = {zobristKey, depth, score, nodeType, bestMove};
+        // Depth-preferred replacement strategy
+        if (!table[index].valid || table[index].depth < depth) {
+            table[index] = {zobristKey, depth, score, nodeType, bestMove, true};
+        }
     }
 
     std::optional<TTEntry> retrieve(uint64_t zobristKey) {
         size_t index = zobristKey % table.size();
-        if (table[index].zobristKey == zobristKey) {
+        if (table[index].valid && table[index].zobristKey == zobristKey) {
             return table[index];
         }
         return {};
     }
 
-    //necceary to clear the table
     void clear() {
-    for (auto& entry : table) {
-        entry = TTEntry{}; // Reset each entry. Assumes TTEntry is default-constructible.
+        for (auto& entry : table) {
+            entry.valid = false; // Mark all entries as invalid
+        }
     }
-}
 
+    void debugSize() {
+        cout << "Table size: " << table.size() << endl;
+        cout << "Percent full: " << (count_if(table.begin(), table.end(), [](const TTEntry& entry) { return entry.valid; }) / (double)table.size()) * 100 << "%\n " << endl;
+    }
 
 private:
     std::vector<TTEntry> table;

@@ -8,7 +8,7 @@
 #include <atomic> // For std::atomic
 #include <memory> // For unique_ptr
 
-// Include necessary headers from Disservin's chess library
+// from my code
 #include "chess.hpp"
 #include "searcher.hpp"
 
@@ -16,7 +16,7 @@ using namespace chess;
 using namespace std;
 
 chess::Board board;
-unique_ptr<Searcher> searcher; // Use fully qualified name
+unique_ptr<Searcher> searcher; 
 mutex searchThreadMutex;
 unique_ptr<std::thread> searchThread;
 atomic<bool> stop(false);
@@ -26,8 +26,11 @@ void setPosition(const std::string& uci, const std::vector<std::string>& tokens)
     int ntokens = tokens.size();
 
     // starting position
-    if (tokens[1] == "startpos")
+    if (tokens[1] == "startpos"){
         board.setFen(constants::STARTPOS);
+        // reset the tt
+        searcher->clear();
+    }
     else if (tokens[1] == "fen")
         board.setFen(uci.substr(13));   // get text after "fen"
 
@@ -53,9 +56,8 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
         // Capture time control parameters by value in the lambda
         searchThread = make_unique<thread>([=]() {
             cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << endl;
-            SearchResult result = searcher->search(timeLeft, timeIncrement, movesToGo); 
-            cout << "bestmove " << uci::moveToUci(result.bestMove)
-                 << " info depth " << result.depth << " score cp " << result.score << endl;
+            Move move = searcher->search(timeLeft, timeIncrement, movesToGo); 
+            cout << "bestmove " << uci::moveToUci(move) << endl;
         });
     }
 }

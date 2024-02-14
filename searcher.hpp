@@ -2,23 +2,33 @@
 #include "chess.hpp"
 #include "evaluator.hpp"
 #include "t_table.hpp"
-#include <climits> // For INT_MIN and INT_MAX
 #include <cstdlib>
 #include <ctime>
+#include <map>
 #include <iostream>
 #include <algorithm>
-#include <chrono> // for timer
+#include <chrono> 
 
 using namespace chess;
+using namespace std;
 
-// Struct to hold the results of a search
-struct SearchResult {
+// this version of iterative deepening is heavily influened 
+// by Sebastian Lague's chess engine tutorial
+
+// Struct to hold the state of a search
+struct SearchState {
     Move bestMove;
-    Move bestMove2; // last depth's best move
-    int depth;
-    int score;
+    int bestScore;
+    Move currentIterationBestMove;
+    int currentIterationBestScore;
+    Move killerMoves[2]; // store two killer moves
+    int currentDepth;
     int nodes;
 };
+
+
+
+
 
 // variable that is called when the engine is told to stop searching
 // will also be used for time control
@@ -26,31 +36,23 @@ extern std::atomic<bool> stop;
 
 class Searcher {
 public:
+    SearchState state;
     Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 20){
     }
-    SearchResult search(int timeRemaining, int timeIncrement, int movesToGo) {
+    Move search(int timeRemaining, int timeIncrement, int movesToGo) {
+        initSearch();
         // crude time control
         // we divide by 2 because the last depth is probably going to be more than 5 times as long as the rest
         int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 5;
 
-        // start the timer
+        // // start the timer
         auto startTime = chrono::steady_clock::now();
 
-        result.bestMove = Move::NULL_MOVE;
-        result.bestMove2 = Move::NULL_MOVE;
-        result.depth = 2;
-        result.score = INT_MIN + 1;
-        result.nodes = 0;
-
-        // clear the table for every search
-        tt.clear();
-
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (!stop.load() && result.depth <= MAX_DEPTH) {
-            int bestScore = result.score;
-            int alpha = result.score;
-            int beta = INT_MAX;
-
+        while (state.currentDepth < MAX_DEPTH && !stop.load()) {
+            state.currentIterationBestMove = Move::NULL_MOVE;
+            state.currentIterationBestScore = neg_infinity;
+            
             // check to see if we have reached the desired think time
             auto currentTime = chrono::steady_clock::now();
             auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
@@ -59,35 +61,32 @@ public:
                 stop = true; // Signal to stop the search
                 break;
             }
+            // call the search function
+            negamax(state.currentDepth, neg_infinity, infinity, true); // isroot = true
 
-            Movelist moves;
-            movegen::legalmoves<MoveGenType::ALL>(moves, board);
-            sortMoves(moves, board, result); // we don't have a pv yet
-
-            for (const Move& move : moves) {
-                if (stop.load()) break; // Check for stop signal
-
-                board.makeMove(move);
-                int eval = -negamax(result.depth, -beta, -alpha, true); // isroot = true
-                board.unmakeMove(move);
-
-                if (eval > bestScore) {
-                    bestScore = eval;
-                    result.bestMove = move;
-                    result.score = bestScore; // Update the score in result
-                }
-
-                alpha = std::max(alpha, eval);
-                if (alpha >= beta) {
-                    break; // Alpha-beta pruning
-                }
+            // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
+            // update the overall search state with results from the latest iteration
+            if (!stop){
+                state.bestScore = state.currentIterationBestScore;
+                state.bestMove = state.currentIterationBestMove; // Update result only once,
+                cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
+                state.currentDepth++; // Update the depth after each iteration
+                
             }
-            cout << " info depth " << result.depth << " score cp " << result.score << " pv " << uci::moveToUci(result.bestMove) << " nodes " << result.nodes << endl;
-            result.depth++; // Update the depth after each iteration
+            //otherwise we abort the iterative deepening loop
+            else{
+                break;
+            }
+            
         }
 
-        stop = false; // Reset the stop signal
-        return result; // Return the search result
+        // debug function
+        tt.debugSize();
+        return state.bestMove; // Return the search result
+    }
+
+    void clear() {
+        tt.clear();
     }
 
 private:
@@ -95,21 +94,32 @@ private:
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
     int MAX_DEPTH = 100;
+    
+    // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)
+    const int infinity = 9999999;
+    const int neg_infinity = -infinity;
 
-    // keep track of moves
-    SearchResult result;
-
-    NodeType determineNodeType(float bestScore, float alpha, float beta) {
-        if (bestScore <= alpha) {
-            return NodeType::UPPERBOUND; // Failed low, this is a beta node
-        } else if (bestScore >= beta) {
-            return NodeType::LOWERBOUND; // Failed high, this is an alpha node
-        } else {
-            return NodeType::EXACT; // Exact score
-        }
+    //mate score is less than the infinities in magnitude (IMPORTANT FOR NEGAMAX)
+    const int mateScore = 100000;
+    
+    // probably unnecesary but good practice
+    void initSearch() {
+        state.bestMove = Move::NULL_MOVE;
+        state.bestScore = neg_infinity;
+        state.currentDepth = 1;
+        state.nodes = 0;
+        state.currentIterationBestMove = Move::NULL_MOVE;
+        state.currentIterationBestScore = neg_infinity;
+        state.killerMoves[0] = Move::NULL_MOVE;
+        state.killerMoves[1] = Move::NULL_MOVE;
     }
 
     int negamax(int depth, int alpha, int beta, bool isRoot = false) {
+        // our search has been told to stop due to time
+        if (stop.load()){
+            return 0;
+        }
+        
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
         }
@@ -121,70 +131,139 @@ private:
             if ((ttEntry->nodeType == NodeType::EXACT) ||
                 (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
                 (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
-                // If this is the root node and we have a best move stored, update result.bestMove.
-                if (isRoot && ttEntry->bestMove != Move::NULL_MOVE) {
-                    result.bestMove = ttEntry->bestMove;
+                if (isRoot){
+                    state.currentIterationBestMove = ttEntry->bestMove;
+                    state.currentIterationBestScore = ttEntry->score;
                 }
                 return ttEntry->score; // Use the score from the transposition table.
             }
         }
-
-        int bestScore = INT_MIN + 1;
         Move localBestMove = Move::NULL_MOVE;
+        NodeType nodeType = NodeType::UPPERBOUND;
         Movelist moves;
         movegen::legalmoves<MoveGenType::ALL>(moves, board);
 
         if (moves.size() == 0) {
             // Check for checkmate or stalemate
-            return board.inCheck() ? (-100000 - depth) : 0;
+            return board.inCheck() ? (-mateScore - depth) : 0;
         }
 
         if (depth == 0) {
-            return evaluate(depth); // Leaf node evaluation
+            return quiescence(alpha, beta); // Leaf node evaluation, add quiescence search here
         }
-
-        sortMoves(moves, board, result); // Pre-sort moves based on heuristics
+        state.nodes ++;
+        sortMoves(moves, board); // Pre-sort moves based on heuristics
 
         for (const Move& move : moves) {
             board.makeMove(move);
-            int score = -negamax(depth - 1, -beta, -alpha, false); // Recurse with flipped bounds and not root.
+            int eval = -negamax(depth - 1, -beta, -alpha, false); 
             board.unmakeMove(move);
+            
+            if (eval >= beta) {
+                //tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move); 
+                // store history and killer moves if move is quiet here
+                    // update killer moves
+                    if (move != state.killerMoves[0]) {
+                        state.killerMoves[1] = state.killerMoves[0];
+                        state.killerMoves[0] = move;
+                    }
 
-            if (score > bestScore) {
-                bestScore = score;
+                return beta; // Alpha-beta cutoff.
+            }
+
+            if (eval > alpha) {
+                alpha = eval;
                 localBestMove = move; // Found a new best move.
+                nodeType = NodeType::EXACT;
+                if (isRoot){
+                    state.currentIterationBestMove = localBestMove;
+                    state.currentIterationBestScore = alpha;
+                }
             }
-
-            alpha = std::max(alpha, score);
-            if (alpha >= beta) {
-                break; // Alpha-beta cutoff.
-            }
+            
         }
 
         // Update the transposition table with the new best score and move found at this depth.
-        tt.save(zobristKey, depth, bestScore, determineNodeType(bestScore, alpha, beta), localBestMove);
-
-        return bestScore;
+       tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
+        
+        return alpha;
     }
 
-    // sorts in order of 
-    // PV, then captures, then everything else
-    void sortMoves(Movelist& moves, Board& board, SearchResult& result) {
-        std::sort(moves.begin(), moves.end(), [&board, &result](const Move& a, const Move& b) -> bool {
-            if (result.bestMove != Move::NULL_MOVE) {
-                if (a == result.bestMove) {
-                    return true;
-                } else if (b == result.bestMove) {
-                    return false;
-                }
+    int quiescence(int alpha, int beta) {
+        int stand_pat = evaluate(0);
+        if (stand_pat >= beta) {
+            return beta;
+        }
+        if (alpha < stand_pat) {
+            alpha = stand_pat;
+        }
+        Movelist moves;
+        movegen::legalmoves<MoveGenType::CAPTURE>(moves, board);
+        sortMoves(moves, board);
+        for (const Move& move : moves) {
+            board.makeMove(move);
+            int score = -quiescence(-beta, -alpha);
+            board.unmakeMove(move);
+            if (score >= beta) {
+                return beta;
             }
-
-            bool aIsCapture = board.isCapture(a);
-            bool bIsCapture = board.isCapture(b);
-            return aIsCapture && !bIsCapture; // Prioritize captures over non-captures
-        });
-        // May want to add other logic here later
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+        return alpha;
     }
+
+constexpr int rank_of(Square sq) {
+    return static_cast<int>(sq) / 8; // Divide the square index by 8 to get the rank
+}
+        // Improved MVV-LVA scoring function
+int MVV_LVA_Score(const Move& move, const Board& board) {
+    if (move == state.bestMove) {
+        return infinity; // PV move
+    }   
+
+    static const std::map<PieceType, int> PieceValue = {
+        {PieceType::NONE, 0},
+        {PieceType::PAWN, 100},
+        {PieceType::KNIGHT, 320},
+        {PieceType::BISHOP, 330},
+        {PieceType::ROOK, 500},
+        {PieceType::QUEEN, 900},
+        {PieceType::KING, 20000}
+    };
+    // Correctly determine the victim and aggressor pieces
+
+    PieceType victim = board.at<PieceType>(move.to()); // Victim is the piece on the destination square
+    PieceType aggressor = board.at<PieceType>(move.from()); // Aggressor is the piece on the source square
+
+    // If there is no capture, return a low base score for quiet moves
+    if (victim == PieceType::NONE) {
+        // check to see if it is a promotion
+        if (aggressor == PieceType::PAWN && (static_cast<int>(move.to()) / 8 == 0) == 0 || (static_cast<int>(move.to()) / 8 == 7) == 0){
+            return 200; // Base score for promotions
+        }
+        if (move == state.killerMoves[0] || move == state.killerMoves[1]){
+            return 100; // Better than base score for killer moves
+        }   
+        return 10; // Base score for quiet moves to differentiate them from invalid moves
+    }
+
+    // Calculate and return the MVV-LVA score
+    // Prioritize captures by victim value, and within those, prioritize lower-value aggressors
+    int score = PieceValue.at(victim) * 10 + PieceValue.at(PieceType::KING) - PieceValue.at(aggressor);
+    assert(score > 0); // Ensure scoring logic is correct and positive scores are assigned to valid moves
+    return score;
+}
+
+
+    
+// Sorting moves based on MVV-LVA score and PV and Killer moves
+void sortMoves(Movelist& moves, const Board& board) {
+    std::sort(moves.begin(), moves.end(), [this, &board](const Move& a, const Move& b) {
+        return this->MVV_LVA_Score(a, board) > this->MVV_LVA_Score(b, board);
+    });
+}
 
     int evaluate(int depth) {
         int rawScore = evaluator.evaluate(depth); // Positive for White's advantage, negative for Black's
