@@ -2,13 +2,12 @@
 #include "chess.hpp"
 #include "evaluator.hpp"
 #include "t_table.hpp"
-#include <climits> // For INT_MIN and INT_MAX
 #include <cstdlib>
 #include <ctime>
 #include <map>
 #include <iostream>
 #include <algorithm>
-#include <chrono> // for timer
+#include <chrono> 
 
 using namespace chess;
 using namespace std;
@@ -38,7 +37,7 @@ extern std::atomic<bool> stop;
 class Searcher {
 public:
     SearchState state;
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 26){
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 20){
     }
     Move search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
@@ -48,10 +47,6 @@ public:
 
         // // start the timer
         auto startTime = chrono::steady_clock::now();
- 
-
-        // clear the table for every search
-        //tt.clear();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
         while (state.currentDepth < MAX_DEPTH && !stop.load()) {
@@ -68,9 +63,9 @@ public:
             }
             // call the search function
             negamax(state.currentDepth, neg_infinity, infinity, true); // isroot = true
-            //update results
 
             // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
+            // update the overall search state with results from the latest iteration
             if (!stop){
                 state.bestScore = state.currentIterationBestScore;
                 state.bestMove = state.currentIterationBestMove; // Update result only once,
@@ -85,7 +80,8 @@ public:
             
         }
 
-        //stop = false; // Reset the stop signal
+        // debug function
+        tt.debugSize();
         return state.bestMove; // Return the search result
     }
 
@@ -99,11 +95,14 @@ private:
     TranspositionTable tt; // Transposition table
     int MAX_DEPTH = 100;
     
-    // define my own versions of infinity and negative infinity
+    // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)
     const int infinity = 9999999;
     const int neg_infinity = -infinity;
+
+    //mate score is less than the infinities in magnitude (IMPORTANT FOR NEGAMAX)
     const int mateScore = 100000;
     
+    // probably unnecesary but good practice
     void initSearch() {
         state.bestMove = Move::NULL_MOVE;
         state.bestScore = neg_infinity;
@@ -116,6 +115,7 @@ private:
     }
 
     int negamax(int depth, int alpha, int beta, bool isRoot = false) {
+        // our search has been told to stop due to time
         if (stop.load()){
             return 0;
         }
@@ -124,20 +124,20 @@ private:
             return 0; // Draw score
         }
 
-        // uint64_t zobristKey = board.zobrist();
-        // auto ttEntry = tt.retrieve(zobristKey);
+        uint64_t zobristKey = board.zobrist();
+        auto ttEntry = tt.retrieve(zobristKey);
 
-        // if (ttEntry.has_value() && ttEntry->depth >= depth) {
-        //     if ((ttEntry->nodeType == NodeType::EXACT) ||
-        //         (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
-        //         (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
-        //         if (isRoot){
-        //             state.currentIterationBestMove = ttEntry->bestMove;
-        //             state.currentIterationBestScore = ttEntry->score;
-        //         }
-        //         return ttEntry->score; // Use the score from the transposition table.
-        //     }
-        // }
+        if (ttEntry.has_value() && ttEntry->depth >= depth) {
+            if ((ttEntry->nodeType == NodeType::EXACT) ||
+                (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
+                (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
+                if (isRoot){
+                    state.currentIterationBestMove = ttEntry->bestMove;
+                    state.currentIterationBestScore = ttEntry->score;
+                }
+                return ttEntry->score; // Use the score from the transposition table.
+            }
+        }
         Move localBestMove = Move::NULL_MOVE;
         NodeType nodeType = NodeType::UPPERBOUND;
         Movelist moves;
@@ -184,7 +184,7 @@ private:
         }
 
         // Update the transposition table with the new best score and move found at this depth.
-       //tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
+       tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
         
         return alpha;
     }

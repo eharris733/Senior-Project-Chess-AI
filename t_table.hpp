@@ -1,3 +1,7 @@
+// note, this is a bit over my head in terms of how it all works
+// mostly stolen from chat gpt's suggestions
+
+//note also thats its a vector as the data structure, perhaps a fixed sized array would be better?
 #include <vector>
 #include <optional>
 #include "chess.hpp"
@@ -44,6 +48,11 @@ public:
         for (auto& entry : table) {
             entry.valid = false; // Mark all entries as invalid
         }
+    }
+
+    void debugSize() {
+        cout << "Table size: " << table.size() << endl;
+        cout << "Percent full: " << (count_if(table.begin(), table.end(), [](const TTEntry& entry) { return entry.valid; }) / (double)table.size()) * 100 << "%\n " << endl;
     }
 
 private:
