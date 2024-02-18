@@ -15,6 +15,15 @@ using namespace std;
 // this version of iterative deepening is heavily influened 
 // by Sebastian Lague's chess engine tutorial
 
+
+// this is experimental as of right now
+struct AspirationWindow {
+    int alpha;
+    int beta;
+    int failHigh;
+    int failLow;
+};
+
 // Struct to hold the state of a search
 struct SearchState {
     Move bestMove;
@@ -24,7 +33,10 @@ struct SearchState {
     Move killerMoves[2]; // store two killer moves
     int currentDepth;
     int nodes;
+    AspirationWindow aspirationWindow;
 };
+
+
 
 
 
@@ -37,13 +49,13 @@ extern std::atomic<bool> stop;
 class Searcher {
 public:
     SearchState state;
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 20){
+    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 22){
     }
     Move search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
         // crude time control
         // we divide by 2 because the last depth is probably going to be more than 5 times as long as the rest
-        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 5;
+        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 4;
 
         // // start the timer
         auto startTime = chrono::steady_clock::now();
@@ -61,14 +73,20 @@ public:
                 stop = true; // Signal to stop the search
                 break;
             }
-            // call the search function
-            negamax(state.currentDepth, neg_infinity, infinity, true); // isroot = true
+
+            
+            state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, true);
+            
 
             // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
             // update the overall search state with results from the latest iteration
             if (!stop){
-                state.bestScore = state.currentIterationBestScore;
-                state.bestMove = state.currentIterationBestMove; // Update result only once,
+                
+                // make sure we never return a null move
+                if( state.currentIterationBestMove != Move::NULL_MOVE){
+                    state.bestScore = state.currentIterationBestScore;
+                    state.bestMove = state.currentIterationBestMove; // Update result only once,
+                }
                 cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
                 state.currentDepth++; // Update the depth after each iteration
                 
@@ -112,6 +130,7 @@ private:
         state.currentIterationBestScore = neg_infinity;
         state.killerMoves[0] = Move::NULL_MOVE;
         state.killerMoves[1] = Move::NULL_MOVE;
+        state.aspirationWindow = {neg_infinity, infinity, 0, 0};
     }
 
     int negamax(int depth, int alpha, int beta, bool isRoot = false) {
@@ -123,6 +142,19 @@ private:
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
         }
+
+        // mate search
+        if(!isRoot){
+            alpha = max(alpha, -mateScore - depth);
+            beta = min(beta, mateScore + depth);
+            if (alpha >= beta)
+            {
+                return alpha;
+            }
+        }
+        
+    
+        
 
         uint64_t zobristKey = board.zobrist();
         auto ttEntry = tt.retrieve(zobristKey);
@@ -138,6 +170,30 @@ private:
                 return ttEntry->score; // Use the score from the transposition table.
             }
         }
+
+
+        // important var for mate checks and search extensions
+        bool isCheck = board.inCheck();
+
+
+        //null move pruning
+        // we disable for the endgame
+        if (depth > 3 && !isCheck && evaluator.getGamePhase() > 0.2){
+            board.makeNullMove();
+            int nullMoveScore = -negamax(depth - 3, -beta, -beta + 1, false);
+            board.unmakeNullMove();
+            if(stop.load()){
+                return 0;
+            }
+            if (nullMoveScore >= beta){
+                return beta;
+            }
+        }
+
+        // var to keep track of how many moves we've looked at from the current node, 
+        // used for late move reductions
+        int moveCount = 0;
+
         Move localBestMove = Move::NULL_MOVE;
         NodeType nodeType = NodeType::UPPERBOUND;
         Movelist moves;
@@ -145,7 +201,7 @@ private:
 
         if (moves.size() == 0) {
             // Check for checkmate or stalemate
-            return board.inCheck() ? (-mateScore - depth) : 0;
+            return isCheck ? (-mateScore - depth) : 0;
         }
 
         if (depth == 0) {
@@ -155,15 +211,41 @@ private:
         sortMoves(moves, board); // Pre-sort moves based on heuristics
 
         for (const Move& move : moves) {
+            moveCount++;
+            
+            bool isCapture = board.isCapture(move);
+
+             // Futility Pruning at depth 1
+            const int FUTILITY_MARGIN = 320; // worth abt a minor piece
+            // constraints are not root node, not in check, not a capture, and not a mate search, and depth is 1
+
+            if (!isRoot && !isCheck && !isCapture && depth == 1 && (alpha > mateScore - MAX_DEPTH) && (beta < mateScore + MAX_DEPTH)) {
+                float evaluation = evaluate(1);
+                if (evaluation + FUTILITY_MARGIN <= alpha) {
+                    return evaluation;
+                }
+            }
+
             board.makeMove(move);
-            int eval = -negamax(depth - 1, -beta, -alpha, false); 
+
+            int depthExtension = 0;
+            //check extension in the right place now
+            if(board.inCheck()){
+                depthExtension = 1;
+            }
+            // Example LMR condition
+            bool doLMR = depth > 2 && moveCount > 3 && !isCapture && isCheck == false;
+            if (doLMR) depthExtension = -1; // Late move reduction
+
+            int eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, false); 
             board.unmakeMove(move);
             
             if (eval >= beta) {
                 //tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move); 
                 // store history and killer moves if move is quiet here
-                    // update killer moves
-                    if (move != state.killerMoves[0]) {
+                    // update killer moves only if not a capture
+
+                    if (!isCapture && move != state.killerMoves[0]) {
                         state.killerMoves[1] = state.killerMoves[0];
                         state.killerMoves[0] = move;
                     }
@@ -190,6 +272,10 @@ private:
     }
 
     int quiescence(int alpha, int beta) {
+        if(stop.load()){
+            return 0;
+        }
+        state.nodes++;
         int stand_pat = evaluate(0);
         if (stand_pat >= beta) {
             return beta;
@@ -265,8 +351,9 @@ void sortMoves(Movelist& moves, const Board& board) {
     });
 }
 
+    //trying out lazy evaluation
     int evaluate(int depth) {
-        int rawScore = evaluator.evaluate(depth); // Positive for White's advantage, negative for Black's
+        int rawScore = evaluator.evaluate(depth, false); // Positive for White's advantage, negative for Black's
         return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
     }
 };

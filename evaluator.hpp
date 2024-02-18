@@ -258,11 +258,8 @@ class Evaluator {
     // might just be better to grab the pieces directly from the board here
     // and keep feature extraction to just the more complicated functions
     // we should never call this on a position that is a game over state
-    float evaluate(int depth){
-        // extract features from the board
-        FeatureExtractor fe = FeatureExtractor(board);
-        fe.extract();
-        Features features = fe.getFeatures();
+    float evaluate(int depth, bool lazy = false){
+       
     float score = 0;
         // Initialize the endgame score
     int taperedEndgameScore = 0; // Use a direct integer instead of a pointer for simplicity
@@ -293,6 +290,15 @@ class Evaluator {
     
         // Combine middle game and end game scores based on the current game phase
         score = mgscore * mgWeight + egscore * egWeight;
+
+        // if lazy evaluation is enabled, return the score here
+        if(lazy){
+            return score;
+        }
+        // extract features from the board
+        FeatureExtractor fe = FeatureExtractor(board);
+        fe.extract();
+        Features features = fe.getFeatures();
 
         score += features.passedPawns * weightFeaturesByHand.passedPawn.middleGame * mgWeight;
         score += features.passedPawns * weightFeaturesByHand.passedPawn.endGame * egWeight;

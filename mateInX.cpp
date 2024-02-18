@@ -17,7 +17,6 @@
 #include <string>
 #include "chess.hpp" // Include your Board class header
 #include "searcher.hpp" // Include your Searcher class header
-#include "basic_searcher.hpp" // Include your BasicSearcher class header
 #include <atomic>
 
 std::atomic<bool> stop(false);
@@ -26,19 +25,26 @@ std::atomic<bool> stop(false);
 int main() {
     // Map of FEN strings to their best moves
     std::map<std::string, std::string> fenToBestMove = {
-        {"4r2k/1p3rbp/2p1N1p1/p3n3/P2NB1nq/1P6/4R1P1/B1Q2RK1 b - - 4 32", "h4h2"},
-        {"4r3/1pp2rbk/6pn/4n3/P3BN1q/1PB2bPP/8/2Q1RRK1 b - - 0 31", "h4g3"},
-        {"4r1k1/4r1p1/8/p2R1P1K/5P1P/1QP3q1/1P6/3R4 b - - 0 1", "g7g6"},
-        {"r1bqk2r/2ppb1p1/n3P2p/8/2B1nP2/4P3/1PPP3P/RNBQK1NR w KQkq - 0 10", "d1h5"},
-        {"rn3r1k/p3qp2/bp2p2p/3pP3/P2NRQ2/1Pb2NPP/5PB1/2R3K1 w - - 1 22", "f4h6"},
-        {"3qr2k/1p3rbp/2p3p1/p7/P2pBNn1/1P3n2/6P1/B1Q1RR1K b - - 1 30", "d8h4"}, //in 4
-        {"4r2k/1p3rbp/2p3p1/p7/P2pB1nq/1P3n1N/6P1/B1Q1RR1K b - - 3 31", "h4g3"}, // in 3
-        {"4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33", "f8f4"}, // in 2
-        {"4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24", "f1f8"}, //in 5
         
-        //quiet moves
-        {"rn3k1r/1p2bp1p/8/1p1pp3/8/5R2/PPPP1P1P/RNB1K3 w Q - 0 17", "b1c3"},
-        {"2k5/2p5/2n3N1/p7/2R5/2P3K1/2r5/8 b - - 5 36", "c8b7"} // questionable what the best move is here
+        // mate in x series: https://lichess.org/study/0uBy1QsD
+        {"4r2k/1p3rbp/2p1N1p1/p3n3/P2NB1nq/1P6/4R1P1/B1Q2RK1 b - - 4 32", "h4h2"}, // in 1
+        {"4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33", "f8f4"}, // in 2
+        {"4r2k/1p3rbp/2p3p1/p7/P2pB1nq/1P3n1N/6P1/B1Q1RR1K b - - 3 31", "h4g3"}, // in 3
+        {"3qr2k/1p3rbp/2p3p1/p7/P2pBNn1/1P3n2/6P1/B1Q1RR1K b - - 1 30", "d8h4"}, //in 4
+        {"4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24", "f1f8"}, //in 5
+        {"4rr2/1p4bk/2p3pn/B3n2b/P4N1q/1P5P/6PK/1BQ1RR2 b - - 1 31", "h6g4"}, // in 6
+
+        // tactical non mate series
+        // {"2r5/ppp3B1/4kp1R/8/5P2/P7/1n5P/6K1 b - - 3 29", "c8g8"}, // 1100 elo puzzle
+        // {"rnbqr1k1/ppp2p1p/3p1bPB/8/4P1Q1/1BN5/PPP3PP/R3K2R b KQ - 0 15", "c8g4"}, // 1200 elo puzzle
+
+
+        // {"3r1r1b/ppq2p1k/2p1p1p1/4Nn1n/2PP1P1p/1PQ2R1P/PB2N1P1/3R2K1 b - - 0 1", "h5f4"},  // estimated 2500+ elo puzzle
+        // {"1r3r2/4bpkp/1qb1p1p1/3pP1P1/p1pP1Q2/PpP2N1R/1Pn1B2P/3RB2K w - - 0 1", "f4f6"}, // estimated 3000+ elo puzzle
+
+
+        //endgame series
+        
         
 
         // Add all other FEN strings and their best moves here
@@ -59,7 +65,7 @@ int main() {
             std::cout << "Correct move for position: " << fen << " | " << suggestedMove << std::endl;
         } else {
             std::cout << "Incorrect move for position: " << fen << std::endl;
-            std::cout << "Suggested move: " << suggestedMove << " | Best move: " << bestMove << std::endl;
+            std::cout << "Suggested move: " << suggestedMove << " | Best move: " << bestMove << "\n" << std::endl;
         }
         //reset the stop flag
         stop = false;
