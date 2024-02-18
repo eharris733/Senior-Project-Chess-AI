@@ -54,7 +54,7 @@ public:
     Move search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
         // crude time control
-        // we divide by 2 because the last depth is probably going to be more than 5 times as long as the rest
+        // we divide by 4 because the last depth is probably going to be  4 times as long as the rest
         int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 4;
 
         // // start the timer
@@ -75,7 +75,7 @@ public:
             }
 
             
-            state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, true);
+            state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
             
 
             // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
@@ -87,7 +87,14 @@ public:
                     state.bestScore = state.currentIterationBestScore;
                     state.bestMove = state.currentIterationBestMove; // Update result only once,
                 }
+
+                 
                 cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
+
+                 // stop if we have a mate, since it will never be a false mate
+                 if(state.currentIterationBestScore > mateScore - MAX_DEPTH){
+                     break;
+                 }
                 state.currentDepth++; // Update the depth after each iteration
                 
             }
@@ -133,7 +140,7 @@ private:
         state.aspirationWindow = {neg_infinity, infinity, 0, 0};
     }
 
-    int negamax(int depth, int alpha, int beta, bool isRoot = false) {
+    int negamax(int depth, int alpha, int beta, int plyFromRoot) {
         // our search has been told to stop due to time
         if (stop.load()){
             return 0;
@@ -143,15 +150,7 @@ private:
             return 0; // Draw score
         }
 
-        // mate search
-        if(!isRoot){
-            alpha = max(alpha, -mateScore - depth);
-            beta = min(beta, mateScore + depth);
-            if (alpha >= beta)
-            {
-                return alpha;
-            }
-        }
+       
         
     
         
@@ -163,7 +162,7 @@ private:
             if ((ttEntry->nodeType == NodeType::EXACT) ||
                 (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
                 (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
-                if (isRoot){
+                if (plyFromRoot == 0){
                     state.currentIterationBestMove = ttEntry->bestMove;
                     state.currentIterationBestScore = ttEntry->score;
                 }
@@ -180,7 +179,7 @@ private:
         // we disable for the endgame
         if (depth > 3 && !isCheck && evaluator.getGamePhase() > 0.2){
             board.makeNullMove();
-            int nullMoveScore = -negamax(depth - 3, -beta, -beta + 1, false);
+            int nullMoveScore = -negamax(depth - 3, -beta, -beta + 1, plyFromRoot + 1);
             board.unmakeNullMove();
             if(stop.load()){
                 return 0;
@@ -201,7 +200,7 @@ private:
 
         if (moves.size() == 0) {
             // Check for checkmate or stalemate
-            return isCheck ? (-mateScore - depth) : 0;
+            return isCheck ? (-mateScore + plyFromRoot) : 0;
         }
 
         if (depth == 0) {
@@ -219,7 +218,7 @@ private:
             const int FUTILITY_MARGIN = 320; // worth abt a minor piece
             // constraints are not root node, not in check, not a capture, and not a mate search, and depth is 1
 
-            if (!isRoot && !isCheck && !isCapture && depth == 1 && (alpha > mateScore - MAX_DEPTH) && (beta < mateScore + MAX_DEPTH)) {
+            if (plyFromRoot > 0 && !isCheck && !isCapture && depth == 1 && (alpha > mateScore - MAX_DEPTH) && (beta < mateScore + MAX_DEPTH)) {
                 float evaluation = evaluate(1);
                 if (evaluation + FUTILITY_MARGIN <= alpha) {
                     return evaluation;
@@ -237,7 +236,7 @@ private:
             bool doLMR = depth > 2 && moveCount > 3 && !isCapture && isCheck == false;
             if (doLMR) depthExtension = -1; // Late move reduction
 
-            int eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, false); 
+            int eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1); 
             board.unmakeMove(move);
             
             if (eval >= beta) {
@@ -257,7 +256,7 @@ private:
                 alpha = eval;
                 localBestMove = move; // Found a new best move.
                 nodeType = NodeType::EXACT;
-                if (isRoot){
+                if (plyFromRoot == 0){
                     state.currentIterationBestMove = localBestMove;
                     state.currentIterationBestScore = alpha;
                 }
