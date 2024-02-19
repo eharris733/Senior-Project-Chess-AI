@@ -184,20 +184,27 @@ private:
         bool isCheck = board.inCheck();
 
 
-        //null move pruning
-        //we disable for the endgame
+        //null move reduction, 
+        // based on https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=751ea2e28e427d6119be46de14be5140f7eb471e
+
         // might wantn to disable for pv search, or if we are doing lmr
-        // if (depth >= 3 && !isCheck && !isPVS && evaluator.getGamePhase() > 0.2 && evaluator.evaluate(depth) >=beta){
-        //     board.makeNullMove();
-        //     int nullMoveScore = -negamax(depth - 3, -beta, -beta + 1, plyFromRoot + 1);
-        //     board.unmakeNullMove();
-        //     // if(stop.load()){
-        //     //     return 0;
-        //     // }
-        //     if (nullMoveScore >= beta){
-        //         return beta;
-        //     }
-        // }
+        bool nullMoveReduction = depth >= 3 && !isCheck && evaluate(depth) >= beta && !isPVS;
+        if(nullMoveReduction){
+            board.makeNullMove();
+            int r = depth > 6 ? 4 : 3;
+            int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
+            board.unmakeNullMove();
+            // if(stop.load()){
+            //     return 0;
+            // }
+            if (nullMoveScore >= beta){
+                // reduction in depth
+                depth -= 4;
+                if (depth <= 0){
+                    return evaluate(0);
+                }
+            }
+        }
 
         // var to keep track of how many moves we've looked at from the current node, 
         // used for late move reductions

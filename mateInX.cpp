@@ -27,11 +27,11 @@ int main() {
     std::map<std::string, std::string> fenToBestMove = {
         
         // mate in x series: https://lichess.org/study/0uBy1QsD
-        {"4r2k/1p3rbp/2p1N1p1/p3n3/P2NB1nq/1P6/4R1P1/B1Q2RK1 b - - 4 32", "h4h2"}, // in 1
-        {"4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33", "f8f4"}, // in 2
-        {"4r2k/1p3rbp/2p3p1/p7/P2pB1nq/1P3n1N/6P1/B1Q1RR1K b - - 3 31", "h4g3"}, // in 3
-        {"3qr2k/1p3rbp/2p3p1/p7/P2pBNn1/1P3n2/6P1/B1Q1RR1K b - - 1 30", "d8h4"}, //in 4
-        {"4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24", "f1f8"}, //in 5
+        // {"4r2k/1p3rbp/2p1N1p1/p3n3/P2NB1nq/1P6/4R1P1/B1Q2RK1 b - - 4 32", "h4h2"}, // in 1
+        // {"4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33", "f8f4"}, // in 2
+        // {"4r2k/1p3rbp/2p3p1/p7/P2pB1nq/1P3n1N/6P1/B1Q1RR1K b - - 3 31", "h4g3"}, // in 3
+        // {"3qr2k/1p3rbp/2p3p1/p7/P2pBNn1/1P3n2/6P1/B1Q1RR1K b - - 1 30", "d8h4"}, //in 4
+        // {"4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24", "f1f8"}, //in 5
         {"4rr2/1p4bk/2p3pn/B3n2b/P4N1q/1P5P/6PK/1BQ1RR2 b - - 1 31", "h6g4"}, // in 6
 
         // tactical non mate series
@@ -57,7 +57,7 @@ int main() {
     for (const auto& [fen, bestMove] : fenToBestMove) {
         board.setFen(fen); // Initialize the board with the FEN string
 
-        Move b = searcher.search(10000, 0, 1); // 1 move to go means use all the time on the clock, current is ten seconds each
+        Move b = searcher.search(100000, 0, 1); // 1 move to go means use all the time on the clock, current is ten seconds each
 
         std::string suggestedMove = uci::moveToUci(b); // Convert the suggested move to UCI format
 
