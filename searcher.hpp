@@ -36,8 +36,16 @@ struct SearchState {
     AspirationWindow aspirationWindow;
 };
 
-
-
+// for simple pruning techniques
+static const std::map<PieceType, int> PieceValue = {
+        {PieceType::NONE, 0},
+        {PieceType::PAWN, 100},
+        {PieceType::KNIGHT, 320},
+        {PieceType::BISHOP, 330},
+        {PieceType::ROOK, 500},
+        {PieceType::QUEEN, 900},
+        {PieceType::KING, 20000}
+    };
 
 
 
@@ -322,18 +330,27 @@ private:
         // if(stop.load()){
         //     return 0;
         // }
+        const int DELTA_MARGIN = 900; // most positional advantages aren't worth a rook
         state.nodes++;
         int stand_pat = evaluate(0);
         if (stand_pat >= beta) {
             return beta;
         }
+
         if (alpha < stand_pat) {
             alpha = stand_pat;
         }
+        
         Movelist moves;
         movegen::legalmoves<MoveGenType::CAPTURE>(moves, board);
         sortMoves(moves, board);
         for (const Move& move : moves) {
+            // Delta pruning
+            if (stand_pat + DELTA_MARGIN + PieceValue.at(board.at<PieceType>(move.to())) <= alpha) {
+                alpha = alpha;
+                printf("Pruned by delta\n");
+            }
+
             board.makeMove(move);
             int score = -quiescence(-beta, -alpha);
             board.unmakeMove(move);
@@ -356,15 +373,7 @@ int MVV_LVA_Score(const Move& move, const Board& board) {
         return infinity; // PV move
     }   
 
-    static const std::map<PieceType, int> PieceValue = {
-        {PieceType::NONE, 0},
-        {PieceType::PAWN, 100},
-        {PieceType::KNIGHT, 320},
-        {PieceType::BISHOP, 330},
-        {PieceType::ROOK, 500},
-        {PieceType::QUEEN, 900},
-        {PieceType::KING, 20000}
-    };
+    
     // Correctly determine the victim and aggressor pieces
 
     PieceType victim = board.at<PieceType>(move.to()); // Victim is the piece on the destination square
