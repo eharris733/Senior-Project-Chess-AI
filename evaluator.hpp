@@ -173,8 +173,8 @@ struct weightFeaturesByHand{
     GamePhaseValue rookOpenFile = GamePhaseValue(15, 5); // Rook has no pawns in its file
     GamePhaseValue rookSemiOpenFile = GamePhaseValue(20, 10); // Rook has no friendly pawns in its file
     GamePhaseValue rookAtckWeakPawnOpenColumn = GamePhaseValue(35, 30); // Rook can directly attack a weak enemy pawn
-    GamePhaseValue kingFriendlyPawn = GamePhaseValue(10, 0); // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
-    GamePhaseValue kingNoEnemyPawnNear = GamePhaseValue(-10, 0); // How far king is from closest enemy pawn
+    GamePhaseValue kingFriendlyPawn = GamePhaseValue(4, 0); // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
+    GamePhaseValue kingNoEnemyPawnNear = GamePhaseValue(5, 0); // How far king is from closest enemy pawn
     GamePhaseValue kingPressureScore = GamePhaseValue(10, 10); // Multiplier for king pressure
 
 

@@ -691,25 +691,37 @@ short kingFriendlyPawn(Color color){
         int pawnRank = rank_of(pawnSquare);
         int pawnFile = file_of(pawnSquare);
 
+
+        // disregard if not on same or adjacent file
         if(abs(pawnFile - kingFile) > 1){
             continue;
         }
+        // if the pawn is super far away, cap it at 6
         if (min(abs(pawnRank - kingRank), abs(pawnFile - kingFile)) > 2){
             count += 6;
             continue;
         }
+        // distance is the manhattan distance
         int distance = abs(pawnRank - kingRank) + abs(pawnFile - kingFile) + 1;
         if (distance > 6){
             count += 6;
             continue;
         }
-        count += distance;
+        else{
+            count += 6 - distance;
+        }
+        
     }
+
     return count;
 }
 
 // the higher the score the better, need to add a limit
 // if there is not pawns within a certain radius, it should not affect us
+
+
+//for this one, every close pawn is a negative for the other side
+// so we need to inverse the score, and that way 0 is a good thing
 short kingNoEnemyPawnNear(Color color){
     vector<Square> enemyPawns = color == Color::WHITE ? bPawnSquares : wPawnSquares;
     Square kingSquare = color == Color::WHITE ? whiteKingSquare : blackKingSquare;
@@ -722,16 +734,18 @@ short kingNoEnemyPawnNear(Color color){
         int pawnRank = rank_of(pawnSquare);
         int pawnFile = file_of(pawnSquare);
 
-        if(abs(pawnFile - kingFile) > 1){
+        // don't care about non adjacent file or not the same file pawns
+        // also needs to be within 3 moves of the king
+        if(abs(pawnFile - kingFile) > 1 || abs(pawnRank - kingRank) > 3){
             continue;
         }
-        if (max(abs(pawnRank - kingRank), abs(pawnFile - kingFile)) > 3){
-            continue;
-        }
+        
+        // distance is the manhattan distance
         int distance = abs(pawnRank - kingRank) + abs(pawnFile - kingFile) + 1;
-        count += distance;
+        count += distance; 
     }
-    return count;
+    // invert the score, since the higher the score the worse
+    return -count;
 }
 
 // this uses a feature known as king tropism, where

@@ -348,7 +348,6 @@ private:
             // Delta pruning
             if (stand_pat + DELTA_MARGIN + PieceValue.at(board.at<PieceType>(move.to())) <= alpha) {
                 alpha = alpha;
-                printf("Pruned by delta\n");
             }
 
             board.makeMove(move);
