@@ -1,0 +1,78 @@
+[Event "bullet"]
+[Site "?"]
+[Date "2024.02.18"]
+[Round "1"]
+[White "current"]
+[Black "v2"]
+[Result "*"]
+[ECO "A00"]
+[GameDuration "00:00:08"]
+[GameEndTime "2024-02-18T16:57:19.937 EST"]
+[GameStartTime "2024-02-18T16:57:11.083 EST"]
+[Opening "Ware (Meadow Hay) Opening"]
+[PlyCount "12"]
+[Termination "unterminated"]
+[TimeControl "40/300"]
+
+1. a4 {book} b5 {book} 2. h4 {book} g5 {book} 3. e4 {book} f5 {book}
+4. d4 {book} c5 {book} 5. c4 {book} d5 {book} 6. Qh5+ {+3.77/6 3.4s}
+Kd7 {-3.23/7 3.3s, No result} *
+
+[Event "bullet"]
+[Site "?"]
+[Date "2024.02.18"]
+[Round "1"]
+[White "v2"]
+[Black "current"]
+[Result "*"]
+[ECO "A00"]
+[GameDuration "00:00:08"]
+[GameEndTime "2024-02-18T16:57:19.937 EST"]
+[GameStartTime "2024-02-18T16:57:11.203 EST"]
+[Opening "Gedult's Opening"]
+[PlyCount "6"]
+[Termination "unterminated"]
+[TimeControl "40/300"]
+
+1. f3 {book} c5 {book} 2. e4 {book} Nc6 {book} 3. Nc3 {+0.13/6 3.6s}
+Nf6 {-0.17/6 3.5s, No result} *
+
+[Event "bullet"]
+[Site "?"]
+[Date "2024.02.18"]
+[Round "2"]
+[White "current"]
+[Black "v2"]
+[Result "*"]
+[ECO "A00"]
+[GameDuration "00:00:08"]
+[GameEndTime "2024-02-18T16:57:19.937 EST"]
+[GameStartTime "2024-02-18T16:57:11.311 EST"]
+[Opening "Clemenz (Mead's, Basman's or de Klerk's) Opening"]
+[PlyCount "6"]
+[Termination "unterminated"]
+[TimeControl "40/300"]
+
+1. h3 {book} d5 {book} 2. g4 {book} f5 {book} 3. e3 {-0.43/6 2.9s}
+e5 {+0.32/6 3.0s, No result} *
+
+[Event "bullet"]
+[Site "?"]
+[Date "2024.02.18"]
+[Round "2"]
+[White "v2"]
+[Black "current"]
+[Result "*"]
+[ECO "A01"]
+[GameDuration "00:00:08"]
+[GameEndTime "2024-02-18T16:57:19.937 EST"]
+[GameStartTime "2024-02-18T16:57:11.420 EST"]
+[Opening "Nimzovich-Larsen attack"]
+[PlyCount "10"]
+[Termination "unterminated"]
+[TimeControl "40/300"]
+[Variation "Symmetrical Variation"]
+
+1. b3 {book} b6 {book} 2. Nf3 {book} Bb7 {book} 3. Bb2 {book} Nf6 {book}
+4. Bxf6 {book} exf6 {book} 5. e3 {book} f5 {book, No result} *
+
