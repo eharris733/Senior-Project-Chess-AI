@@ -1,0 +1,60 @@
+[Event "My Tournament"]
+[Site "?"]
+[Date "2024.02.19"]
+[Round "1"]
+[White "current"]
+[Black "v2"]
+[Result "0-1"]
+[ECO "A00"]
+[GameDuration "00:00:15"]
+[GameEndTime "2024-02-19T23:21:22.298 EST"]
+[GameStartTime "2024-02-19T23:21:07.211 EST"]
+[Opening "Saragossa Opening"]
+[PlyCount "20"]
+[Termination "stalled connection"]
+[TimeControl "40/60"]
+
+1. c3 {book} c5 {book} 2. g3 {book} Nc6 {book} 3. Bg2 {book} g6 {book}
+4. d4 {book} cxd4 {book} 5. cxd4 {book} Bg7 {book} 6. d5 {book} Ne5 {book}
+7. d6 {book} Nc4 {book} 8. dxe7 {book} Qa5+ {book} 9. Nd2 {book} Nxb2 {book}
+10. Qb3 {book} Na4 {book, White's connection stalls} 0-1
+
+[Event "My Tournament"]
+[Site "?"]
+[Date "2024.02.19"]
+[Round "1"]
+[White "v2"]
+[Black "current"]
+[Result "*"]
+[ECO "A00"]
+[GameDuration "00:00:15"]
+[GameEndTime "2024-02-19T23:21:22.299 EST"]
+[GameStartTime "2024-02-19T23:21:07.218 EST"]
+[Opening "Grob's attack"]
+[PlyCount "8"]
+[Termination "unterminated"]
+[TimeControl "40/60"]
+
+1. g4 {book} Nf6 {book} 2. g5 {book} Nh5 {book} 3. e3 {+0.21/6 2.0s} g6 {book}
+4. Be2 {+0.30/5 0.81s} Ng7 {+0.23/8 1.6s, No result} *
+
+[Event "My Tournament"]
+[Site "?"]
+[Date "2024.02.19"]
+[Round "2"]
+[White "current"]
+[Black "v2"]
+[Result "*"]
+[ECO "A00"]
+[GameDuration "00:00:15"]
+[GameEndTime "2024-02-19T23:21:22.299 EST"]
+[GameStartTime "2024-02-19T23:21:07.211 EST"]
+[Opening "Van't Kruijs Opening"]
+[PlyCount "10"]
+[Termination "unterminated"]
+[TimeControl "40/60"]
+
+1. e3 {book} f5 {book} 2. e4 {book} fxe4 {+1.30/5 0.34s} 3. Nc3 {book}
+Nf6 {+1.26/5 0.35s} 4. g4 {book} d5 {+1.59/5 0.79s} 5. g5 {book}
+Ng8 {+1.69/5 0.83s, No result} *
+

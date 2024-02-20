@@ -149,7 +149,7 @@ private:
         state.aspirationWindow = {neg_infinity, infinity, 0, 0};
     }
 
-    int negamax(int depth, int alpha, int beta, int plyFromRoot, bool  isPVS = false) {
+    int negamax(int depth, int alpha, int beta, int plyFromRoot) {
         // our search has been told to stop due to time
         // if (stop.load()){
         //     return 0;
@@ -158,6 +158,13 @@ private:
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
         }
+
+       
+        //pruning and hueristics booleans
+        // important var for mate checks and search extensions
+        bool isPvs = (beta - alpha) > 1;
+        bool isCheck = board.inCheck();
+        bool isRoot = plyFromRoot == 0;
 
        
         
@@ -169,9 +176,9 @@ private:
 
         if (ttEntry.has_value() && ttEntry->depth >= depth) {
             if ((ttEntry->nodeType == NodeType::EXACT) ||
-                (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score > alpha) ||
-                (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score < beta)) {
-                if (plyFromRoot == 0){
+                (ttEntry->nodeType == NodeType::LOWERBOUND && ttEntry->score >= beta) ||
+                (ttEntry->nodeType == NodeType::UPPERBOUND && ttEntry->score <= alpha)) {
+                if (isRoot){
                     state.currentIterationBestMove = ttEntry->bestMove;
                     state.currentIterationBestScore = ttEntry->score;
                 }
@@ -180,31 +187,26 @@ private:
         }
 
 
-        // important var for mate checks and search extensions
-        bool isCheck = board.inCheck();
+        
 
 
         //null move reduction, 
-        // based on https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=751ea2e28e427d6119be46de14be5140f7eb471e
-
-        // might wantn to disable for pv search, or if we are doing lmr
-        bool nullMoveReduction = depth >= 3 && !isCheck && evaluate(depth) >= beta && !isPVS;
-        if(nullMoveReduction){
-            board.makeNullMove();
-            int r = depth > 6 ? 4 : 3;
-            int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
-            board.unmakeNullMove();
-            // if(stop.load()){
-            //     return 0;
-            // }
-            if (nullMoveScore >= beta){
-                // reduction in depth
-                depth -= 4;
-                if (depth <= 0){
-                    return evaluate(0);
+            // based on https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=751ea2e28e427d6119be46de14be5140f7eb471e
+            // might wantn to disable for pv search, or if we are doing lmr
+            bool nullMoveReduction = depth >= 3 && !isCheck && !isRoot && !isPvs && evaluate(depth) >= beta;
+            if(nullMoveReduction){
+                board.makeNullMove();
+                int r = depth > 6 ? 4 : 3;
+                int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
+                board.unmakeNullMove();
+                if (nullMoveScore >= beta){
+                    // reduction in depth
+                    depth -= 4;
+                    if (depth <= 0){
+                        return evaluate(0);
+                    }
                 }
             }
-        }
 
         // var to keep track of how many moves we've looked at from the current node, 
         // used for late move reductions
@@ -226,15 +228,22 @@ private:
         state.nodes ++;
         sortMoves(moves, board); // Pre-sort moves based on heuristics
 
+        isPvs = true; // hash move will always be the first one searched
+
         for (const Move& move : moves) {
             
             //we should already know this from our sort moves
             bool isCapture = board.isCapture(move);
+            bool isCheck = board.inCheck();
+
+            
+            
+            
 
             // // Futility Pruning at depth 1
-            // const int FUTILITY_MARGIN = 50; // Worth about a pawn
+            // const int FUTILITY_MARGIN = 200; // Worth about two pawns
             // // Constraints: Not root node, not in check, not a capture, not a mate search, and depth is 1
-            // if (plyFromRoot > 0 && !isCheck && !isCapture && !isPVS && depth == 1
+            // if (plyFromRoot > 0 && !isCheck && !isCapture && !isPvs && depth == 1
             //     && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
             //     float evaluation = evaluate(1); 
             //     if (evaluation + FUTILITY_MARGIN <= alpha) {
@@ -247,27 +256,11 @@ private:
             board.makeMove(move);
             // recheck our pruning conditions
             isCheck = board.inCheck();
-            isCapture = board.isCapture(move);
-
             int depthExtension = 0;
             //check extension in the right place now
             if(isCheck){
                 depthExtension ++;
             }
-
-            // // passed pawn reaches a critical rank extension
-
-            // PieceType piece = board.at<PieceType>(move.from());
-            // // Check if the piece is a pawn and is moving to the promotion rank.
-            // if (piece == PieceType::PAWN) {
-            //     bool isBlackPromoting = board.sideToMove() == Color::BLACK && (rank_of(move.to()) == 1 || rank_of(move.to()) == 0);
-            //     bool isWhitePromoting = board.sideToMove() == Color::WHITE && (rank_of(move.to()) == 7 || rank_of(move.to()) == 6);
-            //     if (isBlackPromoting || isWhitePromoting) {
-            //         depthExtension++;
-            //     }
-            // }
-
-
 
             // LMR condition
             // common conditions for LMR from chessprogramming wiki
@@ -287,21 +280,38 @@ private:
             // right now we only reduce by 1 move, but it is likely that with better move sorting
             // we can reduce by more the more moves we look at
             // also only going to look at depth 3 and on
-            bool doLMR = depth >= 3 && moveCount > 3 && !isCapture && !isCheck && !isPVS && depthExtension == 0;
+            bool doLMR = depth >= 3 && moveCount > 3 && !isRoot && !isCapture && !isCheck && !isPvs && depthExtension == 0;
             // if (doLMR) {
             //     int reduction = max(1.0, log(depth) * log(moveCount) / 2);
             //     depth -= reduction; // Apply dynamic reduction based on depth and move count
             // }
             if (doLMR) {
-                depth -= 1; // Apply dynamic reduction based on depth and move count
+                depthExtension -= 1; // Apply dynamic reduction based on depth and move count
             }
 
-            int eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1, moveCount == 0 ? true : false); 
+            //Principal Variation Search
+            int eval;
+            // we have a pvs after one search
+            if (isPvs){
+                eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
+            }
+            // zero window search, to try and prune a bunch
+            else{
+                eval = -negamax(depth - 1 + depthExtension, -alpha - 1, -alpha, plyFromRoot + 1);
+                
+                // move is better than expected, so we do a full research
+                if (eval > alpha && eval < beta) {
+                    // The move is better than expected, re-search with a full window
+                    eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
+                }
+            }
             board.unmakeMove(move);
+
+            // it is now false
+            isPvs = false;
             
             if (eval >= beta) {
-                // this line bugs up the computer for some reason
-                //tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move); 
+                tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move); 
                 // store history and killer moves if move is quiet here
                     // update killer moves only if not a capture
 
@@ -317,7 +327,7 @@ private:
                 alpha = eval;
                 localBestMove = move; // Found a new best move.
                 nodeType = NodeType::EXACT;
-                if (plyFromRoot == 0){
+                if (isRoot){
                     state.currentIterationBestMove = localBestMove;
                     state.currentIterationBestScore = alpha;
                 }
@@ -326,7 +336,11 @@ private:
         }
 
         // Update the transposition table with the new best score and move found at this depth.
-       tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
+        // right now only the exact node type works
+
+        tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
+
+       
         
         return alpha;
     }
@@ -373,34 +387,29 @@ private:
 constexpr int rank_of(Square sq) {
     return static_cast<int>(sq) / 8; // Divide the square index by 8 to get the rank
 }
-        // Improved MVV-LVA scoring function
-int MVV_LVA_Score(const Move& move, const Board& board) {
+       int MVV_LVA_Score(const Move& move, const Board& board) {
     if (move == state.bestMove) {
         return infinity; // PV move
-    }   
-
-    
-    // Correctly determine the victim and aggressor pieces
-
-    PieceType victim = board.at<PieceType>(move.to()); // Victim is the piece on the destination square
-    PieceType aggressor = board.at<PieceType>(move.from()); // Aggressor is the piece on the source square
-
-    // If there is no capture, return a low base score for quiet moves
-    if (victim == PieceType::NONE) {
-        // check to see if it is a promotion
-        if (aggressor == PieceType::PAWN && (static_cast<int>(move.to()) / 8 == 0) == 0 || (static_cast<int>(move.to()) / 8 == 7) == 0){
-            return 200; // Base score for promotions
-        }
-        if (move == state.killerMoves[0] || move == state.killerMoves[1]){
-            return 100; // Better than base score for killer moves
-        }   
-        return 10; // Base score for quiet moves to differentiate them from invalid moves
     }
 
-    // Calculate and return the MVV-LVA score
-    // Prioritize captures by victim value, and within those, prioritize lower-value aggressors
+    PieceType victim = board.at<PieceType>(move.to()); // piece being captured
+    PieceType aggressor = board.at<PieceType>(move.from()); // piece capturing
+
+    // Promotion check refined
+    bool isPromotion = aggressor == PieceType::PAWN && (move.to() / 8 == 0 || move.to() / 8 == 7);
+
+    if (victim == PieceType::NONE) {
+        if (isPromotion) {
+            return 200; // Base score for promotions
+        }
+        if (move == state.killerMoves[0] || move == state.killerMoves[1]) {
+            return 100; // Score for killer moves
+        }
+        return 10; // Base score for quiet moves
+    }
+
+    // MVV-LVA Scoring refined
     int score = PieceValue.at(victim) * 10 + PieceValue.at(PieceType::KING) - PieceValue.at(aggressor);
-    //assert(score > 0); // Ensure scoring logic is correct and positive scores are assigned to valid moves
     return score;
 }
 
