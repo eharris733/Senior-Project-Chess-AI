@@ -9,7 +9,6 @@
 #include <iostream>
 #include <algorithm>
 #include <chrono> 
-#include "tbprobe.h"
 
 
 
@@ -26,6 +25,7 @@ using namespace std;
 struct AspirationWindow {
     int alpha;
     int beta;
+    int delta;
     int failHigh;
     int failLow;
 };
@@ -66,23 +66,22 @@ public:
 
     SearchState state;
     Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 22), book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"){
+        state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
     }
     Move search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
-        // crude time control
-        // we divide by 5 because the last depth is probably going to be 5 times as long as the rest
+        
 
-        // play an opening move if we can
-        if(state.isOpening){
-            Move openingMove = book.pickRandomMove(board);
-            if (openingMove != Move::NULL_MOVE) {
-                return openingMove;
-            }
-            state.isOpening = false; // if we make it to this line, the move is null
+        // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
+        // perfect, but not really a factor of performance
+        Move openingMove = book.pickRandomMove(board);
+        if (openingMove != Move::NULL_MOVE) {
+            return openingMove;
         }
        
-
-        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 5;
+        // add an offset to our timeForThisMove if we are just out of the opening possible?
+        // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
+        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 4;
 
         // // start the timer
         auto startTime = chrono::steady_clock::now();
@@ -101,9 +100,15 @@ public:
                 break;
             }
 
+            if(state.currentDepth < 5){
+                state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
+            }
+            // at depth 5 we use aspiration windows
+            else{
+                state.bestScore = aspirationSearch();
+            }
             
-            state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
-            
+            //state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
 
             // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
             // update the overall search state with results from the latest iteration
@@ -157,17 +162,82 @@ private:
     
     // probably unnecesary but good practice
     void initSearch() {
+        stop = false;
         state.isOpening = true;
         state.bestMove = Move::NULL_MOVE;
-        state.bestScore = neg_infinity;
         state.currentDepth = 1;
         state.nodes = 0;
         state.currentIterationBestMove = Move::NULL_MOVE;
         state.currentIterationBestScore = neg_infinity;
-        state.killerMoves[0] = Move::NULL_MOVE;
-        state.killerMoves[1] = Move::NULL_MOVE;
-        state.aspirationWindow = {neg_infinity, infinity, 0, 0};
+        // state.killerMoves[0] = Move::NULL_MOVE; // maybe don't reset them?
+        // state.killerMoves[1] = Move::NULL_MOVE;
     }
+
+
+    // Aspiration window search
+int aspirationSearch() {
+    // 
+    int progression[] = {80, 250, 700};
+    bool isOpenWindow = false;
+
+    int eval;
+    // Reset or initialize aspiration window parameters
+    state.aspirationWindow.delta = 20;
+    state.aspirationWindow.alpha = state.bestScore - state.aspirationWindow.delta;
+    state.aspirationWindow.beta = state.bestScore + state.aspirationWindow.delta;
+    state.aspirationWindow.failLow = 0;
+    state.aspirationWindow.failHigh = 0;
+
+    // Ensure initial values for alpha, beta, and delta are set before entering this function.
+
+    while (!isOpenWindow){
+        eval = negamax(state.currentDepth, state.aspirationWindow.alpha, state.aspirationWindow.beta, 0);
+        
+        // if we found a mate score, we can stop
+        if(eval > mateScore - MAX_DEPTH || eval < -mateScore + MAX_DEPTH){
+            return eval;
+        }
+        // Update our aspiration windows based on the evaluation
+        if (eval <= state.aspirationWindow.alpha) {
+            // Fail low, widen the window downwards
+            state.aspirationWindow.failLow++;
+            state.aspirationWindow.beta = state.aspirationWindow.alpha; // Adjust beta to the current alpha
+            
+            if(state.aspirationWindow.failLow < 3){
+                state.aspirationWindow.delta += progression[state.aspirationWindow.failLow]; 
+                state.aspirationWindow.alpha -= state.aspirationWindow.delta; // Decrease alpha
+            }
+            else{
+                isOpenWindow = true;
+            }
+            
+            
+            
+        } else if (eval >= state.aspirationWindow.beta) {
+            // Fail high, widen the window upwards
+            state.aspirationWindow.failHigh++;
+            state.aspirationWindow.alpha = state.aspirationWindow.beta; // Adjust alpha to the current beta
+            
+            if(state.aspirationWindow.failHigh < 3){
+                state.aspirationWindow.delta += progression[state.aspirationWindow.failHigh]; 
+                state.aspirationWindow.beta += state.aspirationWindow.delta; // Increase beta
+            }
+            else{
+                isOpenWindow = true;
+            }
+            
+        } else {
+            // Score is within the window, search is successful
+            return eval;
+        }
+
+        // Optional: Add a mechanism to prevent the loop from running indefinitely
+        // For example, a maximum number of iterations or a condition to widen the window to a maximum allowed range
+    }
+    return negamax(state.currentDepth, neg_infinity, infinity, 0);
+}
+
+
 
     int negamax(int depth, int alpha, int beta, int plyFromRoot) {
         // our search has been told to stop due to time
@@ -210,20 +280,37 @@ private:
             //null move reduction, 
             // based on https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=751ea2e28e427d6119be46de14be5140f7eb471e
             // might wantn to disable for pv search, or if we are doing lmr
-            bool nullMoveReduction = depth >= 3 && !isCheck && !isRoot && !isPvs && evaluate(depth) >= beta;
+            bool nullMoveReduction = depth >= 3 && !isCheck && !isRoot && !isPvs;
             if (nullMoveReduction) {
-                board.makeNullMove();
-                int r = depth > 6 ? 4 : 3;
-                int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
-                board.unmakeNullMove();
-                if (nullMoveScore >= beta) {
-                    // reduction in depth
-                    depth -= 4;
-                    if (depth <= 0) {
-                        return evaluate(0);
+                int staticEval = evaluate(depth, true); // lazy eval to avoid expensive evals
+                if (staticEval >= beta){
+                    board.makeNullMove();
+                    int r = depth > 6 ? 4 : 3;
+                    int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
+                    board.unmakeNullMove();
+                    if (nullMoveScore >= beta) {
+                        // reduction in depth
+                        depth -= 4;
+                        if (depth <= 0) {
+                            return staticEval;
+                        }
                     }
                 }
+                
             }
+
+            
+
+            // // null move pruning
+            // // conditions are the same as null move reduction, but also we disregard the endgame to avoid zugzwang
+            // if (depth >= 3 && !isCheck && !isRoot && !isPvs && staticEval >= beta && evaluator.getGamePhase() > .2) {
+            //     board.makeNullMove();
+            //     int nullMoveScore = -negamax(depth - 3, -beta, -beta + 1, plyFromRoot + 1);
+            //     board.unmakeNullMove();
+            //     if (nullMoveScore >= beta) {
+            //         return beta; // Beta cutoff.
+            //     }
+            // }
 
             // var to keep track of how many moves we've looked at from the current node, 
             // used for late move reductions
@@ -253,17 +340,18 @@ private:
                 bool isCapture = board.isCapture(move);
                 bool isCheck = board.inCheck();
 
-                // // Futility Pruning at depth 1
-                // const int FUTILITY_MARGIN = 200; // Worth about two pawns
-                // // Constraints: Not root node, not in check, not a capture, not a mate search, and depth is 1
-                // if (plyFromRoot > 0 && !isCheck && !isCapture && !isPvs && depth == 1
-                //     && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
-                //     float evaluation = evaluate(1); 
-                //     if (evaluation + FUTILITY_MARGIN <= alpha) {
-                //         // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
-                //         return alpha; 
-                //     }
-                // }
+                // Reverse Futility Pruning at depth 1-3, with increasing margins
+                const int FUTILITY_MARGIN[] = {300, 900, 1300}; // Worth about a piece, a queen, and a completely winning position
+                // Constraints: Not root node, not in check, not a capture, not a mate search, and depth is 1
+                // also can't prune only legal move
+                if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3
+                    && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
+                    float evaluation = evaluate(1, true); // lazy eval to avoid expensive evals
+                    if (evaluation + FUTILITY_MARGIN[depth] <= alpha) {
+                        // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
+                        continue;
+                    }
+                }
 
                 board.makeMove(move);
                 // recheck our pruning conditions
@@ -298,8 +386,15 @@ private:
                 //     depth -= reduction; // Apply dynamic reduction based on depth and move count
                 // }
                 if (doLMR) {
+                    // another layer of reduction later in the search and late in the move order
+                    // ideally would be percentage based
+                    if(moves.size() - moveCount < 3 && depth >= 6){
+                        depthExtension -= 1; // Apply dynamic reduction based on depth and move count
+                    }
                     depthExtension -= 1; // Apply dynamic reduction based on depth and move count
                 }
+
+                
 
                 //Principal Variation Search
                 int eval;
@@ -332,6 +427,8 @@ private:
                         state.killerMoves[0] = move;
                     }
 
+                    // im not using history hueristic right now, im not sure I like it, but it might be worth it
+
                     return beta; // Alpha-beta cutoff.
                 }
 
@@ -358,12 +455,11 @@ private:
         }
 
 
-        //add delta pruning in the future
         int quiescence(int alpha, int beta) {
             // if(stop.load()){
             //     return 0;
             // }
-            const int DELTA_MARGIN = 900; // most positional advantages aren't worth a rook
+            const int DELTA_MARGIN = 300; // most positional advantages aren't worth more than a piece
             state.nodes++;
             int stand_pat = evaluate(0);
             if (stand_pat >= beta) {
@@ -378,9 +474,11 @@ private:
             movegen::legalmoves<MoveGenType::CAPTURE>(moves, board);
             sortMoves(moves, board);
             for (const Move& move : moves) {
-                // Delta pruning
-                if (stand_pat + DELTA_MARGIN + PieceValue.at(board.at<PieceType>(move.to())) <= alpha) {
-                    alpha = alpha;
+
+                // Delta pruning, disabled in the late endgame due to insufficient material considerations
+                // also disabled for capture checks, since that probably is a good move
+                if (evaluator.getGamePhase() > .1 && !board.inCheck() && stand_pat + DELTA_MARGIN + PieceValue.at(board.at<PieceType>(move.to())) <= alpha) {
+                    continue; // prune this move
                 }
 
                 board.makeMove(move);
@@ -395,10 +493,12 @@ private:
             }
             return alpha;
         }
-
+            // these utility functions could go in their own file tbh
             constexpr int rank_of(Square sq) {
                 return static_cast<int>(sq) / 8; // Divide the square index by 8 to get the rank
             }
+
+            // move ordering needs to be tuned
             int MVV_LVA_Score(const Move& move, const Board& board) {
                 if (move == state.bestMove) {
                     return infinity; // PV move
@@ -433,26 +533,9 @@ private:
         }
 
         //trying out lazy evaluation
-        int evaluate(int depth) {
-            int rawScore = evaluator.evaluate(depth, false); // Positive for White's advantage, negative for Black's
+        int evaluate(int depth, bool isLazy = false) {
+            int rawScore = evaluator.evaluate(depth, isLazy); // Positive for White's advantage, negative for Black's
             return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
-        }
-
-        //table base stuff, not test at all
-        void initTablebases(std::string path) {
-            tb_init(path.c_str());
-        }
-
-        #include "tbprobe.h"
-
-        Move probeEndgame(const Board& board) {
-            unsigned result = tb_probe_root(board.pieces, board.sideToMove, board.castlingRights, board.epSquare, board.fiftyMoveCounter, &info);
-            if (result != TB_RESULT_FAILED) {
-                unsigned move = TB_GET_FROM(result) | TB_GET_TO(result) | (TB_GET_PROMOTES(result) << 12);
-                // Convert the move from Fathom format to your engine's move format
-                return convertToFathomMove(move, board);
-            }
-            return Move::NO_MOVE; // Indicate failure or no tablebase entry
         }
 
     };

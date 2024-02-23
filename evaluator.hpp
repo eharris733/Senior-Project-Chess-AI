@@ -292,7 +292,8 @@ class Evaluator {
         score = mgscore * mgWeight + egscore * egWeight;
 
         // if lazy evaluation is enabled, return the score here
-        if(lazy){
+        // we can also be lazy in evaluating completely winning positions not in the endgame
+        if(lazy || (abs(score) > 500 && gamePhase > .2)){
             return score;
         }
         // extract features from the board

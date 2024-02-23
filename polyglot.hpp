@@ -6,7 +6,7 @@
 
 struct PolyglotEntry {
     uint64_t key;
-    uint16_t move;
+    uint16_t m;
     uint16_t count;
     uint16_t n;
     uint16_t sum;
@@ -52,7 +52,7 @@ public:
     PolyglotEntry entry;
     while (file.read(reinterpret_cast<char*>(&entry), sizeof(PolyglotEntry))) {
         entry.key = swapBytes64(entry.key);
-        entry.move = swapBytes16(entry.move);
+        entry.m = swapBytes16(entry.m);
         entry.count = swapBytes16(entry.count);
         entry.n = swapBytes16(entry.n);
         entry.sum = swapBytes16(entry.sum);
@@ -62,7 +62,7 @@ public:
 }
 
 
-    Move polyglotMoveToEngineMove(uint16_t move, const Board& board) {
+    chess::Move polyglotMoveToEngineMove(uint16_t move, const Board& board) {
         // Decompose the polyglot move to from and to squares
         int from = (move >> 6) & 0x3F;
         int to = move & 0x3F;
@@ -72,25 +72,23 @@ public:
         // For example, if your Move constructor does not directly take 'from' and 'to',
         // you might need to find a corresponding function or method in your engine that does this conversion.
         // This is a placeholder for the actual conversion logic.
-        Move engineMove = Move(move);
+        chess::Move engineMove = chess::Move(move);
+        Movelist moves;
+        movegen::legalmoves<MoveGenType::ALL>(moves, board);
+        // Verify the move is legal in the current position
+        if (moves.find(engineMove) != -1){
+            return engineMove;
+        }
 
-        printf("Polyglot move: %s\n", uci::moveToUci(engineMove).c_str());
-
-        return engineMove;
-        // // Verify the move is legal in the current position
-        // if (board.isLegalMove(engineMove)) {
-        //     return engineMove;
-        // }
-
-        //return Move::NULL_MOVE; // Return null move if conversion fails or move is illegal
+        return Move::NULL_MOVE;
     }
 
-    Move pickRandomMove(const Board& board) {
+    chess::Move pickRandomMove(const Board& board) {
         uint64_t key = board.zobrist();
-        std::vector<Move> possibleMoves;
+        std::vector<chess::Move> possibleMoves;
         for (const auto& entry : entries) {
             if (entry.key == key) {
-                Move move = polyglotMoveToEngineMove(entry.move, board);
+                chess::Move move = polyglotMoveToEngineMove(entry.m, board);
                 if (move != Move::NULL_MOVE) {
                     possibleMoves.push_back(move);
                 }
@@ -98,7 +96,7 @@ public:
         }
 
         if (possibleMoves.empty()) {
-            return Move::NULL_MOVE;
+            return chess::Move::NULL_MOVE;
         } else {
             std::random_device rd;
             std::mt19937 mt(rd());

@@ -3,9 +3,17 @@
 // Built in is also a Feature tester class, which contians a list of FEN strings, and their associated expected features
 // we extract features from each FEN, and see if they match up with the expected test results. If not, we can delve further to try 
 // and make the feature extraction bullet-proof. Optimization will probably be a secondary concern
-// optimization possibilities:
-    // detecting for lazy evaluation
-    // not recalculating attacks, and certain bitboards THIS IS HUGE, right now I re-calculate anything I need within each function
+// ok future elliot here, we optomized by caching results, and it was a LOT faster, so we need more optomizations to make this computer as effecient as possible
+
+// TO DO: 
+    // 1. Add piece tables to the feature extraction (since we calculate, then we iterate, why not calculate while iterating?)
+    // 2. no more vectors!! only bitboards, and then we can use the popcount function to get the number of pieces
+    // 3. conditional recalculation of features, if a move is made, we only need to recalculate the features that are affected by the move
+
+// Once this is done, we can expose our evaluation weights to a sepearate file/config, as well as our magically 
+// tuned search parameters, and then the GA can try and tune those parameters.
+
+// new ideal file structure: extract and weight at the same time using config file
 
 // important distinction: These are the raw features, not the features weighted by the evaluation function, that is a whole different story. 
 

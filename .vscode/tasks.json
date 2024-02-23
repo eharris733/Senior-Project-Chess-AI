@@ -2,19 +2,17 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++ build active file with Fathom",
+            "label": "C/C++: g++ build active file",
             "command": "/usr/bin/g++",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}", // Your active file
-                "${workspaceFolder}/Fathom/tbprobe.c", // Path to the Fathom source file
+                "${file}", // active file
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-std=c++17",
                 "-O3",
                 "-march=native",
-                "-I${workspaceFolder}/Fathom" // Include path for Fathom header files
             ],
             "options": {
                 "cwd": "${fileDirname}"
