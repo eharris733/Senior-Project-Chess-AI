@@ -23,60 +23,9 @@
 
 using namespace chess;
 using namespace std;
-// command to run in terminal: g++ -std=c++17 -O3 -march=native -o example chess.cpp
 
 
-class FeatureExtractor {
-private:
-    Features features;
-    const Board& board;
-
-    // Cache for commonly used bitboards and calculations
-    Bitboard wpawns, bpawns, allPawns;
-    Bitboard wAttacks, bAttacks;
-    Bitboard isolatedWPawns, isolatedBPawns;
-
-    Bitboard wWSquares, wBSquares; // store the weak squares for black and white
-    
-    Bitboard wWpawns, bWpawns; // store the weak pawns for black and white
-
-    vector<Square> wPassedPawns, bPassedPawns; // store the passed pawns for black and white
-
-    vector<Square> wPawnSquares, bPawnSquares; // Store pawn squares for both colors for quick access
-    vector<Square> wKnightSquares, bKnightSquares; // store knight squares
-    vector<Square> wBishopSquares, bBishopSquares; // store bishop squares
-
-    vector<Square> wRookSquares, bRookSquares; // store rook squares
-
-
-    Square whiteKingSquare, blackKingSquare; // store king squares
-
-
-    // Initialize caches (call this in the extract method)
-    void initCaches() {
-        wpawns = board.pieces(PieceType::PAWN, Color::WHITE);
-        bpawns = board.pieces(PieceType::PAWN, Color::BLACK);
-        allPawns = wpawns | bpawns;
-        wAttacks = wPawnAttacks(wpawns);
-        bAttacks = bPawnAttacks(bpawns);
-
-        wPawnSquares = findPieceSquares(PieceType::PAWN, Color::WHITE);
-        bPawnSquares = findPieceSquares(PieceType::PAWN, Color::BLACK);
-
-        wKnightSquares = findPieceSquares(PieceType::KNIGHT, Color::WHITE);
-        bKnightSquares = findPieceSquares(PieceType::KNIGHT, Color::BLACK);
-
-        wBishopSquares = findPieceSquares(PieceType::BISHOP, Color::WHITE);
-        bBishopSquares = findPieceSquares(PieceType::BISHOP, Color::BLACK);
-
-        wRookSquares = findPieceSquares(PieceType::ROOK, Color::WHITE);
-        bRookSquares = findPieceSquares(PieceType::ROOK, Color::BLACK);
-
-        whiteKingSquare = board.kingSq(Color::WHITE); 
-        blackKingSquare = board.kingSq(Color::BLACK);
-    }
-
-    //helper functions
+//helper functions
 Color opposite_color(Color color) {
     return (color == Color::WHITE) ? Color::BLACK : Color::WHITE;
 }
@@ -109,6 +58,34 @@ Bitboard rankBitboard(int rank) {
     // Bitboard with the 1s on the 1st rank
     Bitboard mask = 0xFF;
     return mask << (rank * 8); // Shift to the appropriate rank
+}
+
+Square int_to_square(int sq) {
+    return static_cast<Square>(sq);
+}
+
+Square bitboard_to_square(Bitboard bitboard) {
+    return int_to_square(__builtin_ctzll(bitboard));
+}
+
+Bitboard inBetween(Square sq1, Square sq2) {
+    Bitboard between = 0ULL;
+    int rank1 = rank_of(sq1), file1 = file_of(sq1);
+    int rank2 = rank_of(sq2), file2 = file_of(sq2);
+
+    if (rank1 == rank2) {
+        // Same Rank
+        for (int file = std::min(file1, file2) + 1; file < std::max(file1, file2); ++file) {
+            between |= 1ULL << (rank1 * 8 + file);
+        }
+    } else if (file1 == file2) {
+        // Same File
+        for (int rank = std::min(rank1, rank2) + 1; rank < std::max(rank1, rank2); ++rank) {
+            between |= 1ULL << (rank * 8 + file1);
+        }
+    }
+    // If not on the same rank or file, returns 0 (no in-between squares)
+    return between;
 }
 
 Bitboard forward_squares(Square sq, Color col) {
@@ -155,74 +132,38 @@ Bitboard blocking_squares(Square sq, Color col, Bitboard enemyPawns) {
     return mask;
 }
 
-Bitboard wAttackFrontSpans(Bitboard wpawns) {
-    Bitboard leftAttacks = attacks::pawnLeftAttacks<Color::WHITE>(wpawns);
-    Bitboard  rightAttacks = attacks::pawnRightAttacks<Color::WHITE>(wpawns);
-    Bitboard attackSpan = 0;
 
-    while (leftAttacks | rightAttacks) {
-        attackSpan |= leftAttacks | rightAttacks;
-        leftAttacks <<= 7;
-        rightAttacks <<= 9;
+
+
+
+Bitboard detectPassedPawns(Color col, Bitboard wPawnSquares, Bitboard bPawnSquares) {
+    Bitboard pawnSquares = col == Color::WHITE ? wPawnSquares : bPawnSquares;
+    Bitboard enemyPawns = col == Color::WHITE ? bPawnSquares : wPawnSquares;
+    Bitboard passedPawns = 0;
+    int forwardShift = col == Color::WHITE ? 8 : -8;
+
+    while (pawnSquares) {
+        Bitboard pawnSquare = pawnSquares & -pawnSquares;
+
+        Bitboard blockingSquares = 0;
+        Bitboard currentSquare = pawnSquare;
+        do {
+            currentSquare = (col == Color::WHITE) ? (currentSquare << 8) : (currentSquare >> 8);
+            blockingSquares |= currentSquare;
+        } while (currentSquare && (currentSquare & enemyPawns) == 0 && !(currentSquare & (col == Color::WHITE ? 0xFF00000000000000LL : 0xFFLL)));
+
+        if ((blockingSquares & enemyPawns) == 0 && currentSquare) {
+            passedPawns |= pawnSquare;
+        }
+
+        pawnSquares &= pawnSquares - 1;
     }
 
-    return attackSpan;
-}
-
-Bitboard bAttackFrontSpans(Bitboard bpawns) {
-    Bitboard leftAttacks = attacks::pawnLeftAttacks<Color::BLACK>(bpawns);
-    Bitboard  rightAttacks = attacks::pawnRightAttacks<Color::BLACK>(bpawns);
-    Bitboard attackSpan = 0;
-
-    while (leftAttacks | rightAttacks) {
-        attackSpan |= leftAttacks | rightAttacks;
-        leftAttacks >>= 9;
-        rightAttacks >>= 7;
-    }
-
-    return attackSpan;
-}
-
-Bitboard wPawnAttacks(Bitboard wpawns) {
-    Bitboard leftAttacks = attacks::pawnLeftAttacks<Color::WHITE>(wpawns);
-    Bitboard  rightAttacks = attacks::pawnRightAttacks<Color::WHITE>(wpawns);
-    return leftAttacks | rightAttacks;
+    return passedPawns;
 }
 
 
-Bitboard bPawnAttacks(Bitboard bpawns) {
-    Bitboard leftAttacks = attacks::pawnLeftAttacks<Color::BLACK>(bpawns);
-    Bitboard  rightAttacks = attacks::pawnRightAttacks<Color::BLACK>(bpawns);
-    return leftAttacks | rightAttacks;
-}
-
-// feature extraction functions
-
- // Example of a modified feature extraction function using cached data
-    vector<Square> detectPassedPawns(Color col) {
-        vector<Square>& pawnSquares = col == Color::WHITE ? wPawnSquares : bPawnSquares;
-        Bitboard enemyPawns = col == Color::WHITE ? bpawns : wpawns;
-
-        vector<Square> passedPawns;
-        for (Square pawnSquare : pawnSquares) {
-            Bitboard blockingSquares = blocking_squares(pawnSquare, col, enemyPawns);
-            if ((blockingSquares & enemyPawns) == 0) {
-                passedPawns.push_back(pawnSquare);
-            }
-        }
-        // store results for later use
-        if (col == Color::WHITE){
-            wPassedPawns = passedPawns;
-        }
-        else{
-            bPassedPawns = passedPawns;
-        }
-        return passedPawns;
-    }
-
-
-
-int detectDoubledPawns(Color color) {
+int detectDoubledPawns(Color color, Bitboard wpawns, Bitboard bpawns) {
     const auto& pawns = (color == Color::WHITE) ? wpawns : bpawns;
     int doubledPawns = 0;
 
@@ -238,37 +179,8 @@ int detectDoubledPawns(Color color) {
     return doubledPawns;
 }
 
-Bitboard detectWeakPawns(Color color) {
-    const Bitboard pawns = (color == Color::WHITE) ? wpawns : bpawns;
-    const Bitboard enemyPawns = (color == Color::WHITE) ? bpawns : wpawns;
-    const Bitboard friendlyAttacks = (color == Color::WHITE) ? wAttacks : bAttacks;
-    const Bitboard enemyAttacks = (color == Color::WHITE) ? bAttacks : wAttacks;
-    Bitboard backwardsPawns = 0;
 
-    Bitboard stops, wAttackSpans, bAttackSpans, backwardPawns;
-
-    if (color == Color::WHITE) {
-        stops = wpawns << 8;
-        backwardPawns = (stops & enemyAttacks & ~friendlyAttacks) >> 8;
-    } else {
-        stops = bpawns >> 8;
-        backwardPawns = (stops & enemyAttacks & ~friendlyAttacks) << 8;
-    }
-
-    return backwardPawns;
-    // store results for later use
-    if (color == Color::WHITE){
-        wWpawns = backwardsPawns;
-    }
-    else{
-        bWpawns = backwardsPawns;
-    }
-
-    return backwardsPawns;
-}
-
-Bitboard detectIsolatedPawns(Color color) {
-    const Bitboard pawns = (color == Color::WHITE) ? wpawns : bpawns;
+Bitboard detectIsolatedPawns(Bitboard pawns) {
     Bitboard isolatedPawns = 0;
 
     // Iterate through each square on the board to check for isolated pawns
@@ -286,37 +198,33 @@ Bitboard detectIsolatedPawns(Color color) {
             isolatedPawns |= squareBitboard;
         }
     }
-    if(color == Color::WHITE){
-        isolatedWPawns = isolatedPawns;
-    }
-    else{
-        isolatedBPawns = isolatedPawns;
-    }
     return isolatedPawns;
 }
 
+Bitboard detectWeakPawns(Color color, Bitboard wpawns, Bitboard bpawns, Bitboard wAttacks, Bitboard bAttacks) {
+    const Bitboard pawns = (color == Color::WHITE) ? wpawns : bpawns;
+    const Bitboard enemyPawns = (color == Color::WHITE) ? bpawns : wpawns;
+    const Bitboard friendlyAttacks = (color == Color::WHITE) ? wAttacks : bAttacks;
+    const Bitboard enemyAttacks = (color == Color::WHITE) ? bAttacks : wAttacks;
+    Bitboard backwardsPawns = 0;
 
+    Bitboard stops, wAttackSpans, bAttackSpans, backwardPawns;
 
-// Other helper functions (fileBitboard, file_of, squareToString, etc.) remain the same
-
-
-// change to incorporate piece tables soon
-std::vector<Square> findPieceSquares(PieceType pieceType, Color color) {
-    std::vector<Square> pieceSquares;
-
-    Bitboard pieces = board.pieces(pieceType, color);
-
-    // Iterate over each piece
-    while (pieces) {
-        Square pieceSquare = chess::builtin::poplsb(pieces); // Get the least significant bit as Square
-        pieceSquares.push_back(pieceSquare);
+    if (color == Color::WHITE) {
+        stops = wpawns << 8;
+        backwardPawns = (stops & enemyAttacks & ~friendlyAttacks) >> 8;
+    } else {
+        stops = bpawns >> 8;
+        backwardPawns = (stops & enemyAttacks & ~friendlyAttacks) << 8;
     }
 
-    return pieceSquares;
+    return backwardsPawns;
 }
 
 
-Bitboard detectWeakSquares(Color color) {
+
+
+Bitboard detectWeakSquares(Color color, Bitboard wpawns, Bitboard bpawns, Bitboard wAttacks, Bitboard bAttacks) {
     // Directly utilize the provided cached bitboards
     Bitboard pawns = (color == Color::WHITE) ? wpawns : bpawns;
     Bitboard attacks = (color == Color::WHITE) ? wAttacks : bAttacks;
@@ -351,280 +259,183 @@ Bitboard detectWeakSquares(Color color) {
 
 
 
-//returns the number of passed pawns that a king could catch up to in time
-int ruleOfTheSquare(Color color) {
-    const vector<Square>& passedPawns = detectPassedPawns(opposite_color(color));
-    Square kingSquare = (color == Color::WHITE) ? whiteKingSquare : blackKingSquare;
+int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
+    Square kSquare = bitboard_to_square(king);
 
     int count = 0;
-    for (Square passedPawnSquare : passedPawns) {
+    while (passedPawns) {
+        Bitboard passedPawnSquareBit = passedPawns & -passedPawns; // Extract LSB (a passed pawn)
+        Square passedPawnSquare = bitboard_to_square(passedPawnSquareBit); // Convert the bit to its square
+
         int passedPawnRank = rank_of(passedPawnSquare);
         int passedPawnFile = file_of(passedPawnSquare);
 
         // Calculate the "square" of the pawn based on its rank and the direction it advances
-        int promotionRank = (color == Color::WHITE) ? 0 : 7; // Rank the pawn needs to reach to promote
-        int distanceToPromotion = (color == Color::WHITE) ? 7 - passedPawnRank : passedPawnRank;
+        int promotionRank = (color == Color::WHITE) ? 7 : 0; // Rank the pawn needs to reach to promote
+        int distanceToPromotion = abs(promotionRank - passedPawnRank);
 
-        int kingRank = rank_of(kingSquare);
-        int kingFile = file_of(kingSquare);
+        int kingRank = rank_of(kSquare);
+        int kingFile = file_of(kSquare);
 
         // Calculate the king's distance to the promotion path of the pawn
-        int distanceToStopPromotion = max(abs(kingRank - promotionRank), abs(kingFile - passedPawnFile));
+        int distanceToStopPromotion = max(abs(kingRank - passedPawnRank), abs(kingFile - passedPawnFile));
 
         // If the king can reach the pawn's promotion path before or as it promotes, count it
         if (distanceToStopPromotion <= distanceToPromotion) {
             count++;
         }
+
+        passedPawns &= passedPawns - 1; // Remove this pawn from the set
     }
     return count;
 }
 
 
-//returns the number of knights on weak squares that are defended by a pawn
-int knightOutposts(Color color) {
-    // Access the appropriate cached weak squares and knight positions based on the color
-    const Bitboard& weakSquares = (color == Color::WHITE) ? wBSquares : wWSquares; // Use opposite color's weak squares
-    const vector<Square>& knightSquares = (color == Color::WHITE) ? wKnightSquares : bKnightSquares;
-    const Bitboard& friendlyAttacks = (color == Color::WHITE) ? wAttacks : bAttacks;
-
+// weak squares are the opposite of the color
+int knightOutposts(Color color, Bitboard weakSquares, Bitboard knightSquares, Bitboard friendlyPawnAttacks) {
     int count = 0;
 
-    // Iterate over the knight positions and count how many are on weak squares
-    for (Square knightSquare : knightSquares) {
-        if (weakSquares & square_to_bitmap(knightSquare) & friendlyAttacks) {
+    // Iterate over the knight positions using a while loop and bit manipulation
+    while (knightSquares) {
+        // Isolate the least significant bit that is set (a knight's position)
+        Bitboard ls1b = knightSquares & -knightSquares;
+
+        // Check if this knight is on a weak square and defended by a pawn
+        if ((ls1b & weakSquares) && (ls1b & friendlyPawnAttacks)) {
             count++;
         }
+
+        // Remove this knight from the set of knights to process the next one
+        knightSquares &= ~ls1b;
     }
 
     return count;
 }
 
-// counts the number of squares a bishop can move to
-short bishopMobility(Color color){
-    const vector<Square>& bishops = (color == Color::WHITE) ? wBishopSquares : bBishopSquares;
-    short totalMobility = 0;
-
-    for (Square bishopSquare : bishops) {
-        int bishopRank = rank_of(bishopSquare);
-        int bishopFile = file_of(bishopSquare);
-        short mobility = 0;
-
-        // Check squares to the right and above the bishop
-        for (int file = bishopFile + 1, rank = bishopRank + 1; file < 8 && rank < 8; file++, rank++) {
-            if (board.at<PieceType>(Square(rank * 8 + file)) != PieceType::NONE) {
-                break;
-            }
-            mobility++;
-        }
-
-        // Check squares to the left and above the bishop
-        for (int file = bishopFile - 1, rank = bishopRank + 1; file >= 0 && rank < 8; file--, rank++) {
-            if (board.at<PieceType>(Square(rank * 8 + file)) != PieceType::NONE) {
-                break;
-            }
-            mobility++;
-        }
-
-        // Check squares to the right and below the bishop
-        for (int file = bishopFile + 1, rank = bishopRank - 1; file < 8 && rank >= 0; file++, rank--) {
-            if (board.at<PieceType>(Square(rank * 8 + file)) != PieceType::NONE) {
-                break;
-            }
-            mobility++;
-        }
-
-        // Check squares to the left and below the bishop
-        for (int file = bishopFile - 1, rank = bishopRank - 1; file >= 0 && rank >= 0; file--, rank--) {
-            if (board.at<PieceType>(Square(rank * 8 + file)) != PieceType::NONE) {
-                break;
-            }
-            mobility++;
-        }
-
-        totalMobility += mobility;
-    }
-
-    return totalMobility;
-
+// bishop mobility is the number of squares the bishop can move to
+short bishopMobility(Bitboard bAttacks){
+    return builtin::popcount(bAttacks);
 }
+
 
 // 1 if white has bishop pair and black doesn't, 
 // -1 if black has bishop pair and white doesn't
 // 0 if neither side has bishop pair
-short bishopPair(){
-    short count = 0;
-    
-
-    if (wBishopSquares.size() >= 2){
-        count ++;
-    }
-    if(bBishopSquares.size() >= 2){
-        count --;
-    }
-    return count;
-}
-
-short rookAttackKingFile(Color color) {
-    // Use the cached rook positions based on the color
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    // Use the cached king square for the opposite color
-    Square kingSquare = (color == Color::WHITE) ? blackKingSquare : whiteKingSquare;
-    int kingFile = file_of(kingSquare);
-    
-    short count = 0;
-    // Iterate over the cached rook positions to count how many are on the same file as the king
-    for (Square rookSquare : rooks) {
-        if (file_of(rookSquare) == kingFile) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
-
-short rookAttackKingAdjFile(Color color){
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    Square kingSquare = (color == Color::WHITE) ? blackKingSquare : whiteKingSquare;
-    int kingFile = file_of(kingSquare);
-    short count = 0;
-    for (Square rookSquare : rooks) {
-        int rookFile = file_of(rookSquare);
-        if (abs(rookFile - kingFile) == 1){
-            count ++;
-        }
-    }
-    return count;
-}
-
-short rookSeventhRank(Color color){
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    short count = 0;
-    for (Square rookSquare : rooks) {
-        int rookRank = rank_of(rookSquare);
-        if (color == Color::WHITE){
-            if (rookRank == 6){
-                count ++;
-            }
-        }
-        else{
-            if (rookRank == 1){
-                count ++;
-            }
-        }
-    }
-    return count;
-}
-
-// function that returns if the rooks could capture each other, assuming they weren't the same color
-// assumption:: if we have three or more rooks, who cares if they are connected, we are probably winning
-short rookConnected(Color color){
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    if(rooks.size() < 2){
-        return 0;
-    }
-    Square rook1 = rooks[0];
-    Square rook2 = rooks[1]; 
-    int rook1Rank = rank_of(rook1);
-    int rook2Rank = rank_of(rook2);
-    int rook1File = file_of(rook1);
-    int rook2File = file_of(rook2);
-    if (rook1Rank != rook2Rank && rook1File != rook2File){
-        return 0;
-    }
-    if (rook1Rank == rook2Rank){
-        int minFile = min(rook1File, rook2File);
-        int maxFile = max(rook1File, rook2File);
-        for (int i = minFile + 1; i < maxFile; i++){
-            if (board.at<PieceType>(Square(rook1Rank * 8 + i)) != PieceType::NONE){
-                return 0;
-            }
-        }
-        return 1;
-    }
-    if (rook1File == rook2File){
-        int minRank = min(rook1Rank, rook2Rank);
-        int maxRank = max(rook1Rank, rook2Rank);
-        for (int i = minRank + 1; i < maxRank; i++){
-            if (board.at<PieceType>(Square(i * 8 + rook1File)) != PieceType::NONE){
-                return 0;
-            }
-        }
+short bishopPair(Bitboard bishops){
+    if (builtin::popcount(bishops) >= 2){
         return 1;
     }
     return 0;
 }
 
-short rookMobility(Color color){
-        const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-        short totalMobility = 0;
+short rookAttackKingFile(Color color, Bitboard rooks, Bitboard king) {
+    Square kingSquare = bitboard_to_square(king);
+    int kingFile = file_of(kingSquare);
 
-        for (Square rookSquare : rooks) {
-            int rookRank = rank_of(rookSquare);
-            int rookFile = file_of(rookSquare);
-            short mobility = 0;
+    short count = 0;
+    Bitboard fileMask = fileBitboard(kingFile); // Assuming you have a function to generate a bitmask for a file
 
-            // Check squares to the right of the rook
-            for (int file = rookFile + 1; file < 8; file++) {
-                if (board.at<PieceType>(Square(rookRank * 8 + file)) != PieceType::NONE) {
-                    break;
-                }
-                mobility++;
-            }
+    // Check if any rooks are on the same file as the king
+    Bitboard attackingRooks = rooks & fileMask;
+    while (attackingRooks) {
+        builtin::poplsb(attackingRooks); // Remove the found rook from the attackingRooks bitboard
+        count++;
+    }
 
-            // Check squares to the left of the rook
-            for (int file = rookFile - 1; file >= 0; file--) {
-                if (board.at<PieceType>(Square(rookRank * 8 + file)) != PieceType::NONE) {
-                    break;
-                }
-                mobility++;
-            }
-
-            // Check squares above the rook
-            for (int rank = rookRank + 1; rank < 8; rank++) {
-                if (board.at<PieceType>(Square(rank * 8 + rookFile)) != PieceType::NONE) {
-                    break;
-                }
-                mobility++;
-            }
-
-            // Check squares below the rook
-            for (int rank = rookRank - 1; rank >= 0; rank--) {
-                if (board.at<PieceType>(Square(rank * 8 + rookFile)) != PieceType::NONE) {
-                    break;
-                }
-                mobility++;
-            }
-
-            totalMobility += mobility;
-        }
-
-        return totalMobility;
+    return count;
 }
 
-short rookBehindPassedPawn(Color color) {
-    // Access the cached rook squares based on the color
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    // Access the cached passed pawn squares for the opposite color
-    const vector<Square>& passedPawns = (color == Color::WHITE) ? bPassedPawns : wPassedPawns;
+
+
+short rookAttackKingAdjFile(Color color, Bitboard rooks, Bitboard king) {
+    Square kingSquare = bitboard_to_square(king);
+    int kingFile = file_of(kingSquare);
+
+    short count = 0;
+    // Create masks for the files adjacent to the king's file
+    Bitboard adjFilesMask = 0ULL;
+    if (kingFile > 0) adjFilesMask |= fileBitboard(kingFile - 1); // Left adjacent file
+    if (kingFile < 7) adjFilesMask |= fileBitboard(kingFile + 1); // Right adjacent file
+
+    // Check if any rooks are on the adjacent files
+    Bitboard attackingRooks = rooks & adjFilesMask;
+    while (attackingRooks) {
+        builtin::poplsb(attackingRooks); // Remove the found rook from the attackingRooks bitboard
+        count++;
+    }
+
+    return count;
+}
+
+
+short rookSeventhRank(Color color, Bitboard rooks) {
+    
+    // Define masks for the 7th rank for white and the 2nd rank for black
+    Bitboard seventhRankMask = color == Color::WHITE ? rankBitboard(6) : rankBitboard(1);
+
+    // Apply the mask to find rooks on the correct rank
+    Bitboard rooksOnSeventh = rooks & seventhRankMask;
+
+    // Count and return the number of rooks on the 7th rank (for white) or 2nd rank (for black)
+    return builtin::popcount(rooksOnSeventh);
+}
+
+
+short rookConnected(Color color, Bitboard rooks, Bitboard allPieces) {
+
+    if (builtin::popcount(rooks) < 2) {
+        return 0;
+    }
+
+    // Iterate through all pairs of rooks (in a bitboard, this means we need to isolate each rook)
+    while (rooks) {
+        Square rook1 = builtin::poplsb(rooks); // Isolate and remove the first rook
+        Bitboard remainingRooks = rooks; // Copy of the remaining rooks after the first has been removed
+        while (remainingRooks) {
+            Square rook2 = builtin::poplsb(remainingRooks); // Isolate and remove the next rook
+
+            // Check if they are on the same rank or file
+            if ((rank_of(rook1) == rank_of(rook2)) || (file_of(rook1) == file_of(rook2))) {
+                // Generate a bitboard with all squares between the two rooks, including themselves
+                Bitboard inBetweenB = inBetween(rook1, rook2) | (1ULL << rook1) | (1ULL << rook2);
+                
+                // If the intersection with all pieces is just the rooks, they are connected
+                if (((inBetweenB & allPieces) == ((1ULL << rook1) | (1ULL << rook2)))) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+short rookMobility(Bitboard rookAttacks){
+    return builtin::popcount(rookAttacks);
+}
+
+// we only care about file based mobility
+short rookBehindPassedPawn(Color color, Bitboard rooks, Bitboard passedPawns) {
 
     short count = 0;
 
-    // Iterate over the rooks and passed pawns to count the occurrences
-    for (Square rookSquare : rooks) {
-        int rookRank = rank_of(rookSquare);
-        int rookFile = file_of(rookSquare);
+    // Iterate over each rook in the bitboard
+    while (rooks) {
+        int rookSquare = builtin::poplsb(rooks); // This function removes the least significant bit and returns its index
+        int rookFile = file_of(Square(rookSquare));
+        int rookRank = rank_of(Square(rookSquare));
 
-        for (Square passedPawnSquare : passedPawns) {
-            int passedPawnRank = rank_of(passedPawnSquare);
-            int passedPawnFile = file_of(passedPawnSquare);
+        Bitboard filePawns = passedPawns & fileBitboard(rookFile); // Mask for passed pawns on the same file as the rook
 
-            // Check if the rook and the pawn are on the same file
-            if (rookFile == passedPawnFile) {
-                // For white, the rook must be on a lower rank than the pawn; for black, on a higher rank
-                if ((color == Color::WHITE && rookRank < passedPawnRank) || (color == Color::BLACK && rookRank > passedPawnRank)) {
-                    count++;
-                }
+        // Iterate over each pawn in the filtered bitboard
+        while (filePawns) {
+            int pawnSquare = builtin::poplsb(filePawns); // Adjust filePawns in the process
+            int pawnRank = rank_of(Square(pawnSquare));
+
+            // Determine if the rook is behind the pawn from its perspective
+            if ((color == Color::WHITE && rookRank < pawnRank) || (color == Color::BLACK && rookRank > pawnRank)) {
+                count++;
             }
         }
     }
@@ -633,50 +444,58 @@ short rookBehindPassedPawn(Color color) {
 }
 
 
-short rookOpenFile(Color color){
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    const Bitboard& allPawns =  wpawns | bpawns;
+
+
+short rookOpenFile(Color color, Bitboard rooks, Bitboard allPawns) {
     short count = 0;
-    for (Square rookSquare : rooks) {
-        int rookFile = file_of(rookSquare);
-        Bitboard fileMask = fileBitboard(rookFile);
-        if ((allPawns & fileMask) == 0){
-            count ++;
+
+    // Iterate over each rook in the bitboard
+    Bitboard rooksCopy = rooks; // Make a copy to preserve original bitboard
+    while (rooksCopy) {
+        int rookSquare = builtin::poplsb(rooksCopy); // This function also modifies rooksCopy
+        int rookFile = file_of(Square(rookSquare));
+        Bitboard fileMask = fileBitboard(rookFile); // Assuming fileBB[] is an array of bitboards for each file
+
+        // Check if there are no pawns on the rook's file
+        if ((allPawns & fileMask) == 0) {
+            count++;
         }
     }
+
     return count;
 }
 
-short rookSemiOpenFile(Color color){
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
+
+short rookSemiOpenFile(Color color, Bitboard rooks, Bitboard friendlyPawns, Bitboard enemyPawns) {
     short count = 0;
-    for (int i = 0; i < rooks.size(); i++){
-        Square rookSquare = rooks[i];
-        int rookFile = file_of(rookSquare);
-        Bitboard fileMask = fileBitboard(rookFile);
-        Bitboard friendlyPawns = board.pieces(PieceType::PAWN, color);
-        Bitboard enemyPawns = board.pieces(PieceType::PAWN, opposite_color(color));
-        if ((friendlyPawns & fileMask) == 0 && (enemyPawns & fileMask) != 0){
-            count ++;
+
+    Bitboard rooksCopy = rooks; // Make a copy to preserve the original bitboard
+    while (rooksCopy) {
+        int rookSquare = builtin::poplsb(rooksCopy); // Adjust rooksCopy and get the next rook square
+        int rookFile = file_of(Square(rookSquare));
+        Bitboard fileMask = fileBitboard(rookFile); // Assuming fileBB[] is an array of bitboards for each file
+
+        // Check if there are no friendly pawns and there are enemy pawns on the rook's file
+        if ((friendlyPawns & fileMask) == 0 && (enemyPawns & fileMask) != 0) {
+            count++;
         }
     }
+
     return count;
 }
 
-short rookAtckWeakPawnOpenColumn(Color color) {
-    // Directly access the cached rook positions
-    const vector<Square>& rooks = (color == Color::WHITE) ? wRookSquares : bRookSquares;
-    // Use the bitboard for weak pawns of the opposite color
-    Bitboard weakPawns = (color == Color::WHITE) ? bWpawns | isolatedBPawns : wWpawns | isolatedWPawns;
+
+short rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, Bitboard weakPawns) {
     
     short count = 0;
 
-    for (Square rookSquare : rooks) {
-        int rookFile = file_of(rookSquare);
-        Bitboard fileMask = fileBitboard(rookFile);
+    Bitboard rooksCopy = rooks; // Make a copy to preserve the original bitboard
+    while (rooksCopy) {
+        int rookSquare = builtin::poplsb(rooksCopy); // Adjust rooksCopy and get the next rook square
+        int rookFile = file_of(Square(rookSquare));
+        Bitboard fileMask = fileBitboard(rookFile); // Assuming fileBB[] is an array of bitboards for each file
 
         // If there's a weak pawn on the same file as the rook, increase the count
-        // This check is simplified by directly comparing the file mask with the weak pawns bitboard
         if (fileMask & weakPawns) {
             count++;
         }
@@ -684,41 +503,33 @@ short rookAtckWeakPawnOpenColumn(Color color) {
 
     return count;
 }
-// How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
-//only relevant to pawns on the same or adjacent files, the lower the score the better
-// need to add a heav punishment if there is not three pawns, two or even one
-short kingFriendlyPawn(Color color){
-    vector<Square> friendlyPawns = color == Color::WHITE ? wPawnSquares : bPawnSquares;
-    Square kingSquare = color == Color::WHITE ? whiteKingSquare : blackKingSquare;
+
+
+short kingFriendlyPawn(Bitboard friendlyPawns, Bitboard king) {
+    
+    Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
     short count = 0;
-    for (int i = 0; i < friendlyPawns.size(); i++){
-        Square pawnSquare = friendlyPawns[i];
+    
+    Bitboard pawnsCopy = friendlyPawns; // Make a copy to preserve the original bitboard
+    int pawnCount = 0; // Track the number of relevant pawns
 
-        int pawnRank = rank_of(pawnSquare);
-        int pawnFile = file_of(pawnSquare);
+    while (pawnsCopy) {
+        int pawnSquare = builtin::poplsb(pawnsCopy); // Adjust pawnsCopy and get the next pawn square
+        int pawnRank = rank_of(Square(pawnSquare));
+        int pawnFile = file_of(Square(pawnSquare)); // these rank and file functions are redundant tbh
 
-
-        // disregard if not on same or adjacent file
-        if(abs(pawnFile - kingFile) > 1){
-            continue;
+        // Only consider pawns on the same or adjacent file
+        if (abs(pawnFile - kingFile) <= 1) {
+            pawnCount++;
+            int distance = abs(pawnRank - kingRank) + abs(pawnFile - kingFile) + 1;
+            if (distance > 6) {
+                count += 6; // Cap the effect at a maximum distance
+            } else {
+                count += 6 - distance; // Closer pawns add less to the count
+            }
         }
-        // if the pawn is super far away, cap it at 6
-        if (min(abs(pawnRank - kingRank), abs(pawnFile - kingFile)) > 2){
-            count += 6;
-            continue;
-        }
-        // distance is the manhattan distance
-        int distance = abs(pawnRank - kingRank) + abs(pawnFile - kingFile) + 1;
-        if (distance > 6){
-            count += 6;
-            continue;
-        }
-        else{
-            count += 6 - distance;
-        }
-        
     }
 
     return count;
@@ -728,44 +539,40 @@ short kingFriendlyPawn(Color color){
 // if there is not pawns within a certain radius, it should not affect us
 
 
-//for this one, every close pawn is a negative for the other side
-// so we need to inverse the score, and that way 0 is a good thing
-short kingNoEnemyPawnNear(Color color){
-    vector<Square> enemyPawns = color == Color::WHITE ? bPawnSquares : wPawnSquares;
-    Square kingSquare = color == Color::WHITE ? whiteKingSquare : blackKingSquare;
+short kingNoEnemyPawnNear(Bitboard enemyPawns, Bitboard king) {
+    Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
     short count = 0;
-    for (int i = 0; i < enemyPawns.size(); i++){
-        Square pawnSquare = enemyPawns[i];
 
-        int pawnRank = rank_of(pawnSquare);
-        int pawnFile = file_of(pawnSquare);
+    Bitboard pawnsCopy = enemyPawns; // Make a copy to preserve the original bitboard
 
-        // don't care about non adjacent file or not the same file pawns
-        // also needs to be within 3 moves of the king
-        if(abs(pawnFile - kingFile) > 1 || abs(pawnRank - kingRank) > 3){
-            continue;
+    while (pawnsCopy) {
+        int pawnSquare = builtin::poplsb(pawnsCopy); // Adjust pawnsCopy and get the next pawn square
+        int pawnRank = rank_of(Square(pawnSquare));
+        int pawnFile = file_of(Square(pawnSquare));
+
+        // Consider only pawns within 3 moves and on the same or adjacent file
+        if (abs(pawnFile - kingFile) <= 1 && abs(pawnRank - kingRank) <= 3) {
+            int distance = abs(pawnRank - kingRank) + abs(pawnFile - kingFile) + 1;
+            count += distance; // Closer pawns increase the count
         }
-        
-        // distance is the manhattan distance
-        int distance = abs(pawnRank - kingRank) + abs(pawnFile - kingFile) + 1;
-        count += distance; 
     }
-    // invert the score, since the higher the score the worse
+
+    // Invert the score since closer enemy pawns are negative for the king's side
     return -count;
 }
+
 
 // this uses a feature known as king tropism, where
 // the score is weighted by piece value and proximity to the king it is attacking. 
 // we already account for pawns in the previous round 
 // still this is rather crude and should be improved upon
-float kingPressureScore(Color color){
+float kingPressureScore(Bitboard king, Bitboard enemyPieces, Board board){
     float score = 0;
-    Square kingSquare = color == Color::WHITE ? blackKingSquare : whiteKingSquare;
+    Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
-    Bitboard enemyPieces = board.pieces(PieceType::BISHOP, color) | board.pieces(PieceType::KNIGHT, color) | board.pieces(PieceType::ROOK, color) | board.pieces(PieceType::QUEEN, color);
     while (enemyPieces){
         Square enemySquare = chess::builtin::poplsb(enemyPieces);
         int enemyRank = rank_of(enemySquare);
@@ -789,51 +596,6 @@ float kingPressureScore(Color color){
     return score;
 }
 
-
-
-
-public:
-    FeatureExtractor(const Board& board) : board(board) {
-    }
-
-    Features getFeatures() {
-        return features;
-    }
-
-    void extract() {
-        //sanity check TODO:
-        //is it that the features aren't helping because they are promoting negative positions?
-        // does isolated pawns for instance, return positive if white has more or less isolated pawns 
-
-        // Extract the features
-        features.fen = board.getFen();
-        initCaches();
-        //this one is a bitboard instead of a vector, might be faster?
-        features.weakPawns = builtin::popcount(detectWeakPawns(Color::WHITE)) - builtin::popcount(detectWeakPawns(Color::BLACK));
-        features.doubledPawns = detectDoubledPawns(Color::WHITE) - detectDoubledPawns(Color::BLACK);
-        features.isolatedPawns = builtin::popcount(detectIsolatedPawns(Color::WHITE)) - builtin::popcount(detectIsolatedPawns(Color::BLACK));
-        features.passedPawns = detectPassedPawns(Color::WHITE).size() - detectPassedPawns(Color::BLACK).size();
-        features.weakSquares = builtin::popcount(detectWeakSquares(Color::WHITE)) - builtin::popcount(detectWeakSquares(Color::BLACK));
-        features.passedPawnEnemyKingSquare = ruleOfTheSquare(Color::WHITE) - ruleOfTheSquare(Color::BLACK);
-        features.knightOutposts = knightOutposts(Color::WHITE) - knightOutposts(Color::BLACK);
-        features.bishopMobility = bishopMobility(Color::WHITE) - bishopMobility(Color::BLACK);
-        features.bishopPair = bishopPair();
-        features.rookAttackKingFile = rookAttackKingFile(Color::WHITE) - rookAttackKingFile(Color::BLACK);
-        features.rookAttackKingAdjFile = rookAttackKingAdjFile(Color::WHITE) - rookAttackKingAdjFile(Color::BLACK);
-        features.rook7thRank = rookSeventhRank(Color::WHITE) - rookSeventhRank(Color::BLACK);
-        features.rookConnected = rookConnected(Color::WHITE) - rookConnected(Color::BLACK);
-        features.rookMobility = rookMobility(Color::WHITE) - rookMobility(Color::BLACK);
-        features.rookBehindPassedPawn = rookBehindPassedPawn(Color::WHITE) - rookBehindPassedPawn(Color::BLACK);
-        features.rookOpenFile = rookOpenFile(Color::WHITE) - rookOpenFile(Color::BLACK);
-        features.rookSemiOpenFile = rookSemiOpenFile(Color::WHITE) - rookSemiOpenFile(Color::BLACK);
-        features.rookAtckWeakPawnOpenColumn = rookAtckWeakPawnOpenColumn(Color::WHITE) - rookAtckWeakPawnOpenColumn(Color::BLACK);
-        features.kingFriendlyPawn = kingFriendlyPawn(Color::WHITE) - kingFriendlyPawn(Color::BLACK);
-        features.kingNoEnemyPawnNear = kingNoEnemyPawnNear(Color::WHITE) - kingNoEnemyPawnNear(Color::BLACK);
-        features.kingPressureScore = kingPressureScore(Color::WHITE) - kingPressureScore(Color::BLACK);
-    }
-
-
-}; // end of FeatureExtractor class
 
 
 

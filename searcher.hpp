@@ -38,7 +38,7 @@ struct SearchState {
     int currentIterationBestScore;
     Move killerMoves[2]; // store two killer moves
     int currentDepth;
-    int nodes;
+    long nodes;
     AspirationWindow aspirationWindow;
     bool isOpening;
 };
@@ -68,16 +68,22 @@ public:
     Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 22), book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"){
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
     }
+
+    // getter method for the state of the search
+    SearchState getState() {
+        return state;
+    }
+
     Move search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
         
 
         // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
         // perfect, but not really a factor of performance
-        Move openingMove = book.pickRandomMove(board);
-        if (openingMove != Move::NULL_MOVE) {
-            return openingMove;
-        }
+        // Move openingMove = book.pickRandomMove(board);
+        // if (openingMove != Move::NULL_MOVE) {
+        //     return openingMove;
+        // }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
         // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
@@ -194,9 +200,10 @@ int aspirationSearch() {
         eval = negamax(state.currentDepth, state.aspirationWindow.alpha, state.aspirationWindow.beta, 0);
         
         // if we found a mate score, we can stop
-        if(eval > mateScore - MAX_DEPTH || eval < -mateScore + MAX_DEPTH){
-            return eval;
-        }
+        // deleting this since we are not neccesarily searching all the moves, so we can def find a false mate
+        // if(eval > mateScore - MAX_DEPTH || eval < -mateScore + MAX_DEPTH){
+        //     return eval;
+        // }
         // Update our aspiration windows based on the evaluation
         if (eval <= state.aspirationWindow.alpha) {
             // Fail low, widen the window downwards
@@ -240,10 +247,6 @@ int aspirationSearch() {
 
 
     int negamax(int depth, int alpha, int beta, int plyFromRoot) {
-        // our search has been told to stop due to time
-        // if (stop.load()){
-        //     return 0;
-        // }
         
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
@@ -255,11 +258,6 @@ int aspirationSearch() {
         bool isPvs = (beta - alpha) > 1;
         bool isCheck = board.inCheck();
         bool isRoot = plyFromRoot == 0;
-
-       
-        
-    
-        
 
         uint64_t zobristKey = board.zobrist();
         auto ttEntry = tt.retrieve(zobristKey);
@@ -299,19 +297,6 @@ int aspirationSearch() {
                 
             }
 
-            
-
-            // // null move pruning
-            // // conditions are the same as null move reduction, but also we disregard the endgame to avoid zugzwang
-            // if (depth >= 3 && !isCheck && !isRoot && !isPvs && staticEval >= beta && evaluator.getGamePhase() > .2) {
-            //     board.makeNullMove();
-            //     int nullMoveScore = -negamax(depth - 3, -beta, -beta + 1, plyFromRoot + 1);
-            //     board.unmakeNullMove();
-            //     if (nullMoveScore >= beta) {
-            //         return beta; // Beta cutoff.
-            //     }
-            // }
-
             // var to keep track of how many moves we've looked at from the current node, 
             // used for late move reductions
             int moveCount = 0;
@@ -329,7 +314,7 @@ int aspirationSearch() {
             if (depth == 0) {
                 return quiescence(alpha, beta); // Leaf node evaluation, add quiescence search here
             }
-            state.nodes++;
+            
             sortMoves(moves, board); // Pre-sort moves based on heuristics
 
             isPvs = true; // hash move will always be the first one searched
@@ -354,6 +339,7 @@ int aspirationSearch() {
                 }
 
                 board.makeMove(move);
+                state.nodes++;
                 // recheck our pruning conditions
                 isCheck = board.inCheck();
                 int depthExtension = 0;
@@ -460,7 +446,7 @@ int aspirationSearch() {
             //     return 0;
             // }
             const int DELTA_MARGIN = 300; // most positional advantages aren't worth more than a piece
-            state.nodes++;
+            
             int stand_pat = evaluate(0);
             if (stand_pat >= beta) {
                 return beta;
@@ -482,6 +468,7 @@ int aspirationSearch() {
                 }
 
                 board.makeMove(move);
+                state.nodes++; // ive changed to only updating node counts after we change board state
                 int score = -quiescence(-beta, -alpha);
                 board.unmakeMove(move);
                 if (score >= beta) {
