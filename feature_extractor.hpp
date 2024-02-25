@@ -313,9 +313,9 @@ Bitboard detectWeakSquares(Color color, Bitboard pawns) {
 
     // Define the target area based on color
     if (color == Color::WHITE) {
-        targetArea = rankBitboard(2) | rankBitboard(3); // Target ranks 3 and 4 for white
+        targetArea = rankBitboard(2) | rankBitboard(3) | rankBitboard(4); // Target ranks 3 and 4 for white
     } else {
-        targetArea = rankBitboard(4) | rankBitboard(5); // Target ranks 5 and 6 for black
+        targetArea = rankBitboard(3) | rankBitboard(4) | rankBitboard(5); // Target ranks 5 and 6 for black
     }
 
     // Weak squares are those in the target area not covered by potential pawn moves
@@ -373,7 +373,7 @@ int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
 
 
 // weak squares are the opposite of the color
-int knightOutposts(Color color, Bitboard weakSquares, Bitboard knightSquares, Bitboard friendlyPawnAttacks) {
+int knightOutposts(Bitboard weakSquares, Bitboard knightSquares, Bitboard friendlyPawnAttacks) {
     int count = 0;
 
     // Iterate over the knight positions using a while loop and bit manipulation
@@ -389,7 +389,6 @@ int knightOutposts(Color color, Bitboard weakSquares, Bitboard knightSquares, Bi
         // Remove this knight from the set of knights to process the next one
         knightSquares &= ~ls1b;
     }
-
     return count;
 }
 

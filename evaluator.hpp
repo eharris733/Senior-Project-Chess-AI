@@ -382,8 +382,8 @@ class Evaluator {
         // rule of the square (tested and working)
         score += (ruleOfTheSquare(Color::WHITE, blackPassedPawns, wKings) - ruleOfTheSquare(Color::BLACK, whitePassedPawns, bKings)) * (featureWeights.passedPawnEnemyKingSquare.middleGame * mgWeight + featureWeights.passedPawnEnemyKingSquare.endGame * egWeight);
         
-        // knight outposts (not tested yet)
-        score += (popcount(knightOutposts(Color::WHITE, weakBlackSquares, wKnights, wPawnAttacks)) - popcount(knightOutposts(Color::BLACK, weakWhiteSquares, bKnights, bPawnAttacks))) * (featureWeights.knightOutposts.middleGame * mgWeight + featureWeights.knightOutposts.endGame * egWeight);
+        // knight outposts (tested like 90% sure it works)
+        score += (popcount(knightOutposts(weakBlackSquares, wKnights, wPawnAttacks)) - popcount(knightOutposts(weakWhiteSquares, bKnights, bPawnAttacks))) * (featureWeights.knightOutposts.middleGame * mgWeight + featureWeights.knightOutposts.endGame * egWeight);
 
         // bishop mobility (tested)
         score += (bishopMobility(wBishopAttacks) - bishopMobility(bBishopAttacks)) * (featureWeights.bishopMobility.middleGame * mgWeight + featureWeights.bishopMobility.endGame * egWeight);
@@ -400,17 +400,21 @@ class Evaluator {
         score += (rookAttackKingAdjFile(Color::WHITE, wRooks, bKings) - rookAttackKingAdjFile(Color::BLACK, bRooks, wKings)) * (featureWeights.rookAttackKingAdjFile.middleGame * mgWeight + featureWeights.rookAttackKingAdjFile.endGame * egWeight);
 
 
-        // rook on 7th rank
+        // rook on 7th rank (tested and working)
         score += (rookSeventhRank(Color::WHITE, wRooks) - rookSeventhRank(Color::BLACK, bRooks)) * (featureWeights.rook7thRank.middleGame * mgWeight + featureWeights.rook7thRank.endGame * egWeight);
+        
 
-        // rook connected
+        // rook connected (tested and working)
         score += (rookConnected(Color::WHITE, wRooks, pieces) - rookConnected(Color::BLACK, bRooks, pieces)) * (featureWeights.rookConnected.middleGame * mgWeight + featureWeights.rookConnected.endGame * egWeight);
+        
 
-        // rook mobility
+        // rook mobility (tested and working)
         score += (rookMobility(wRookAttacks) - rookMobility(bRookAttacks)) * (featureWeights.rookMobility.middleGame * mgWeight + featureWeights.rookMobility.endGame * egWeight);
 
-        // rook behind passed pawn
+
+        // rook behind passed pawn (tested and working) 
         score += (rookBehindPassedPawn(Color::WHITE, wRooks, whitePassedPawns) - rookBehindPassedPawn(Color::BLACK, bRooks, blackPassedPawns)) * (featureWeights.rookBehindPassedPawn.middleGame * mgWeight + featureWeights.rookBehindPassedPawn.endGame * egWeight);
+        
 
         // rook on open file
         Bitboard allPawns = wPawns | bPawns;

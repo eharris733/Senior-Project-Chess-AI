@@ -80,10 +80,10 @@ public:
 
         // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
         // perfect, but not really a factor of performance
-        // Move openingMove = book.pickRandomMove(board);
-        // if (openingMove != Move::NULL_MOVE) {
-        //     return openingMove;
-        // }
+        Move openingMove = book.pickRandomMove(board);
+        if (openingMove != Move::NULL_MOVE) {
+            return openingMove;
+        }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
         // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
