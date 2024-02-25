@@ -88,29 +88,31 @@ Bitboard inBetween(Square sq1, Square sq2) {
     return between;
 }
 
-Bitboard forward_squares(Square sq, Color col) {
-    Bitboard mask = 0;
-    int rank = rank_of(sq), file = file_of(sq);
-    while ((col == Color::WHITE && rank < 7) || (col == Color::BLACK && rank > 0)) {
-        rank += (col == Color::WHITE) ? 1 : -1;
-        for (int f = std::max(0, file - 1); f <= std::min(7, file + 1); ++f) {
-            mask |= square_to_bitmap(Square(rank * 8 + f));
-        }
+Bitboard wAttackFrontSpans(Bitboard pawnAttacks) {
+    // Assuming pawnAttacks represents immediate attack squares,
+    // and you need to extend this to cover all forward spans.
+    Bitboard attackSpan = pawnAttacks;
+    Bitboard shifts = pawnAttacks;
+    while (shifts) {
+        shifts <<= 8; // Move one rank forward
+        attackSpan |= shifts;
     }
-    return mask;
+    return attackSpan;
 }
 
-Bitboard behind_squares(Square sq, Color col) {
-    Bitboard mask = 0;
-    int rank = rank_of(sq), file = file_of(sq);
-    while ((col == Color::WHITE && rank > 0) || (col == Color::BLACK && rank < 7)) {
-        rank += (col == Color::WHITE) ? -1 : 1;
-        for (int f = std::max(0, file - 1); f <= std::min(7, file + 1); ++f) {
-            mask |= square_to_bitmap(Square(rank * 8 + f));
-        }
+Bitboard bAttackFrontSpans(Bitboard pawnAttacks) {
+    // Assuming pawnAttacks represents immediate attack squares,
+    // and you need to extend this to cover all forward spans.
+    Bitboard attackSpan = pawnAttacks;
+    Bitboard shifts = pawnAttacks;
+    while (shifts) {
+        shifts >>= 8; // Move one rank backward
+        attackSpan |= shifts;
     }
-    return mask;
+    return attackSpan;
 }
+
+
 
 Bitboard blocking_squares(Square sq, Color col, Bitboard enemyPawns) {
     Bitboard mask = 0;
@@ -133,34 +135,29 @@ Bitboard blocking_squares(Square sq, Color col, Bitboard enemyPawns) {
 }
 
 
+Bitboard shiftNorth(Bitboard b) { return b << 8; }
+Bitboard shiftSouth(Bitboard b) { return b >> 8; }
+Bitboard shiftEast(Bitboard b) { return (b & 0xFEFEFEFEFEFEFEFEULL) << 1; } // Prevent wraparound
+Bitboard shiftWest(Bitboard b) { return (b & 0x7F7F7F7F7F7F7F7FULL) >> 1; }
 
-
-
-Bitboard detectPassedPawns(Color col, Bitboard wPawnSquares, Bitboard bPawnSquares) {
-    Bitboard pawnSquares = col == Color::WHITE ? wPawnSquares : bPawnSquares;
-    Bitboard enemyPawns = col == Color::WHITE ? bPawnSquares : wPawnSquares;
+Bitboard detectPassedPawns(Color col, Bitboard ownPawns, Bitboard enemyPawns) {
     Bitboard passedPawns = 0;
-    int forwardShift = col == Color::WHITE ? 8 : -8;
 
-    while (pawnSquares) {
-        Bitboard pawnSquare = pawnSquares & -pawnSquares;
+    while (ownPawns) {
+        Bitboard pawn = ownPawns & -ownPawns; // Isolate the least significant bit representing a pawn
+        Bitboard blockSquares = blocking_squares(bitboard_to_square(pawn), col, enemyPawns);
 
-        Bitboard blockingSquares = 0;
-        Bitboard currentSquare = pawnSquare;
-        do {
-            currentSquare = (col == Color::WHITE) ? (currentSquare << 8) : (currentSquare >> 8);
-            blockingSquares |= currentSquare;
-        } while (currentSquare && (currentSquare & enemyPawns) == 0 && !(currentSquare & (col == Color::WHITE ? 0xFF00000000000000LL : 0xFFLL)));
-
-        if ((blockingSquares & enemyPawns) == 0 && currentSquare) {
-            passedPawns |= pawnSquare;
+        // Check if any enemy pawn is in the blocking squares
+        if (!(blockSquares & enemyPawns)) {
+            passedPawns |= pawn;
         }
 
-        pawnSquares &= pawnSquares - 1;
+        ownPawns &= ownPawns - 1; // Move to the next pawn
     }
 
     return passedPawns;
 }
+
 
 
 int detectDoubledPawns(Color color, Bitboard wpawns, Bitboard bpawns) {
@@ -201,60 +198,135 @@ Bitboard detectIsolatedPawns(Bitboard pawns) {
     return isolatedPawns;
 }
 
-Bitboard detectWeakPawns(Color color, Bitboard wpawns, Bitboard bpawns, Bitboard wAttacks, Bitboard bAttacks) {
-    const Bitboard pawns = (color == Color::WHITE) ? wpawns : bpawns;
-    const Bitboard enemyPawns = (color == Color::WHITE) ? bpawns : wpawns;
-    const Bitboard friendlyAttacks = (color == Color::WHITE) ? wAttacks : bAttacks;
-    const Bitboard enemyAttacks = (color == Color::WHITE) ? bAttacks : wAttacks;
-    Bitboard backwardsPawns = 0;
+// Function to calculate eastward attacks for white pawns
+Bitboard wPawnEastAttacks(Bitboard wpawns) {
+    return (wpawns << 9) & ~0x0101010101010101; // Avoid wraparound from H to A file
+}
 
-    Bitboard stops, wAttackSpans, bAttackSpans, backwardPawns;
+// Function to calculate westward attacks for white pawns
+Bitboard wPawnWestAttacks(Bitboard wpawns) {
+    return (wpawns << 7) & ~0x8080808080808080; // Avoid wraparound from A to H file
+}
 
-    if (color == Color::WHITE) {
-        stops = wpawns << 8;
-        backwardPawns = (stops & enemyAttacks & ~friendlyAttacks) >> 8;
-    } else {
-        stops = bpawns >> 8;
-        backwardPawns = (stops & enemyAttacks & ~friendlyAttacks) << 8;
+// Function to calculate eastward attack spans for white pawns
+Bitboard wEastAttackFrontSpans(Bitboard wpawns) {
+    Bitboard spans = 0;
+    Bitboard attacks = wPawnEastAttacks(wpawns);
+    while (attacks) {
+        spans |= attacks;
+        attacks <<= 8; // Move one rank up
     }
+    return spans;
+}
 
-    return backwardsPawns;
+// Function to calculate westward attack spans for white pawns
+Bitboard wWestAttackFrontSpans(Bitboard wpawns) {
+    Bitboard spans = 0;
+    Bitboard attacks = wPawnWestAttacks(wpawns);
+    while (attacks) {
+        spans |= attacks;
+        attacks <<= 8; // Move one rank up
+    }
+    return spans;
+}
+
+// Function to calculate eastward attacks for black pawns
+Bitboard bPawnEastAttacks(Bitboard bpawns) {
+    return (bpawns >> 7) & ~0x0101010101010101; // Avoid wraparound from H to A file
+}
+
+// Function to calculate westward attacks for black pawns
+Bitboard bPawnWestAttacks(Bitboard bpawns) {
+    return (bpawns >> 9) & ~0x8080808080808080; // Avoid wraparound from A to H file
+}
+
+// Assuming the functions for bPawnEastAttacks and bPawnWestAttacks are already defined as:
+// bPawnEastAttacks: Calculates eastward attacks for black pawns
+// bPawnWestAttacks: Calculates westward attacks for black pawns
+
+// Function to calculate eastward attack spans for black pawns
+Bitboard bEastAttackFrontSpans(Bitboard bpawns) {
+    Bitboard spans = 0;
+    Bitboard attacks = bPawnEastAttacks(bpawns);
+    while (attacks) {
+        spans |= attacks;
+        attacks >>= 8; // Move one rank down
+    }
+    return spans;
+}
+
+// Function to calculate westward attack spans for black pawns
+Bitboard bWestAttackFrontSpans(Bitboard bpawns) {
+    Bitboard spans = 0;
+    Bitboard attacks = bPawnWestAttacks(bpawns);
+    while (attacks) {
+        spans |= attacks;
+        attacks >>= 8; // Move one rank down
+    }
+    return spans;
 }
 
 
 
+// Assuming `enemyAttacks` correctly represents squares attacked by all enemy pieces,
+// not just enemy pawns. If it only represents enemy pawn attacks, adjust accordingly.
+Bitboard wBackward(Bitboard wpawns, Bitboard bpawns) {
+    Bitboard stops = wpawns << 8;
+    Bitboard wAttackSpans = wEastAttackFrontSpans(wpawns) | wWestAttackFrontSpans(wpawns);
+    Bitboard bAttacks = bPawnEastAttacks(bpawns) | bPawnWestAttacks(bpawns);
+    return (stops & bAttacks & ~wAttackSpans) >> 8;
+}
 
-Bitboard detectWeakSquares(Color color, Bitboard wpawns, Bitboard bpawns, Bitboard wAttacks, Bitboard bAttacks) {
-    // Directly utilize the provided cached bitboards
-    Bitboard pawns = (color == Color::WHITE) ? wpawns : bpawns;
-    Bitboard attacks = (color == Color::WHITE) ? wAttacks : bAttacks;
-    Bitboard weakSquares;
-    Bitboard potentialPawnCoverage = 0; // Declare the variable 'potentialPawnCoverage' and initialize it to 0.
+Bitboard bBackward(Bitboard bpawns, Bitboard wpawns) {
+    Bitboard stops = bpawns >> 8;
+    Bitboard bAttackSpans = bEastAttackFrontSpans(bpawns) | bWestAttackFrontSpans(bpawns);
+    Bitboard wAttacks = wPawnEastAttacks(wpawns) | wPawnWestAttacks(wpawns);
+    return (stops & wAttacks & ~bAttackSpans) << 8;
+}
 
-    for (Bitboard p = wpawns; p; p &= p - 1) {
-        Bitboard pos = p & -p; // isolate the least significant bit (current pawn position)
-        potentialPawnCoverage |= (pos << 8) | ((pos & ~fileBitboard(0)) << 7) | ((pos & ~fileBitboard(7)) << 9);
+
+
+Bitboard detectWeakSquares(Color color, Bitboard pawns) {
+    Bitboard potentialCoverage = pawns; // a pawn on the square is not a weak square
+    Bitboard targetArea;
+
+    while (pawns) {
+        Bitboard pawnPos = pawns & -pawns; // Isolate the least significant bit representing a pawn
+        pawns &= pawns - 1; // Remove this pawn from consideration
+
+        if (color == Color::WHITE) {
+            while (pawnPos) {
+                pawnPos <<= 8; // Move to the next rank
+                if (pawnPos == 0) break; // If we have moved off the board, stop
+                potentialCoverage |= (pawnPos & ~fileBitboard(0)) << 1; // Add coverage to the right
+                potentialCoverage |= (pawnPos & ~fileBitboard(7)) >> 1; // Add coverage to the left
+            }
+        } else {
+            while (pawnPos) {
+                pawnPos >>= 8; // Move to the next rank down
+                if (pawnPos == 0) break; // If we have moved off the board, stop
+                potentialCoverage |= (pawnPos & ~fileBitboard(0)) >> 1; // Add coverage to the left
+                potentialCoverage |= (pawnPos & ~fileBitboard(7)) << 1; // Add coverage to the right
+            }
+        }
     }
 
-    // For black pawns: cover squares directly ahead, and one square diagonally ahead to the left and right
-    for (Bitboard p = bpawns; p; p &= p - 1) {
-        Bitboard pos = p & -p; // isolate the least significant bit (current pawn position)
-        potentialPawnCoverage |= (pos >> 8) | ((pos & ~fileBitboard(0)) >> 9) | ((pos & ~fileBitboard(7)) >> 7);
-    }
-
-    // Define target ranks for weak square detection
-    Bitboard targetRanks;
+    // Define the target area based on color
     if (color == Color::WHITE) {
-        targetRanks = rankBitboard(3) | rankBitboard(4) | rankBitboard(5);
-        // Weak squares are those on target ranks not covered by any potential pawn move or attack
-        weakSquares = targetRanks & ~potentialPawnCoverage & ~wpawns;
+        targetArea = rankBitboard(2) | rankBitboard(3); // Target ranks 3 and 4 for white
     } else {
-        targetRanks = rankBitboard(2) | rankBitboard(3) | rankBitboard(4);
-        weakSquares = targetRanks & ~potentialPawnCoverage & ~bpawns;
+        targetArea = rankBitboard(4) | rankBitboard(5); // Target ranks 5 and 6 for black
     }
+
+    // Weak squares are those in the target area not covered by potential pawn moves
+    Bitboard weakSquares = targetArea & ~potentialCoverage;
 
     return weakSquares;
 }
+
+
+
+
 
 
 
@@ -277,14 +349,23 @@ int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
         int kingRank = rank_of(kSquare);
         int kingFile = file_of(kSquare);
 
-        // Calculate the king's distance to the promotion path of the pawn
-        int distanceToStopPromotion = max(abs(kingRank - passedPawnRank), abs(kingFile - passedPawnFile));
-
+        
+        bool canCatchUp = true;
+        
+        if(color == Color::WHITE && passedPawnRank < kingRank){
+            canCatchUp = false;
+        }
+        if(color == Color::BLACK && passedPawnRank > kingRank){
+            canCatchUp = false;
+        }
+        if(distanceToPromotion < abs(kingRank - passedPawnRank)){
+            canCatchUp = false;
+        }
         // If the king can reach the pawn's promotion path before or as it promotes, count it
-        if (distanceToStopPromotion <= distanceToPromotion) {
+        
+        if(canCatchUp){
             count++;
         }
-
         passedPawns &= passedPawns - 1; // Remove this pawn from the set
     }
     return count;

@@ -19,6 +19,13 @@ std::cout << "evaluation for position 3: " << evaluator.evaluate(0) << std::endl
 board.setFen("r2q1rk1/1b3ppp/4p3/pNb1P3/8/PB1Q4/1PP3PP/R4R1K b - - 1 18");
 std::cout << "evaluation for position 4: " << evaluator.evaluate(0) << std::endl;
 
+board.setFen("rnbqkbnr/p4p1p/p2p3p/2p5/2P5/4P2P/PP5P/RNBQKBNR w KQkq - 0 1");
+std::cout << "evaluation for position 5: " << evaluator.evaluate(0) << std::endl;
+
+board.setFen("8/5K2/6R1/8/8/8/6r1/6k1 w - - 0 1");
+std::cout << "evaluation for position 6: " << evaluator.evaluate(0) << std::endl;
+
+
     return 0;
 
  }
