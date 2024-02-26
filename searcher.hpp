@@ -183,7 +183,7 @@ private:
     // Aspiration window search
 int aspirationSearch() {
     // 
-    int progression[] = {80, 250, 700};
+    int progression[] = {100, 350};
     bool isOpenWindow = false;
 
     int eval;
@@ -210,7 +210,7 @@ int aspirationSearch() {
             state.aspirationWindow.failLow++;
             state.aspirationWindow.beta = state.aspirationWindow.alpha; // Adjust beta to the current alpha
             
-            if(state.aspirationWindow.failLow < 3){
+            if(state.aspirationWindow.failLow < 2){
                 state.aspirationWindow.delta += progression[state.aspirationWindow.failLow]; 
                 state.aspirationWindow.alpha -= state.aspirationWindow.delta; // Decrease alpha
             }
@@ -225,7 +225,7 @@ int aspirationSearch() {
             state.aspirationWindow.failHigh++;
             state.aspirationWindow.alpha = state.aspirationWindow.beta; // Adjust alpha to the current beta
             
-            if(state.aspirationWindow.failHigh < 3){
+            if(state.aspirationWindow.failHigh < 2){
                 state.aspirationWindow.delta += progression[state.aspirationWindow.failHigh]; 
                 state.aspirationWindow.beta += state.aspirationWindow.delta; // Increase beta
             }
