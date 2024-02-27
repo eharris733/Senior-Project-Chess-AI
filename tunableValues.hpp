@@ -57,7 +57,7 @@ struct TunableValues{
     GamePhaseValue kingPressureScore;
 
     //tuneable search parameters
-    
+
     // for aspiration window
     int aspirationWindowProgression[2];
     int aspirationWindowInitialDelta;
@@ -76,6 +76,12 @@ struct TunableValues{
     int promotionMoveScore;
     int killerMoveScore;
     int baseScore;
+
+    //for late move reductions
+    int initalDepthLMR;
+    int secondaryDepthLMR;
+    int initialMoveCountLMR;
+    int secondaryMoveCountLMR;
 
 };
 

@@ -391,7 +391,7 @@ int aspirationSearch() {
                 // right now we only reduce by 1 move, but it is likely that with better move sorting
                 // we can reduce by more the more moves we look at
                 // also only going to look at depth 3 and on
-                bool doLMR = depth >= 3 && moveCount > 3 && !isRoot && !isCapture && !isCheck && !isPvs && depthExtension == 0;
+                bool doLMR = depth >= searchParams.initalDepthLMR && moveCount > searchParams.initialMoveCountLMR && !isRoot && !isCapture && !isCheck && !isPvs && depthExtension == 0;
                 // if (doLMR) {
                 //     int reduction = max(1.0, log(depth) * log(moveCount) / 2);
                 //     depth -= reduction; // Apply dynamic reduction based on depth and move count
@@ -399,7 +399,7 @@ int aspirationSearch() {
                 if (doLMR) {
                     // another layer of reduction later in the search and late in the move order
                     // ideally would be percentage based
-                    if(moves.size() - moveCount < 3 && depth >= 6){
+                    if(moveCount > searchParams.secondaryMoveCountLMR && depth >= searchParams.secondaryDepthLMR){
                         depthExtension -= 1; // Apply dynamic reduction based on depth and move count
                     }
                     depthExtension -= 1; // Apply dynamic reduction based on depth and move count

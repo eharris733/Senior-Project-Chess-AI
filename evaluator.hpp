@@ -186,6 +186,10 @@ TunableValues baseline = {
     200, // promotion score
     100, // killer move score
     10, // base move score
+    3, // initial depth for late move reductions
+    6, // secondary depth for late move reductions
+    3, // initial move count for late move reductions
+    4, // secondary move count for late move reductions
 
 };
 
