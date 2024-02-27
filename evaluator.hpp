@@ -173,8 +173,19 @@ TunableValues baseline = {
     GamePhaseValue(35, 30), // Rook can directly attack a weak enemy pawn
     GamePhaseValue(4, 0), // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
     GamePhaseValue(5, 0), // How far king is from closest enemy pawn
-    GamePhaseValue(10, 10) // Multiplier for king pressure
+    GamePhaseValue(10, 10), // Multiplier for king pressure
 
+    //tuneable search parameters
+    {100, 350}, //aspiration window progression
+    20, //aspiration window initial delta
+    5, // use aspiration window depth
+    true, // use lazy eval for null move reductions
+    {300, 900, 1300}, // futility pruning margin
+    true, // use futility pruning lazy eval
+    300, // delta pruning in QS search
+    200, // promotion score
+    100, // killer move score
+    10, // base move score
 
 };
 

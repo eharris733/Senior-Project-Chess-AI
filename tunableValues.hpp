@@ -55,6 +55,28 @@ struct TunableValues{
     GamePhaseValue kingFriendlyPawn;
     GamePhaseValue kingNoEnemyPawnNear;
     GamePhaseValue kingPressureScore;
+
+    //tuneable search parameters
+    
+    // for aspiration window
+    int aspirationWindowProgression[2];
+    int aspirationWindowInitialDelta;
+    int useAspirationWindowDepth;
+
+    // for null move reductions
+    bool useLazyEvalNMR;
+
+    // for futility pruning
+    int futilityMargin[3];
+    bool useLazyEvalFutility;
+    // for delta pruning in QS search
+    int deltaMargin;
+
+    // for move ordering
+    int promotionMoveScore;
+    int killerMoveScore;
+    int baseScore;
+
 };
 
 

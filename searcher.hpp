@@ -3,6 +3,7 @@
 #include "evaluator.hpp"
 #include "t_table.hpp"
 #include "polyglot.hpp"
+#include "tunableValues.hpp"
 #include <cstdlib>
 #include <ctime>
 #include <map>
@@ -65,7 +66,12 @@ class Searcher {
 public:
 
     SearchState state;
-    Searcher(Board& initialBoard) : board(initialBoard), evaluator(initialBoard), tt(1 << 22), book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"){
+    Searcher(Board& initialBoard, TunableValues searchParams = baseline) 
+        : board(initialBoard), 
+          evaluator(initialBoard), 
+          tt(1 << 22), // this value is arbitrary, but it should be a power of 2
+          book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
+          searchParams(baseline){
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
     }
 
@@ -106,7 +112,7 @@ public:
                 break;
             }
 
-            if(state.currentDepth < 5){
+            if(state.currentDepth < searchParams.useAspirationWindowDepth){
                 state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
             }
             // at depth 5 we use aspiration windows
@@ -157,6 +163,7 @@ private:
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
     PolyglotBook book; // Opening book
+    TunableValues searchParams; // Search parameters  
     int MAX_DEPTH = 100;
     
     // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)
@@ -183,7 +190,6 @@ private:
     // Aspiration window search
 int aspirationSearch() {
     // 
-    int progression[] = {100, 350};
     bool isOpenWindow = false;
 
     int eval;
@@ -211,7 +217,7 @@ int aspirationSearch() {
             state.aspirationWindow.beta = state.aspirationWindow.alpha; // Adjust beta to the current alpha
             
             if(state.aspirationWindow.failLow < 2){
-                state.aspirationWindow.delta += progression[state.aspirationWindow.failLow]; 
+                state.aspirationWindow.delta += searchParams.aspirationWindowProgression[state.aspirationWindow.failLow]; 
                 state.aspirationWindow.alpha -= state.aspirationWindow.delta; // Decrease alpha
             }
             else{
@@ -226,7 +232,7 @@ int aspirationSearch() {
             state.aspirationWindow.alpha = state.aspirationWindow.beta; // Adjust alpha to the current beta
             
             if(state.aspirationWindow.failHigh < 2){
-                state.aspirationWindow.delta += progression[state.aspirationWindow.failHigh]; 
+                state.aspirationWindow.delta += searchParams.aspirationWindowProgression[state.aspirationWindow.failHigh]; 
                 state.aspirationWindow.beta += state.aspirationWindow.delta; // Increase beta
             }
             else{
@@ -280,7 +286,7 @@ int aspirationSearch() {
             // might wantn to disable for pv search, or if we are doing lmr
             bool nullMoveReduction = depth >= 3 && !isCheck && !isRoot && !isPvs;
             if (nullMoveReduction) {
-                int staticEval = evaluate(depth, true); // lazy eval to avoid expensive evals
+                int staticEval = evaluate(depth, searchParams.useLazyEvalNMR); // lazy eval to avoid expensive evals
                 if (staticEval >= beta){
                     board.makeNullMove();
                     int r = depth > 6 ? 4 : 3;
@@ -324,29 +330,48 @@ int aspirationSearch() {
                 //we should already know this from our sort moves
                 bool isCapture = board.isCapture(move);
                 bool isCheck = board.inCheck();
+                int depthExtension = 0;
 
                 // Reverse Futility Pruning at depth 1-3, with increasing margins
-                const int FUTILITY_MARGIN[] = {300, 900, 1300}; // Worth about a piece, a queen, and a completely winning position
+                //completely winning position
                 // Constraints: Not root node, not in check, not a capture, not a mate search, and depth is 1
                 // also can't prune only legal move
                 if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3
                     && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
                     float evaluation = evaluate(1, true); // lazy eval to avoid expensive evals
-                    if (evaluation + FUTILITY_MARGIN[depth] <= alpha) {
+                    if (evaluation + searchParams.futilityMargin[depth] <= alpha) {
                         // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
                         continue;
                     }
+                }
+
+                // one reply extensions, as inspired by https://www.chessprogramming.org/One_Reply_Extensions
+                // max of three total extensions for this one
+                if(moves.size() == 1 && plyFromRoot - state.currentDepth < 3){
+                    depthExtension = 1;
                 }
 
                 board.makeMove(move);
                 state.nodes++;
                 // recheck our pruning conditions
                 isCheck = board.inCheck();
-                int depthExtension = 0;
+                
                 //check extension in the right place now
                 if (isCheck) {
-                    depthExtension++;
+                    depthExtension = 1;
                 }
+
+                // extend if a pawn reaches the seventh rank
+                if(board.at<PieceType>(move.to()) == PieceType::PAWN) {
+                    if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
+                        depthExtension = 1;
+                    }
+                    else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
+                        depthExtension = 1;
+                    }
+                }
+
+                //note that any extension will only set the depth extension to 1, so we can't have multiple extensions
 
                 // LMR condition
                 // common conditions for LMR from chessprogramming wiki
@@ -445,7 +470,7 @@ int aspirationSearch() {
             // if(stop.load()){
             //     return 0;
             // }
-            const int DELTA_MARGIN = 300; // most positional advantages aren't worth more than a piece
+            const int DELTA_MARGIN = searchParams.deltaMargin; // most positional advantages aren't worth more than a piece
             
             int stand_pat = evaluate(0);
             if (stand_pat >= beta) {
@@ -499,12 +524,12 @@ int aspirationSearch() {
 
                 if (victim == PieceType::NONE) {
                     if (isPromotion) {
-                        return 200; // Base score for promotions
+                        return searchParams.promotionMoveScore; // Base score for promotions
                     }
                     if (move == state.killerMoves[0] || move == state.killerMoves[1]) {
-                        return 100; // Score for killer moves
+                        return searchParams.killerMoveScore; // Score for killer moves
                     }
-                    return 10; // Base score for quiet moves
+                    return searchParams.baseScore; // Base score for quiet moves
                 }
 
                 // MVV-LVA Scoring refined
