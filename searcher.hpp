@@ -11,15 +11,31 @@
 #include <algorithm>
 #include <chrono> 
 
-
-
-
-
 using namespace chess;
 using namespace std;
 
+
+
 // this version of iterative deepening is heavily influened 
 // by Sebastian Lague's chess engine tutorial
+TunableSearch baseSearch = {
+        //tuneable search parameters
+        {100, 350}, //aspiration window progression
+        20, //aspiration window initial delta
+        5, // use aspiration window depth
+        true, // use lazy eval for null move reductions
+        {300, 900, 1300}, // futility pruning margin
+        true, // use futility pruning lazy eval
+        300, // delta pruning in QS search
+        200, // promotion score
+        100, // killer move score
+        10, // base move score
+        3, // initial depth for late move reductions
+        6, // secondary depth for late move reductions
+        3, // initial move count for late move reductions
+        4, // secondary move count for late move reductions
+    };
+
 
 
 // this is experimental as of right now
@@ -65,13 +81,16 @@ extern std::atomic<bool> stop;
 class Searcher {
 public:
 
+    
+
     SearchState state;
-    Searcher(Board& initialBoard, TunableValues searchParams = baseline) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch) 
         : board(initialBoard), 
           evaluator(initialBoard), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2
           book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
-          searchParams(baseline){
+          searchParams(searchParams)
+          {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
     }
 
@@ -163,7 +182,7 @@ private:
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
     PolyglotBook book; // Opening book
-    TunableValues searchParams; // Search parameters  
+    TunableSearch searchParams; // Search parameters  
     int MAX_DEPTH = 100;
     
     // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)

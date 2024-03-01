@@ -19,7 +19,7 @@ using namespace builtin;
 #define FLIP(sq) (63 - sq) // stolen function to flip a square for BLACK/WHITE
 
 // these are my human guesstimates or taken from the classic PeSTO engine
-TunableValues baseline = {
+TunableEval baseEval = {
     //piece tables are taken from the classic PeSTO engine
     //https://www.chessprogramming.org/PeSTO%27s_Evaluation_Function
     constants::STARTPOS, // The FEN string
@@ -154,10 +154,10 @@ TunableValues baseline = {
 
     //values are completely guessed based on whims
     GamePhaseValue(40, 80),   // Passed pawn
-    GamePhaseValue(-10, -20), // Doubled pawn (not good)
-    GamePhaseValue(-20, -20), // Isolated pawn (not good)
-    GamePhaseValue(-40, -40), // Weak pawn
-    GamePhaseValue(-5, -2), // Weak square
+    GamePhaseValue(10, 20), // Doubled pawn (not good)
+    GamePhaseValue(20, 20), // Isolated pawn (not good)
+    GamePhaseValue(40, 40), // Weak pawn
+    GamePhaseValue(5, 2), // Weak square
     GamePhaseValue(0, 50), // Rule of the square
     GamePhaseValue(40, 35), // Knight is on a weak square
     GamePhaseValue(3, 1), // How many squares a bishop can move to
@@ -175,22 +175,6 @@ TunableValues baseline = {
     GamePhaseValue(5, 0), // How far king is from closest enemy pawn
     GamePhaseValue(10, 10), // Multiplier for king pressure
 
-    //tuneable search parameters
-    {100, 350}, //aspiration window progression
-    20, //aspiration window initial delta
-    5, // use aspiration window depth
-    true, // use lazy eval for null move reductions
-    {300, 900, 1300}, // futility pruning margin
-    true, // use futility pruning lazy eval
-    300, // delta pruning in QS search
-    200, // promotion score
-    100, // killer move score
-    10, // base move score
-    3, // initial depth for late move reductions
-    6, // secondary depth for late move reductions
-    3, // initial move count for late move reductions
-    4, // secondary move count for late move reductions
-
 };
 
 class Evaluator {
@@ -199,7 +183,7 @@ class Evaluator {
 
     public:
 
-        Evaluator(Board& board, TunableValues featureWeights = baseline) : board(board), featureWeights(featureWeights) {
+        Evaluator(Board& board, TunableEval featureWeights = baseEval) : board(board), featureWeights(featureWeights) {
             gamePhase = 0;
         }
         
@@ -371,15 +355,18 @@ class Evaluator {
         score += (builtin::popcount(whitePassedPawns) - builtin::popcount(blackPassedPawns)) * (featureWeights.passedPawn.middleGame * mgWeight + featureWeights.passedPawn.endGame * egWeight);
 
         // doubled pawns (tested and working)
-        score += (detectDoubledPawns(Color::WHITE, wPawns, bPawns) - detectDoubledPawns(Color::BLACK, bPawns, wPawns)) * (featureWeights.doubledPawn.middleGame * mgWeight + featureWeights.doubledPawn.endGame * egWeight);
+        // adjusting the score negatively for doubled pawns
+        score -= (detectDoubledPawns(Color::BLACK, wPawns, bPawns) - detectDoubledPawns(Color::WHITE, bPawns, wPawns)) * (featureWeights.doubledPawn.middleGame * mgWeight + featureWeights.doubledPawn.endGame * egWeight);
 
         Bitboard isolatedWhitePawns = detectIsolatedPawns(wPawns);
         Bitboard isolatedBlackPawns = detectIsolatedPawns(bPawns);
         // isolated pawns (tested and working)
-        score += (builtin::popcount(isolatedWhitePawns) - builtin::popcount(isolatedBlackPawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
+        // adjusting the score negatively for isolated pawns
+        score -= (builtin::popcount(isolatedBlackPawns) - builtin::popcount(isolatedWhitePawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
 
 
         // weak pawns (finally working)
+        // adjusting the score negatively for weak pawns
         Bitboard weakWhitePawns = wBackward(wPawns, bPawns);
         Bitboard weakBlackPawns = bBackward(bPawns, wPawns);
         
@@ -387,12 +374,13 @@ class Evaluator {
         weakWhitePawns &= ~whitePassedPawns & ~isolatedWhitePawns;
         weakBlackPawns &= ~blackPassedPawns & ~isolatedBlackPawns;
 
-        score += (popcount(weakWhitePawns) - popcount(weakBlackPawns)) * (featureWeights.weakPawn.middleGame * mgWeight + featureWeights.weakPawn.endGame * egWeight);
+        score -= (popcount(weakBlackPawns) - popcount(weakWhitePawns)) * (featureWeights.weakPawn.middleGame * mgWeight + featureWeights.weakPawn.endGame * egWeight);
 
         // weak squares (working finally)
+        // adjusting the score negatively for weak squares
         Bitboard weakWhiteSquares = detectWeakSquares(Color::WHITE, wPawns);
         Bitboard weakBlackSquares = detectWeakSquares(Color::BLACK, bPawns);
-        score += (popcount(weakWhiteSquares) - popcount(weakBlackSquares)) * (featureWeights.weakSquare.middleGame * mgWeight + featureWeights.weakSquare.endGame * egWeight);
+        score -= (popcount(weakBlackSquares) - popcount(weakWhiteSquares)) * (featureWeights.weakSquare.middleGame * mgWeight + featureWeights.weakSquare.endGame * egWeight);
 
         // rule of the square (tested and working)
         score += (ruleOfTheSquare(Color::WHITE, blackPassedPawns, wKings) - ruleOfTheSquare(Color::BLACK, whitePassedPawns, bKings)) * (featureWeights.passedPawnEnemyKingSquare.middleGame * mgWeight + featureWeights.passedPawnEnemyKingSquare.endGame * egWeight);
@@ -454,7 +442,7 @@ class Evaluator {
         }
 
     private:
-        TunableValues featureWeights;
+        TunableEval featureWeights;
         float gamePhase;
         Board& board;
 
