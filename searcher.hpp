@@ -3,7 +3,7 @@
 #include "evaluator.hpp"
 #include "t_table.hpp"
 #include "polyglot.hpp"
-#include "tunableValues.hpp"
+#include "baselines.hpp"    
 #include <cstdlib>
 #include <ctime>
 #include <map>
@@ -13,28 +13,6 @@
 
 using namespace chess;
 using namespace std;
-
-
-
-// this version of iterative deepening is heavily influened 
-// by Sebastian Lague's chess engine tutorial
-TunableSearch baseSearch = {
-        //tuneable search parameters
-        {100, 350}, //aspiration window progression
-        20, //aspiration window initial delta
-        5, // use aspiration window depth
-        true, // use lazy eval for null move reductions
-        {300, 900, 1300}, // futility pruning margin
-        true, // use futility pruning lazy eval
-        300, // delta pruning in QS search
-        200, // promotion score
-        100, // killer move score
-        10, // base move score
-        3, // initial depth for late move reductions
-        6, // secondary depth for late move reductions
-        3, // initial move count for late move reductions
-        4, // secondary move count for late move reductions
-    };
 
 
 

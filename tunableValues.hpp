@@ -1,122 +1,151 @@
 #pragma once
 #include <string>
 #include <bitset>
-
-// this file is the start for the preparation of a GA
-// ideally all values that should be tuned will be in this file
-// more or less as a global variable
-
-// eval function weights
-// a struct to allow each feature to be weighted differently based on phase of the game
-struct GamePhaseValue {
-    int middleGame;
-    int endGame;
-
-    GamePhaseValue(int mg = 0, int eg = 0) : middleGame(mg), endGame(eg) {}
-};
-
-// define the struct here
-struct TunableEval{
-    std::string fen; // The FEN string
-    int pawnsMG[64];
-    int pawnsEG[64];
-    int knightsMG[64];
-    int knightsEG[64];
-    int bishopsMG[64];
-    int bishopsEG[64];
-    int rooksMG[64];
-    int rooksEG[64];
-    int queensMG[64];
-    int queensEG[64];
-    int kingsMG[64];
-    int kingsEG[64];
-    GamePhaseValue pawn;
-    GamePhaseValue knight;
-    GamePhaseValue bishop;
-    GamePhaseValue rook;
-    GamePhaseValue queen;
-    GamePhaseValue passedPawn;
-    GamePhaseValue doubledPawn;
-    GamePhaseValue isolatedPawn;
-    GamePhaseValue weakPawn;
-    GamePhaseValue weakSquare;
-    GamePhaseValue passedPawnEnemyKingSquare;
-    GamePhaseValue knightOutposts;
-    GamePhaseValue bishopMobility;
-    GamePhaseValue bishopPair;
-    GamePhaseValue rookAttackKingFile;
-    GamePhaseValue rookAttackKingAdjFile;
-    GamePhaseValue rook7thRank;
-    GamePhaseValue rookConnected;
-    GamePhaseValue rookMobility;
-    GamePhaseValue rookBehindPassedPawn;
-    GamePhaseValue rookOpenFile;
-    GamePhaseValue rookSemiOpenFile;
-    GamePhaseValue rookAtckWeakPawnOpenColumn;
-    GamePhaseValue kingFriendlyPawn;
-    GamePhaseValue kingNoEnemyPawnNear;
-    GamePhaseValue kingPressureScore;
-
-  
-
-};
+#include <random>
+#include <iostream>
+#include "chess.hpp"
+#include "baselines.hpp"
 
 
 
-struct TunableSearch{
-    //tuneable search parameters
-
-    // for aspiration window
-    int aspirationWindowProgression[2];
-    int aspirationWindowInitialDelta;
-    int useAspirationWindowDepth;
-
-    // for null move reductions
-    bool useLazyEvalNMR;
-
-    // for futility pruning
-    int futilityMargin[3];
-    bool useLazyEvalFutility;
-    // for delta pruning in QS search
-    int deltaMargin;
-
-    // for move ordering
-    int promotionMoveScore;
-    int killerMoveScore;
-    int baseScore;
-
-    //for late move reductions
-    int initalDepthLMR;
-    int secondaryDepthLMR;
-    int initialMoveCountLMR;
-    int secondaryMoveCountLMR;
-};
 
 
+// the way I see it, there are three possible encoding schemas:
+// 1. binary encoding -- a classic and universal GA encoding schema, but has the downside of 
+// mutation causing too much change in the chromosome for a single bit
+// (imagine a queen being 900, the msb is 512, and the next bit is 256, if the msb is flipped, the value changes by 512)
+// 2. gray encoding -- a binary encoding where the bits are flipped in a way that the change in value is minimized, although this is more complicated and unfamiliar to implement. 
+// luckily binary to gray and back is easy to implement, selection and mutation not as much
+// 3. integer encoding -- the chromosome is a string of integers, and the mutation is done by adding or subtracting a random number from the integer. This also makes sense, but the mutation isn't as "genetic" as the other two methods, and this is not a popular option...
+// https://www.cs.cmu.edu/Groups/AI/html/faqs/ai/genetic/part6/faq-doc-1.html#:~:text=A%20Gray%20code%20represents%20each,one%20bit%20at%20a%20time.
+
+// because I don't like the idea of integer encoding, I will use binary encoding for the GA, and I will use gray encoding only if I think I have time and energy to implement it (or if I feel that binary encoding is not working well)
+
+// there is also the issue of negative numbers. The only place where this is an issue is the piece square table values, and I'm tempted to omit them from the GA for now, and only tune the other values.
+// upon further consideration, I am going to leave the piece square tables for now, so I can keep the ga unsigned. Consider 8 pieces, a middlegame and an endgame value, values between -256, 256, and 64 sqaures = 64 * 2 * 8 * 10 = 10,240 bits. consider conversely only 20 features, each feature a range of either 0-1028 (for piece values) or 0-256, which means 20 * either 10 or 8 = 160-200 bit length, a much better value. Each chromosone is now only 160-200 bits long, which is much more manageable. Append to that the piece values for each stage, you add another 10 * 8 * 2 = 160 bits, which is still manageable.
+
+// takes in a binary string and returns the integer it represents
+// this is a helper function for the GA, that has a max of 10 bits
 int bitsToInt(const std::string& bits) {
     // std::bitset allows for converting a binary string to an unsigned long
     std::bitset<32> bitset(bits);
+    // return the integer value
     return static_cast<int>(bitset.to_ulong());
 }
 
+// a bit clunky, but it works...
 // multiply piece values by ten so the are scaled correctly
 TunableEval convertChromosoneToEval(const std::string& bitString){
-    TunableEval tEval;
+    TunableEval tEval = baseEval; // give it the default pesto eval values
+    assert(baseEval.kingsEG[0] == -74); // check that the base eval values are correct (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly)
     size_t pos = 0;
 
-    // Example for pawnsMG[0]
-    // Assuming each int is represented by 32 bits in the bitString
-    tEval.pawnsMG[0] = bitsToInt(bitString.substr(pos, 32));
-    pos += 32;
-
     // Parsing GamePhaseValue pawn (middleGame and endGame)
-    tEval.pawn.middleGame = bitsToInt(bitString.substr(pos, 32));
-    pos += 32;
-
-    tEval.pawn.endGame = bitsToInt(bitString.substr(pos, 32));
-    pos += 32;
-
-    // Additional fields would be parsed in a similar manner...
+    tEval.pawn.middleGame = 1000; // set to 100 always, and 100 * 10 = 1000
+    pos += 7;
+    tEval.pawn.endGame = bitsToInt(bitString.substr(pos, 8)) * 10;
+    pos += 8;
+    assert(tEval.pawn.middleGame != 0);
+    tEval.knight.middleGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    pos += 9;
+    tEval.knight.endGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    pos += 9;
+    tEval.bishop.middleGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    pos += 9;
+    tEval.bishop.endGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    pos += 9;
+    tEval.rook.middleGame = bitsToInt(bitString.substr(pos, 10)) * 10;
+    pos += 10;
+    tEval.rook.endGame = bitsToInt(bitString.substr(pos, 10)) * 10;
+    pos += 10;
+    tEval.queen.middleGame = bitsToInt(bitString.substr(pos, 10)) * 10;
+    pos += 10;
+    tEval.queen.endGame = bitsToInt(bitString.substr(pos, 10)) * 10; // these above values are multiplied by 10 to scale them correctly with the eval function and piece tables values (they will later be divided by 10 along w the piece values to get the correct value)
+    pos += 10;
+    tEval.passedPawn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.passedPawn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.doubledPawn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.doubledPawn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.isolatedPawn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.isolatedPawn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.weakPawn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.weakPawn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.weakSquare.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.weakSquare.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.passedPawnEnemyKingSquare.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.passedPawnEnemyKingSquare.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.knightOutposts.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.knightOutposts.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.bishopMobility.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.bishopMobility.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.bishopPair.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.bishopPair.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookAttackKingFile.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookAttackKingFile.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookAttackKingAdjFile.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookAttackKingAdjFile.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rook7thRank.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rook7thRank.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookConnected.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookConnected.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookMobility.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookMobility.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookBehindPassedPawn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookBehindPassedPawn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookOpenFile.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookOpenFile.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookSemiOpenFile.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookSemiOpenFile.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookAtckWeakPawnOpenColumn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.rookAtckWeakPawnOpenColumn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.kingFriendlyPawn.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.kingFriendlyPawn.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.kingNoEnemyPawnNear.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.kingNoEnemyPawnNear.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.kingPressureScore.middleGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
+    tEval.kingPressureScore.endGame = bitsToInt(bitString.substr(pos, 7));
+    pos += 7;
 
     // Return the populated struct
     return tEval;
@@ -125,18 +154,90 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
 
 // convert eval to chromosone for GA
 // divide piece values by ten
-string convertEvalToChromosone(const TunableEval& tEval){
-    std::string bitString;
-
-    // Example for pawnsMG[0]
-    // Assuming each int is represented by 32 bits in the bitString
-    bitString += std::bitset<32>(tEval.pawnsMG[0]).to_string();
+std::string convertEvalToChromosone(const TunableEval& tEval){
+    std::string bitString  = "";
 
     // Adding GamePhaseValue pawn (middleGame and endGame)
-    bitString += std::bitset<32>(tEval.pawn.middleGame).to_string();
-    bitString += std::bitset<32>(tEval.pawn.endGame).to_string();
+    bitString += std::bitset<7>(tEval.pawn.middleGame).to_string(); 
+    bitString += std::bitset<8>(tEval.pawn.endGame).to_string();
 
-    // Additional fields would be added in a similar manner...
+    assert(bitString.size() == 15); // sanity check to make sure the bitstring is the correct size (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly
+
+    bitString += std::bitset<9>(tEval.knight.middleGame).to_string();
+    bitString += std::bitset<9>(tEval.knight.endGame).to_string();
+
+    bitString += std::bitset<9>(tEval.bishop.middleGame).to_string();
+    bitString += std::bitset<9>(tEval.bishop.endGame).to_string();
+
+    bitString += std::bitset<10>(tEval.rook.middleGame).to_string();
+    bitString += std::bitset<10>(tEval.rook.endGame).to_string();
+
+    bitString += std::bitset<10>(tEval.queen.middleGame).to_string();
+    bitString += std::bitset<10>(tEval.queen.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.passedPawn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.passedPawn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.doubledPawn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.doubledPawn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.isolatedPawn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.isolatedPawn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.weakPawn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.weakPawn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.weakSquare.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.weakSquare.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.passedPawnEnemyKingSquare.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.passedPawnEnemyKingSquare.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.knightOutposts.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.knightOutposts.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.bishopMobility.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.bishopMobility.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.bishopPair.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.bishopPair.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookAttackKingFile.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookAttackKingFile.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookAttackKingAdjFile.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookAttackKingAdjFile.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rook7thRank.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rook7thRank.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookConnected.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookConnected.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookMobility.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookMobility.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookBehindPassedPawn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookBehindPassedPawn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookOpenFile.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookOpenFile.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookSemiOpenFile.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookSemiOpenFile.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.rookAtckWeakPawnOpenColumn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.rookAtckWeakPawnOpenColumn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.kingFriendlyPawn.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.kingFriendlyPawn.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.kingNoEnemyPawnNear.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.kingNoEnemyPawnNear.endGame).to_string();
+
+    bitString += std::bitset<7>(tEval.kingPressureScore.middleGame).to_string();
+    bitString += std::bitset<7>(tEval.kingPressureScore.endGame).to_string();
+
 
     return bitString;
 }
@@ -147,35 +248,44 @@ std::mt19937 gen(rd()); // Seed the generator
 
 // Function to generate a random integer within a given range
 // takes in the num of bits, and whether the number is signed or not    
-int randomInt(int bits, bool isSigned) {
+int randomInt(int bits) {
     std::uniform_int_distribution<int> distrib(0, (1 << bits) - 1);
     int randInt = distrib(gen);
-    if (isSigned) {
-        // If the number is signed, we need to convert it to a negative number half the time
-        if (randInt & (1 << (bits - 1))) {
-            randInt -= (1 << bits);
-        }
-    }
     return randInt;
 }
 
 // Function to initialize a TunableEval struct with random values
 TunableEval initializeRandomTunableEval() {
-    TunableEval tEval;
-
-    // For simplicity, let's say each square's value ranges from -100 to 100
-    for (int i = 0; i < 64; ++i) {
-        tEval.pawnsMG[i] = randomInt(10, true); // up to ten bits, and signed = -256 - 256 range
-        tEval.pawnsEG[i] = randomInt(10, true);
-        // Repeat for other pieces...
-    }
+    TunableEval tEval = baseEval; // get global base eval values
+    assert(baseEval.kingsEG[0] == -74); // check that the base eval values are correct (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly)
 
     // Initialize GamePhaseValues with random values, assuming a range
-    tEval.pawn = GamePhaseValue(100, randomInt(10, false)); // 0 - 1024 range, hard coded to 100 to allow other values to be tested
-    // Repeat for other GamePhaseValues...
-
-    // For the sake of example, other fields are initialized similarly
-    // ...
+    tEval.pawn = GamePhaseValue(100, randomInt(8)); // 0 - 256 range, hard coded to 100 to allow other values to be interepretable to the base pawn value
+    tEval.knight = GamePhaseValue(randomInt(9), randomInt(9)); // 0 - 512 range
+    tEval.bishop = GamePhaseValue(randomInt(9), randomInt(9)); // 0 - 512 range
+    tEval.rook = GamePhaseValue(randomInt(10), randomInt(10)); // 0 - 1024 range
+    tEval.queen = GamePhaseValue(randomInt(10), randomInt(10)); // 0 - 1024 range
+    tEval.passedPawn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.doubledPawn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.isolatedPawn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.weakPawn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.weakSquare = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.passedPawnEnemyKingSquare = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.knightOutposts = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.bishopMobility = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.bishopPair = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookAttackKingFile = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookAttackKingAdjFile = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rook7thRank = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookConnected = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookMobility = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookBehindPassedPawn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookOpenFile = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookSemiOpenFile = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.rookAtckWeakPawnOpenColumn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.kingFriendlyPawn = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.kingNoEnemyPawnNear = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
+    tEval.kingPressureScore = GamePhaseValue(randomInt(7), randomInt(7)); // 0 - 128 range
 
     return tEval;
 }
