@@ -255,6 +255,8 @@ int randomInt(int bits) {
 }
 
 // Function to initialize a TunableEval struct with random values
+// could potentially speed this up by not creating a struct but just making a random string with the 
+// first seven bits 0110010 (100 in binary) and the rest random
 TunableEval initializeRandomTunableEval() {
     TunableEval tEval = baseEval; // get global base eval values
     assert(baseEval.kingsEG[0] == -74); // check that the base eval values are correct (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly)
