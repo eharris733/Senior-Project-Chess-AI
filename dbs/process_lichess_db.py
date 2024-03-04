@@ -6,7 +6,7 @@ import zstandard as zstd
 import io
 
 # Define the number of lines you want to read
-num_lines_to_read = 100000  # For example, read only the first 1000 lines
+num_lines_to_read = 10000  # For example, read only the first 1000 lines
 
 # Create a Zstandard decompressor
 decompressor = zstd.ZstdDecompressor()
@@ -39,8 +39,8 @@ def parse_deepest_eval(line):
     if 'cp' in deepest_eval:
         cp = deepest_eval['cp']
         board = chess.Board(fen)
-        # if it's an extreme position or is check we won't be able to search it very well
-        if abs(cp) > 500 or board.is_check():
+        # if it's an extreme position or is check we won't be able to evaluate it very well
+        if abs(cp) > 1800 or board.is_check() or len(board.piece_map()) < 7:
             return False
         return fen, cp
 

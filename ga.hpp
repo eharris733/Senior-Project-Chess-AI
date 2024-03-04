@@ -7,14 +7,18 @@
 #include "ga_util.hpp"
 #include "searcher.hpp"
 #include <atomic>
+#include <thread>
+#include <vector>
+#include <mutex>
+
 
 
 atomic<bool> stop(false); // so the searcher works
 
 class GeneticAlgorithm {
 public:
-    GeneticAlgorithm(size_t populationSize, double mutationRate,  double crossoverRate, int totalGenerations, int trainingSize)
-        : populationSize(populationSize), mutationRate(mutationRate), crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize) {
+    GeneticAlgorithm(size_t populationSize, double mutationRate,  double crossoverRate, int totalGenerations, int trainingSize, int eliteCount, int archiveSize, int reintroduceCount)
+        : populationSize(populationSize), mutationRate(mutationRate), crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount){
         readCSV("dbs/fen_cp_evaluations.csv"); 
         selectNRandom(trainingSize); // Select 5,000 random evaluations
         initializePopulation();
@@ -23,7 +27,13 @@ public:
     }
 
     void run() {
+
+        chromosome best = population.front();
         currentGeneration = 0;
+
+        //try baseline
+        double baseline = calculateFitness(evaluations, baseEval);
+        std::cout << "Baseline Fitness: " << baseline << std::endl;
 
         while(currentGeneration++ < totalGenerations) {
             selectNRandom(trainingSize); // Select 5,000 random evaluations
@@ -38,6 +48,10 @@ public:
             // delete worst one and duplicate best one
             population.pop_back();
             population.push_back(population.front());
+            
+            if(population.front().fitness < best.fitness) {
+                best = population.front();
+            }
 
             // Example: Tracking best and average fitness
             double totalFitness = 0.0;
@@ -59,6 +73,9 @@ public:
                 printTunableEval(bestEval);
             }
         }
+
+        std::cout << "Best Chromosome: "  << std::endl;
+        printTunableEval(convertChromosoneToEval(best.chromosome));
 
     }
 
@@ -82,7 +99,12 @@ private:
     int currentGeneration;
     int totalGenerations;
     int trainingSize;
-    
+    int eliteCount; // Number of best individuals to keep in each generation
+    std::vector<chromosome> archive; // for historical mechanism as described in 2013 paper
+    size_t archiveSize; // N: Maximum size of the archive
+    size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
+
+
     std::vector<chromosome> population; // a vector of pairs of chromosomes and their fitness levels
     std::vector<PositionEvaluation> allEvaluations;
     std::vector<PositionEvaluation> evaluations;
@@ -105,27 +127,67 @@ private:
         }
     }  
 
-    double calculateFitness(const std::vector<PositionEvaluation>& evals, const TunableEval& params) {
-
+    // Helper function to calculate fitness for a subset of evaluations
+double calculateFitnessSubset(const std::vector<PositionEvaluation>& evalsSubset, const TunableEval& params) {
+    double totalDifference = 0.0;
+    for (const auto& eval : evalsSubset) {
         Board board = Board();
-        Searcher searcher(board, baseSearch, params); // Create a new Searcher object with default 
-        //feature weights
-        searcher.setMaxDepth(1); // only do 1 -ply searches for now
-        searcher.setVerbose(false); // Turn off verbose mode
-        double totalDifference = 0.0;
-
-        for (const auto& eval : evals) {
-            board.setFen(eval.fen);
-            searcher.clear(); // Clear the TT table bc new position has nothing to do w old one
-            double predictedScore = searcher.search(1000, 0, 1).bestScore; // kind of irrelevant params here
-            // if(predictedScore == 0) {
-            //     cout << "predicted score is 0" << endl;
-            // }
-            totalDifference += std::abs(predictedScore - eval.actualScore);
-        }
-
-        return totalDifference / evaluations.size(); // Return the average difference
+        Evaluator evaluator = Evaluator(board, params);
+        Searcher searcher(board, baseSearch, params);
+        board.setFen(eval.fen);
+        double predictedScore = evaluator.evaluate(0, false);
+        // if(board.sideToMove() == Color::BLACK) {
+        //     predictedScore *= -1;
+        // }
+        totalDifference += std::abs(predictedScore - eval.actualScore);
     }
+    return totalDifference;
+}
+
+// Modified calculateFitness function with multi-threading
+// obviously I did not write this, but damn is it nice. x5 speedup more or less
+double calculateFitness(const std::vector<PositionEvaluation>& evals, const TunableEval& params) {
+    const size_t numThreads = std::thread::hardware_concurrency(); // Use as many threads as there are CPU cores
+    std::vector<std::thread> threads;
+    std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
+
+    size_t evalsPerThread = evals.size() / numThreads;
+    
+    // Lambda to process each subset of evaluations
+   auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx) {
+    try {
+        std::vector<PositionEvaluation> evalsSubset(evals.begin() + startIdx, evals.begin() + endIdx);
+        partialDifferences[threadIdx] = calculateFitnessSubset(evalsSubset, params);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in thread " << threadIdx << ": " << e.what() << std::endl;
+        // Handle exception or set an error state
+    }
+};
+
+
+    // Launch threads
+    for (size_t i = 0; i < numThreads; ++i) {
+        size_t startIdx = i * evalsPerThread;
+        size_t endIdx = (i + 1) * evalsPerThread;
+        if (i == numThreads - 1) {
+            endIdx = evals.size(); // Make sure the last thread covers all remaining evaluations
+        }
+        threads.emplace_back(worker, startIdx, endIdx, i);
+    }
+
+    // Wait for all threads to complete
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // Aggregate the results
+    double totalDifference = 0.0;
+    for (const auto& diff : partialDifferences) {
+        totalDifference += diff;
+    }
+
+    return totalDifference / evals.size(); // Return the average difference
+}
 
     // looks good
     void initializePopulation() {
@@ -154,7 +216,6 @@ private:
         }
     }
 
-    // not good yet
     // Function to perform single-point crossover between two chromosomes
     std::pair<std::string, std::string> singlePointCrossover(const std::string& parent1, const std::string& parent2) {
         // Ensure the parents are of equal length
@@ -263,42 +324,79 @@ void crossover() {
     population = std::move(newPopulation);
 }
 
-// selection based on the research paper, inverted to make lower fitness better
-   void selection() {
-    // Find the maximum fitness in the population to scale fitness values
-    double maxFitness = std::max_element(population.begin(), population.end(), 
-                                          [](const chromosome& a, const chromosome& b) {
-                                              return a.fitness < b.fitness;
-                                          })->fitness;
+// Function to update the archive with solutions from the current generation
+    void updateArchive(const std::vector<chromosome>& currentGeneration) {
+        // Combine current generation and archive, then sort
+        std::vector<chromosome> combined = archive;
+        combined.insert(combined.end(), currentGeneration.begin(), currentGeneration.end());
+        std::sort(combined.begin(), combined.end(), [](const chromosome& a, const chromosome& b) {
+            return a.fitness < b.fitness; // Assuming lower fitness values are better
+        });
 
-    // Calculate the total inverted fitness of the current population
+        // Keep only the best N solutions in the archive
+        if (combined.size() > archiveSize) {
+            combined.resize(archiveSize);
+        }
+
+        archive = combined;
+    }
+
+    // Function to reintroduce X solutions from the archive to the new population
+    void reintroduceFromArchive(std::vector<chromosome>& newPopulation) {
+        if (archive.empty() || reintroduceCount == 0) return;
+
+        // Ensure we do not reintroduce more than available in the archive
+        size_t count = std::min(reintroduceCount, archive.size());
+
+        // Add the top X solutions from the archive to the new population
+        newPopulation.insert(newPopulation.end(), archive.begin(), archive.begin() + count);
+
+        // Optionally, remove reintroduced solutions from the archive
+        // archive.erase(archive.begin(), archive.begin() + count);
+    }
+
+// selection based on the research paper, inverted to make lower fitness better
+// now with elitism
+   void selection() {
+    // Sort the population by fitness to identify the elites
+    std::sort(population.begin(), population.end(), [](const chromosome& a, const chromosome& b) {
+        return a.fitness < b.fitness; // Assuming lower fitness values are better
+    });
+
+    // Directly copy the eliteCount individuals to the new population
+    std::vector<chromosome> newPopulation(population.begin(), population.begin() + eliteCount);
+
+    // Before filling the rest of the new population, reintroduce solutions from the archive
+    reintroduceFromArchive(newPopulation);
+
+    // Calculate the total inverted fitness of the non-elite population
     double totalInvertedFitness = 0.0;
-    for (const auto& individual : population) {
-        double invertedFitness = maxFitness - individual.fitness; // Invert the fitness score
+    for (size_t i = eliteCount; i < population.size(); ++i) {
+        double invertedFitness = population[i].fitness;
         totalInvertedFitness += invertedFitness;
     }
 
-    // Calculate the selection probability for each individual based on inverted fitness
+    // Calculate the selection probability for each non-elite individual
     std::vector<double> selectionProbabilities;
-    for (const auto& individual : population) {
-        double invertedFitness = maxFitness - individual.fitness;
+    for (size_t i = eliteCount; i < population.size(); ++i) {
+        double invertedFitness = population[i].fitness;
         double selectionProbability = invertedFitness / totalInvertedFitness;
         selectionProbabilities.push_back(selectionProbability);
     }
 
-    // Generate a new population based on selection probabilities
-    std::vector<chromosome> newPopulation;
+    // Adjust the selection process for non-elites
     std::discrete_distribution<size_t> distribution(selectionProbabilities.begin(), selectionProbabilities.end());
 
-    // Fill the new population based on selection probabilities
-    for (size_t i = 0; i < populationSize; i++) {
-        size_t selectedIndex = distribution(gen);
+    // Fill the remaining slots in the new population based on selection probabilities
+    while (newPopulation.size() < populationSize) {
+        size_t selectedIndex = distribution(gen) + eliteCount; // Adjust index to skip elites
         newPopulation.push_back(population[selectedIndex]);
     }
 
-    // Update the population with the new generation
+    // Before replacing the old population, update the archive with solutions from the current generation
+        updateArchive(population);
+    // Update the population with the new generation, including elites
     population = std::move(newPopulation);
-
 }
 
 
