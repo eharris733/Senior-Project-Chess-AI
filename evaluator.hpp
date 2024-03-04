@@ -29,6 +29,10 @@ class Evaluator {
         Evaluator(Board& board, TunableEval featureWeights = baseEval) : board(board), featureWeights(featureWeights) {
             gamePhase = 0;
         }
+
+        void setFeatureWeights(TunableEval featureWeights){
+            this->featureWeights = featureWeights;
+        }
         
         int getGamePhase(){
             return gamePhase;

@@ -1,9 +1,8 @@
 #include "chess.hpp"
 #pragma once
 
-// this file is the start for the preparation of a GA
-// ideally all values that should be tuned will be in this file
-// more or less as a global variable
+// this file defines the structs that I will use in my program, as well as gets the baseline versions of them
+// baselines should play at about a 2400 strength
 
 // eval function weights
 // a struct to allow each feature to be weighted differently based on phase of the game

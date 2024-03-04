@@ -56,8 +56,8 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
         // Capture time control parameters by value in the lambda
         searchThread = make_unique<thread>([=]() {
             cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << endl;
-            Move move = searcher->search(timeLeft, timeIncrement, movesToGo); 
-            cout << "bestmove " << uci::moveToUci(move) << endl;
+            SearchState result = searcher->search(timeLeft, timeIncrement, movesToGo); 
+            cout << "bestmove " << uci::moveToUci(result.bestMove) << endl;
         });
     }
 }

@@ -3,7 +3,8 @@
 #include "evaluator.hpp"
 #include "t_table.hpp"
 #include "polyglot.hpp"
-#include "baselines.hpp"    
+#include "baselines.hpp"   
+#include "ga_util.hpp" 
 #include <cstdlib>
 #include <ctime>
 #include <map>
@@ -62,11 +63,11 @@ public:
     
 
     SearchState state;
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
         : board(initialBoard), 
-          evaluator(initialBoard), 
+          evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2
-          book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
+          //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
@@ -77,16 +78,25 @@ public:
         return state;
     }
 
-    Move search(int timeRemaining, int timeIncrement, int movesToGo) {
+    // setter method for the search parameters, so we can set to 1 or 2 or 6 for training
+    void setMaxDepth(int depth) {
+        MAX_DEPTH = depth;
+    }   
+
+    void setVerbose(bool v) {
+        verbose = v;
+    }
+
+    SearchState search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
         
-
-        // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
-        // perfect, but not really a factor of performance
-        Move openingMove = book.pickRandomMove(board);
-        if (openingMove != Move::NULL_MOVE) {
-            return openingMove;
-        }
+        // disabling this for now while I'm training the GA
+        // // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
+        // // perfect, but not really a factor of performance
+        // Move openingMove = book.pickRandomMove(board);
+        // if (openingMove != Move::NULL_MOVE) {
+        //     state.bestMove = openingMove;
+        // }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
         // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
@@ -96,7 +106,7 @@ public:
         auto startTime = chrono::steady_clock::now();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (state.currentDepth < MAX_DEPTH && !stop.load()) {
+        while (state.currentDepth <= MAX_DEPTH && !stop.load()) {
             state.currentIterationBestMove = Move::NULL_MOVE;
             state.currentIterationBestScore = neg_infinity;
             
@@ -129,8 +139,10 @@ public:
                     state.bestMove = state.currentIterationBestMove; // Update result only once,
                 }
 
-                 
-                cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
+                if (verbose){
+                    cout << " info depth " << state.currentDepth << " score cp " << state.bestScore << " pv " << uci::moveToUci(state.bestMove) << " nodes " << state.nodes << endl;
+                }
+                
 
                  // stop if we have a mate, since it will never be a false mate
                  if(state.currentIterationBestScore > mateScore - MAX_DEPTH){
@@ -147,8 +159,11 @@ public:
         }
 
         // debug function
-        tt.debugSize();
-        return state.bestMove; // Return the best move found
+        if(verbose){
+            tt.debugSize();
+        }
+        
+        return state; // Return the best move found
     }
 
     void clear() {
@@ -159,9 +174,11 @@ private:
     Board& board; // The board to search on
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
-    PolyglotBook book; // Opening book
+    //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
+    TunableEval evalParams; // Evaluation parameters
     int MAX_DEPTH = 100;
+    bool verbose = true;
     
     // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)
     const int infinity = 9999999;

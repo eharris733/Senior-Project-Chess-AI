@@ -65,7 +65,7 @@ int main() {
 
         auto startTime = std::chrono::high_resolution_clock::now();
 
-        Move b = searcher.search(4000, 0, 1); // Adjust parameters as needed, should take one second to reach max depth, 
+        Move b = searcher.search(4000, 0, 1).bestMove; // Adjust parameters as needed, should take one second to reach max depth, 
         // then finish search on that depth
 
         SearchState sMetrics = searcher.getState();

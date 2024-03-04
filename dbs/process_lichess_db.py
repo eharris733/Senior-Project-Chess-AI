@@ -1,3 +1,4 @@
+import csv
 import json
 import chess
 
@@ -38,35 +39,32 @@ def parse_deepest_eval(line):
     if 'cp' in deepest_eval:
         cp = deepest_eval['cp']
         board = chess.Board(fen)
-        if board.is_check():
+        # if it's an extreme position or is check we won't be able to search it very well
+        if abs(cp) > 500 or board.is_check():
             return False
         return fen, cp
 
     return False
 
 
-# Open the .zst file
-# this is a file with 21,158,952 chess positions evaluated with Stockfish.
-with open("lichess_db_eval.json.zst", "rb") as compressed:
-    # Create a stream reader to decompress data as it's read
-    with decompressor.stream_reader(compressed) as decompressed_stream:
-        # Python's TextIOWrapper can decode the binary stream to text
-        text_stream = io.TextIOWrapper(decompressed_stream, encoding='utf-8')
+# Open the output CSV file for writing
+with open("fen_cp_evaluations.csv", "w", newline='') as csvfile:
+    csvwriter = csv.writer(csvfile)
+    csvwriter.writerow(["FEN", "Evaluation"])  # Write the header
 
-        # Initialize a counter for the lines read
-        line_count = 0
+    # Open the .zst file
+    with open("lichess_db_eval.json.zst", "rb") as compressed:
+        with decompressor.stream_reader(compressed) as decompressed_stream:
+            text_stream = io.TextIOWrapper(decompressed_stream, encoding='utf-8')
+            line_count = 0
 
-        # Read the file line by line
-        for line in text_stream:
-            # Process each line here
-            # This example just prints each line
-            result = parse_deepest_eval(line)
-            if result:
-                print(result)
+            for line in text_stream:
+                result = parse_deepest_eval(line)
+                if result:
+                    # Write the FEN and cp value to the CSV
+                    csvwriter.writerow(result)
+                    line_count += 1
+                    if line_count >= num_lines_to_read:
+                        break
 
-            # Increment the line counter
-            line_count += 1
-
-            # Check if the limit has been reached
-            if line_count >= num_lines_to_read:
-                break
+print(f"{line_count} entries written to fen_cp_evaluations.csv")
