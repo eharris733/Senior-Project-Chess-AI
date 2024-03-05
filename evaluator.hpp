@@ -4,6 +4,13 @@
 // one giant loop to get mobility scores, material, piece square tables, and other simple features
 // then we send off the calculated bitboards to the feature extractor to get the more complicated features
 
+//TODO:
+// better more comprehensive king safety evaluation (maybe multiple things?) (attacking and defending scores?)
+// knight mobility
+// pawn islands
+// queen mobility
+// central pawns
+// castle rights/did castle
 #include <vector>
 #include <string>
 #include "chess.hpp"
