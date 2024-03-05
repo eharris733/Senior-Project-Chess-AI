@@ -100,71 +100,91 @@ class Evaluator {
                     wPawns |= square_to_bitmap(sq);
                     wPawnAttacks |= attacks::pawn(Color::WHITE, sq);
                     taperedEndgameScore += 1;
-                    mgscore += featureWeights.pawnsMG[sqi] + featureWeights.pawn.middleGame;
-                    egscore += featureWeights.pawnsEG[sqi] + featureWeights.pawn.endGame;
+                    //mgscore += featureWeights.pawnsMG[sqi]; 
+                    mgscore += featureWeights.pawn.middleGame;
+                    //egscore += featureWeights.pawnsEG[sqi];
+                    egscore += featureWeights.pawn.endGame;
                     break;
                 case Piece::BLACKPAWN:
                     bPawns |= square_to_bitmap(sq);
                     bPawnAttacks |= attacks::pawn(Color::BLACK, sq);
                     taperedEndgameScore += 1;
-                    mgscore -= featureWeights.pawnsMG[FLIP(sqi)] + featureWeights.pawn.middleGame;
-                    egscore -= featureWeights.pawnsEG[FLIP(sqi)] + featureWeights.pawn.endGame;
+                    //mgscore -= featureWeights.pawnsMG[FLIP(sqi)];
+                    mgscore -= featureWeights.pawn.middleGame;
+                    //egscore -= featureWeights.pawnsEG[FLIP(sqi)];
+                    egscore -= featureWeights.pawn.endGame;
                     break;
                 case Piece::WHITEKNIGHT:
                     wKnights |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     wKnightAttacks |= attacks::knight(sq);
-                    mgscore += featureWeights.knightsMG[sqi] + featureWeights.knight.middleGame;
-                    egscore += featureWeights.knightsEG[sqi] + featureWeights.knight.endGame;
+                    //mgscore += featureWeights.knightsMG[sqi];
+                    mgscore += featureWeights.knight.middleGame;
+                    //egscore += featureWeights.knightsEG[sqi];
+                    egscore += featureWeights.knight.endGame;
                     break;
                 case Piece::BLACKKNIGHT:
                     bKnights |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     bKnightAttacks |= attacks::knight(sq);
-                    mgscore -= featureWeights.knightsMG[FLIP(sqi)] + featureWeights.knight.middleGame;
-                    egscore -= featureWeights.knightsEG[FLIP(sqi)] + featureWeights.knight.endGame;
+                   // mgscore -= featureWeights.knightsMG[FLIP(sqi)];
+                    mgscore -= featureWeights.knight.middleGame;
+                    //egscore -= featureWeights.knightsEG[FLIP(sqi)];
+                    egscore -= featureWeights.knight.endGame;
                     break;
                 case Piece::WHITEBISHOP:
                     wBishops |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     wBishopAttacks |= attacks::bishop(sq, pieces);
-                    mgscore += featureWeights.bishopsMG[sqi] + featureWeights.bishop.middleGame;
-                    egscore += featureWeights.bishopsEG[sqi] + featureWeights.bishop.endGame;
+                    //mgscore += featureWeights.bishopsMG[sqi];
+                    mgscore += featureWeights.bishop.middleGame;
+                    //egscore += featureWeights.bishopsEG[sqi];
+                    egscore += featureWeights.bishop.endGame;
                     break;
                 case Piece::BLACKBISHOP:
                     bBishops |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     bBishopAttacks |= attacks::bishop(sq, pieces);
-                    mgscore -= featureWeights.bishopsMG[FLIP(sqi)] + featureWeights.bishop.middleGame;
-                    egscore -= featureWeights.bishopsEG[FLIP(sqi)] + featureWeights.bishop.endGame;
+                    //mgscore -= featureWeights.bishopsMG[FLIP(sqi)];
+                    mgscore -= featureWeights.bishop.middleGame;
+                    //egscore -= featureWeights.bishopsEG[FLIP(sqi)];
+                    egscore -= featureWeights.bishop.endGame;
                     break;
                 case Piece::WHITEROOK:
                     wRooks |= square_to_bitmap(sq);
                     taperedEndgameScore += 5;
                     wRookAttacks |= attacks::rook(sq, pieces);
-                    mgscore += featureWeights.rooksMG[sqi] + featureWeights.rook.middleGame;
-                    egscore += featureWeights.rooksEG[sqi] + featureWeights.rook.endGame;
+                    //mgscore += featureWeights.rooksMG[sqi];
+                    mgscore += featureWeights.rook.middleGame;
+                    //egscore += featureWeights.rooksEG[sqi];
+                    egscore += featureWeights.rook.endGame;
                     break;
                 case Piece::BLACKROOK:
                     bRooks |= square_to_bitmap(sq);
                     taperedEndgameScore += 5;
                     bRookAttacks |= attacks::rook(sq, pieces);
-                    mgscore -= featureWeights.rooksMG[FLIP(sqi)] + featureWeights.rook.middleGame;
-                    egscore -= featureWeights.rooksEG[FLIP(sqi)] + featureWeights.rook.endGame;
+                    //mgscore -= featureWeights.rooksMG[FLIP(sqi)];
+                    mgscore -= featureWeights.rook.middleGame;
+                    //egscore -= featureWeights.rooksEG[FLIP(sqi)];
+                    egscore -= featureWeights.rook.endGame;
                     break;
                 case Piece::WHITEQUEEN:
                     wQueens |= square_to_bitmap(sq);
                     taperedEndgameScore += 9;
                     wQueenAttacks |= attacks::queen(sq, pieces);
-                    mgscore += featureWeights.queensMG[sqi] + featureWeights.queen.middleGame;
-                    egscore += featureWeights.queensEG[sqi] + featureWeights.queen.endGame;
+                    //mgscore += featureWeights.queensMG[sqi];
+                    mgscore += featureWeights.queen.middleGame;
+                    //egscore += featureWeights.queensEG[sqi];
+                    egscore += featureWeights.queen.endGame;
                     break;
                 case Piece::BLACKQUEEN:
                     bQueens |= square_to_bitmap(sq);
                     taperedEndgameScore += 9;
                     bQueenAttacks |= attacks::queen(sq, pieces);
-                    mgscore -= featureWeights.queensMG[FLIP(sqi)] + featureWeights.queen.middleGame;
-                    egscore -= featureWeights.queensEG[FLIP(sqi)] + featureWeights.queen.endGame;
+                    //mgscore -= featureWeights.queensMG[FLIP(sqi)];
+                    mgscore -= featureWeights.queen.middleGame;
+                    //egscore -= featureWeights.queensEG[FLIP(sqi)];
+                    egscore -= featureWeights.queen.endGame;
                     break;
                 case Piece::WHITEKING:
                     wKings |= square_to_bitmap(sq);

@@ -66,7 +66,7 @@ public:
     Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
-          tt(1 << 2), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
+          tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
@@ -85,30 +85,6 @@ public:
 
     void setVerbose(bool v) {
         verbose = v;
-    }
-
-    // basic search with some assumptions (not near mate, not in check, etc.)
-    // used only for training of GA's in the evaluation function
-    int onePlySearch() {
-        int bestScore = neg_infinity;
-        Movelist moves;
-        movegen::legalmoves<MoveGenType::ALL>(moves, board);
-        for(const Move& move : moves){
-            board.makeMove(move);
-            int score = quiescence(neg_infinity, infinity);
-            board.unmakeMove(move);
-            if(score > bestScore){
-                bestScore = score;
-            }
-        }
-        return bestScore;
-    }
-
-    int zeroPlySearch(){
-
-        int score = quiescence(neg_infinity, infinity);
-        return score;
-
     }
 
     SearchState search(int timeRemaining, int timeIncrement, int movesToGo) {
@@ -521,10 +497,6 @@ int aspirationSearch() {
 
             Movelist moves;
             movegen::legalmoves<MoveGenType::CAPTURE>(moves, board);
-
-            if(moves.size() == 0){
-                return stand_pat;
-            }   
             sortMoves(moves, board);
             for (const Move& move : moves) {
 
