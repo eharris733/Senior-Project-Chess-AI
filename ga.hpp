@@ -17,9 +17,9 @@ atomic<bool> stop(false); // so the searcher works
 
 class GeneticAlgorithm {
 public:
-    GeneticAlgorithm(size_t populationSize, double mutationRate,  double crossoverRate, int totalGenerations, int trainingSize, int eliteCount, int archiveSize, int reintroduceCount)
-        : populationSize(populationSize), mutationRate(mutationRate), crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount){
-        readCSV("dbs/fen_cp_evaluations.csv"); 
+    GeneticAlgorithm(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int trainingSize, int eliteCount, int archiveSize, int reintroduceCount)
+        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount){
+        readCSV("dbs/quiet_evals_filtered.csv"); 
         selectNRandom(trainingSize); // Select 5,000 random evaluations
         initializePopulation();
         
@@ -36,6 +36,8 @@ public:
         std::cout << "Baseline Fitness: " << baseline << std::endl;
 
         while(currentGeneration++ < totalGenerations) {
+            mutationRate = calculateMutationRate(initialMutationRate, mutationDecayRate, currentGeneration / 10);
+            
             selectNRandom(trainingSize); // Select 5,000 random evaluations
             crossover();
             mutation();
@@ -66,6 +68,7 @@ public:
             }
             double averageFitness = totalFitness / population.size();
             std::cout << "Generation: " << currentGeneration << std::endl;
+            cout << "Mutation Rate: " << mutationRate << endl;
             std::cout << "Best Fitness: " << bestFitness << ", Average Fitness: " << averageFitness << std::endl;
 
             if(currentGeneration % 20 == 0) {
@@ -94,6 +97,8 @@ private:
 
     // the parameters for the genetic algorithm, some set to default just in case
     size_t populationSize;
+    double initialMutationRate;
+    double mutationDecayRate;
     double mutationRate;
     double crossoverRate;
     int currentGeneration;
@@ -126,6 +131,11 @@ private:
             }
         }
     }  
+
+    // simulated annealing, makes the mutation rate do exponential decay
+    double calculateMutationRate(double initialRate, double decayRate, int generation) {
+        return initialRate * exp(-decayRate * generation);
+    }
 
     // Helper function to calculate fitness for a subset of evaluations
 double calculateFitnessSubset(const std::vector<PositionEvaluation>& evalsSubset, const TunableEval& params) {

@@ -19,18 +19,20 @@ int main() {
     // crossover rate = 0.75
     // mutation rate = 0.002
     // number of generations = 300
-    double mutationRate = 0.001;
+    double initialMutationRate = 0.1;
+    double decayRate = 0.9;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
-    size_t populationSize = 2000; 
-    int trainingSize = 5000;
-    int eliteSize = 20;
+    size_t populationSize = 1500; 
+    int trainingSize = 1500;
+    int eliteSize = 50;
     int archiveSize = 100;
-    int replacementCount = 20;
+    int replacementCount = 50;
 
     std::cout << "Running Genetic Algorithm" << std::endl;
     std::cout << "Population Size: " << populationSize << std::endl;
-    std::cout << "Mutation Rate: " << mutationRate << std::endl;
+    std::cout << "Initial Mutation Rate: " << initialMutationRate << std::endl;
+    std::cout << "Mutation Decay Rate: " << decayRate << std::endl;
     std::cout << "Crossover Rate: " << crossoverRate << std::endl;
     std::cout << "Total Generations: " << totalGenerations << std::endl;
     std::cout << "Training Size: " << trainingSize << std::endl;
@@ -39,7 +41,7 @@ int main() {
     std::cout << "Replacement Count: " << replacementCount << std::endl;
 
     
-    GeneticAlgorithm GA = GeneticAlgorithm(populationSize, mutationRate, crossoverRate, totalGenerations, trainingSize, eliteSize, archiveSize, replacementCount);
+    GeneticAlgorithm GA = GeneticAlgorithm(populationSize, initialMutationRate, decayRate, crossoverRate, totalGenerations, trainingSize, eliteSize, archiveSize, replacementCount);
     GA.run();
     return 0;
 }

@@ -24,13 +24,37 @@
 // there is also the issue of negative numbers. The only place where this is an issue is the piece square table values, and I'm tempted to omit them from the GA for now, and only tune the other values.
 // upon further consideration, I am going to leave the piece square tables for now, so I can keep the ga unsigned. Consider 8 pieces, a middlegame and an endgame value, values between -256, 256, and 64 sqaures = 64 * 2 * 8 * 10 = 10,240 bits. consider conversely only 20 features, each feature a range of either 0-1028 (for piece values) or 0-256, which means 20 * either 10 or 8 = 160-200 bit length, a much better value. Each chromosone is now only 160-200 bits long, which is much more manageable. Append to that the piece values for each stage, you add another 10 * 8 * 2 = 160 bits, which is still manageable.
 
-// takes in a binary string and returns the integer it represents
+// takes in a binary string and returns the integer it represents (not Gray encoding)
 // this is a helper function for the GA, that has a max of 10 bits
+// int bitsToInt(const std::string& bits) {
+//     // std::bitset allows for converting a binary string to an unsigned long
+//     std::bitset<16> bitset(bits);
+//     // return the integer value
+//     return static_cast<int>(bitset.to_ulong());
+// }
+
+
+// Gray encoding stuff
+// Function to convert binary to Gray code
+unsigned int binaryToGray(unsigned int num) {
+    return num ^ (num >> 1);
+}
+
+// Function to convert Gray code back to binary
+unsigned int grayToBinary(unsigned int gray) {
+    unsigned int binary = 0;
+    for (; gray; gray = gray >> 1) {
+        binary ^= gray;
+    }
+    return binary;
+}
+
+// takes in a Gray encoded binary string and returns the integer it represents
 int bitsToInt(const std::string& bits) {
-    // std::bitset allows for converting a binary string to an unsigned long
-    std::bitset<16> bitset(bits);
-    // return the integer value
-    return static_cast<int>(bitset.to_ulong());
+    std::bitset<16> gray(bits);
+    unsigned int grayNum = static_cast<unsigned int>(gray.to_ulong());
+    unsigned int binaryNum = grayToBinary(grayNum);
+    return static_cast<int>(binaryNum);
 }
 
 // a bit clunky, but it works...
@@ -90,9 +114,9 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.knightOutposts.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
-    tEval.bishopMobility.middleGame = bitsToInt(bitString.substr(pos, 6));
+    tEval.bishopMobility.middleGame = bitsToInt(bitString.substr(pos, 5));
     pos += 6;
-    tEval.bishopMobility.endGame = bitsToInt(bitString.substr(pos, 6));
+    tEval.bishopMobility.endGame = bitsToInt(bitString.substr(pos, 5));
     pos += 6;
     tEval.bishopPair.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
@@ -114,9 +138,9 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.rookConnected.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
-    tEval.rookMobility.middleGame = bitsToInt(bitString.substr(pos, 6));
+    tEval.rookMobility.middleGame = bitsToInt(bitString.substr(pos, 5));
     pos += 6;
-    tEval.rookMobility.endGame = bitsToInt(bitString.substr(pos, 6));
+    tEval.rookMobility.endGame = bitsToInt(bitString.substr(pos, 5));
     pos += 6;
     tEval.rookBehindPassedPawn.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
@@ -157,86 +181,93 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
 std::string convertEvalToChromosone(const TunableEval& tEval){
     std::string bitString  = "";
 
+    // Utility lambda to convert integer to Gray encoded binary string
+    auto intToGrayString = [](int value, int bits) -> std::string {
+        unsigned int grayValue = binaryToGray(static_cast<unsigned int>(value));
+        return std::bitset<16>(grayValue).to_string().substr(16-bits, bits);
+    };
+
     // Adding GamePhaseValue pawn (middleGame and endGame)
-    bitString += std::bitset<7>(tEval.pawn.middleGame).to_string(); 
-    bitString += std::bitset<8>(tEval.pawn.endGame).to_string();
+    bitString += intToGrayString(tEval.pawn.middleGame / 10, 7); 
+    bitString += intToGrayString(tEval.pawn.endGame / 10, 8);
 
-    assert(bitString.size() == 15); // sanity check to make sure the bitstring is the correct size (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly
+    assert(bitString.length() == 15); // check that the bitstring is the correct length (this is a sanity check to make sure the bitstring is the correct length, and that the random values are being added to the base eval values correctly
 
-    bitString += std::bitset<9>(tEval.knight.middleGame).to_string();
-    bitString += std::bitset<9>(tEval.knight.endGame).to_string();
+    bitString += intToGrayString(tEval.knight.middleGame / 10, 9);
+    bitString += intToGrayString(tEval.knight.endGame / 10, 9);
 
-    bitString += std::bitset<9>(tEval.bishop.middleGame).to_string();
-    bitString += std::bitset<9>(tEval.bishop.endGame).to_string();
+    bitString += intToGrayString(tEval.bishop.middleGame / 10, 9);
+    bitString += intToGrayString(tEval.bishop.endGame / 10, 9);
 
-    bitString += std::bitset<10>(tEval.rook.middleGame).to_string();
-    bitString += std::bitset<10>(tEval.rook.endGame).to_string();
+    bitString += intToGrayString(tEval.rook.middleGame / 10, 10);
+    bitString += intToGrayString(tEval.rook.endGame / 10, 10);
 
-    bitString += std::bitset<10>(tEval.queen.middleGame).to_string();
-    bitString += std::bitset<10>(tEval.queen.endGame).to_string();
+    bitString += intToGrayString(tEval.queen.middleGame / 10, 10);
+    bitString += intToGrayString(tEval.queen.endGame / 10, 10);
 
-    bitString += std::bitset<6>(tEval.passedPawn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.passedPawn.endGame).to_string();
+    // Repeat for all other values, for example:
+    bitString += intToGrayString(tEval.passedPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.passedPawn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.doubledPawn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.doubledPawn.endGame).to_string();
+    bitString += intToGrayString(tEval.doubledPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.doubledPawn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.isolatedPawn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.isolatedPawn.endGame).to_string();
+    bitString += intToGrayString(tEval.isolatedPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.isolatedPawn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.weakPawn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.weakPawn.endGame).to_string();
+    bitString += intToGrayString(tEval.weakPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.weakPawn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.weakSquare.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.weakSquare.endGame).to_string();
+    bitString += intToGrayString(tEval.weakSquare.middleGame, 6);
+    bitString += intToGrayString(tEval.weakSquare.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.passedPawnEnemyKingSquare.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.passedPawnEnemyKingSquare.endGame).to_string();
+    bitString += intToGrayString(tEval.passedPawnEnemyKingSquare.middleGame, 6);
+    bitString += intToGrayString(tEval.passedPawnEnemyKingSquare.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.knightOutposts.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.knightOutposts.endGame).to_string();
+    bitString += intToGrayString(tEval.knightOutposts.middleGame, 6);
+    bitString += intToGrayString(tEval.knightOutposts.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.bishopMobility.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.bishopMobility.endGame).to_string();
+    bitString += intToGrayString(tEval.bishopMobility.middleGame, 5);
+    bitString += intToGrayString(tEval.bishopMobility.endGame, 5);
 
-    bitString += std::bitset<6>(tEval.bishopPair.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.bishopPair.endGame).to_string();
+    bitString += intToGrayString(tEval.bishopPair.middleGame, 6);
+    bitString += intToGrayString(tEval.bishopPair.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookAttackKingFile.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookAttackKingFile.endGame).to_string();
+    bitString += intToGrayString(tEval.rookAttackKingFile.middleGame, 6);
+    bitString += intToGrayString(tEval.rookAttackKingFile.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookAttackKingAdjFile.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookAttackKingAdjFile.endGame).to_string();
+    bitString += intToGrayString(tEval.rookAttackKingAdjFile.middleGame, 6);
+    bitString += intToGrayString(tEval.rookAttackKingAdjFile.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rook7thRank.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rook7thRank.endGame).to_string();
+    bitString += intToGrayString(tEval.rook7thRank.middleGame, 6);
+    bitString += intToGrayString(tEval.rook7thRank.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookConnected.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookConnected.endGame).to_string();
+    bitString += intToGrayString(tEval.rookConnected.middleGame, 6);
+    bitString += intToGrayString(tEval.rookConnected.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookMobility.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookMobility.endGame).to_string();
+    bitString += intToGrayString(tEval.rookMobility.middleGame, 5);
+    bitString += intToGrayString(tEval.rookMobility.endGame, 5);
 
-    bitString += std::bitset<6>(tEval.rookBehindPassedPawn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookBehindPassedPawn.endGame).to_string();
+    bitString += intToGrayString(tEval.rookBehindPassedPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.rookBehindPassedPawn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookOpenFile.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookOpenFile.endGame).to_string();
+    bitString += intToGrayString(tEval.rookOpenFile.middleGame, 6);
+    bitString += intToGrayString(tEval.rookOpenFile.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookSemiOpenFile.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookSemiOpenFile.endGame).to_string();
+    bitString += intToGrayString(tEval.rookSemiOpenFile.middleGame, 6);
+    bitString += intToGrayString(tEval.rookSemiOpenFile.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.rookAtckWeakPawnOpenColumn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.rookAtckWeakPawnOpenColumn.endGame).to_string();
+    bitString += intToGrayString(tEval.rookAtckWeakPawnOpenColumn.middleGame, 6);
+    bitString += intToGrayString(tEval.rookAtckWeakPawnOpenColumn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.kingFriendlyPawn.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.kingFriendlyPawn.endGame).to_string();
+    bitString += intToGrayString(tEval.kingFriendlyPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.kingFriendlyPawn.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.kingNoEnemyPawnNear.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.kingNoEnemyPawnNear.endGame).to_string();
+    bitString += intToGrayString(tEval.kingNoEnemyPawnNear.middleGame, 6);
+    bitString += intToGrayString(tEval.kingNoEnemyPawnNear.endGame, 6);
 
-    bitString += std::bitset<6>(tEval.kingPressureScore.middleGame).to_string();
-    bitString += std::bitset<6>(tEval.kingPressureScore.endGame).to_string();
+    bitString += intToGrayString(tEval.kingPressureScore.middleGame, 6);
+    bitString += intToGrayString(tEval.kingPressureScore.endGame, 6);
 
 
     return bitString;
@@ -273,14 +304,14 @@ TunableEval initializeRandomTunableEval() {
     tEval.weakPawn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.weakSquare = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.passedPawnEnemyKingSquare = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    tEval.knightOutposts = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    tEval.bishopMobility = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
+    tEval.knightOutposts = GamePhaseValue(randomInt(5), randomInt(5)); // 0 - 128 range
+    tEval.bishopMobility = GamePhaseValue(randomInt(5), randomInt(5)); // 0 - 128 range
     tEval.bishopPair = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookAttackKingFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookAttackKingAdjFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rook7thRank = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookConnected = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    tEval.rookMobility = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
+    tEval.rookMobility = GamePhaseValue(randomInt(5), randomInt(5)); // 0 - 128 range
     tEval.rookBehindPassedPawn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookOpenFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookSemiOpenFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
@@ -320,7 +351,13 @@ void printTunableEval(const TunableEval& tEval) {
     std::cout << "kingFriendlyPawn middleGame: " << tEval.kingFriendlyPawn.middleGame << " endGame: " << tEval.kingFriendlyPawn.endGame << std::endl;
     std::cout << "kingNoEnemyPawnNear middleGame: " << tEval.kingNoEnemyPawnNear.middleGame << " endGame: " << tEval.kingNoEnemyPawnNear.endGame << std::endl;
     std::cout << "kingPressureScore middleGame: " << tEval.kingPressureScore.middleGame << " endGame: " << tEval.kingPressureScore.endGame << std::endl;
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << convertEvalToChromosone(tEval) << std::endl;
 }
+
+
+
+
 
 
 
