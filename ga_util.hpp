@@ -60,31 +60,31 @@ int bitsToInt(const std::string& bits) {
 // a bit clunky, but it works...
 // multiply piece values by ten so the are scaled correctly
 TunableEval convertChromosoneToEval(const std::string& bitString){
-    TunableEval tEval = baseEval; // give it the default pesto eval values
-    assert(baseEval.kingsEG[0] == -74); // check that the base eval values are correct (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly)
+    TunableEval tEval = baseEval; // defaultValues
+    assert(baseEval.pawn.middleGame = 100); // check that the base eval values are correct (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly)
     size_t pos = 0;
 
     // Parsing GamePhaseValue pawn (middleGame and endGame)
-    tEval.pawn.middleGame = 1000; // set to 100 always, and 100 * 10 = 1000
+    tEval.pawn.middleGame = 100; // set to 100 always
     pos += 7;
-    tEval.pawn.endGame = bitsToInt(bitString.substr(pos, 8)) * 10;
+    tEval.pawn.endGame = bitsToInt(bitString.substr(pos, 8));
     pos += 8;
     assert(tEval.pawn.middleGame != 0);
-    tEval.knight.middleGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    tEval.knight.middleGame = bitsToInt(bitString.substr(pos, 9));
     pos += 9;
-    tEval.knight.endGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    tEval.knight.endGame = bitsToInt(bitString.substr(pos, 9));
     pos += 9;
-    tEval.bishop.middleGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    tEval.bishop.middleGame = bitsToInt(bitString.substr(pos, 9));
     pos += 9;
-    tEval.bishop.endGame = bitsToInt(bitString.substr(pos, 9)) * 10;
+    tEval.bishop.endGame = bitsToInt(bitString.substr(pos, 9));
     pos += 9;
-    tEval.rook.middleGame = bitsToInt(bitString.substr(pos, 10)) * 10;
+    tEval.rook.middleGame = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
-    tEval.rook.endGame = bitsToInt(bitString.substr(pos, 10)) * 10;
+    tEval.rook.endGame = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
-    tEval.queen.middleGame = bitsToInt(bitString.substr(pos, 10)) * 10;
+    tEval.queen.middleGame = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
-    tEval.queen.endGame = bitsToInt(bitString.substr(pos, 10)) * 10; // these above values are multiplied by 10 to scale them correctly with the eval function and piece tables values (they will later be divided by 10 along w the piece values to get the correct value)
+    tEval.queen.endGame = bitsToInt(bitString.substr(pos, 10)); // these above values are multiplied by 10 to scale them correctly with the eval function and piece tables values (they will later be divided by 10 along w the piece values to get the correct value)
     pos += 10;
     tEval.passedPawn.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
@@ -102,6 +102,10 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.weakPawn.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
+    tEval.centralPawn.middleGame = bitsToInt(bitString.substr(pos, 6));
+    pos += 6;
+    tEval.centralPawn.endGame = bitsToInt(bitString.substr(pos, 6));
+    pos += 6;
     tEval.weakSquare.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
     tEval.weakSquare.endGame = bitsToInt(bitString.substr(pos, 6));
@@ -114,6 +118,10 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.knightOutposts.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
+    tEval.knightMobility.middleGame = bitsToInt(bitString.substr(pos, 5));
+    pos += 5;
+    tEval.knightMobility.endGame = bitsToInt(bitString.substr(pos, 5));
+    pos += 5;
     tEval.bishopMobility.middleGame = bitsToInt(bitString.substr(pos, 5));
     pos += 6;
     tEval.bishopMobility.endGame = bitsToInt(bitString.substr(pos, 5));
@@ -158,6 +166,10 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.rookAtckWeakPawnOpenColumn.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
+    tEval.queenMobility.middleGame = bitsToInt(bitString.substr(pos, 3));
+    pos += 3;
+    tEval.queenMobility.endGame = bitsToInt(bitString.substr(pos, 3));
+    pos += 3;
     tEval.kingFriendlyPawn.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
     tEval.kingFriendlyPawn.endGame = bitsToInt(bitString.substr(pos, 6));
@@ -166,10 +178,12 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.kingNoEnemyPawnNear.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
-    tEval.kingPressureScore.middleGame = bitsToInt(bitString.substr(pos, 6));
-    pos += 6;
-    tEval.kingPressureScore.endGame = bitsToInt(bitString.substr(pos, 6));
-    pos += 6;
+    
+    // multiply by ten to get the correct value
+    for (int i = 0; i < 62; i++) {
+        tEval.kingSafetyTable[i] = 10 * bitsToInt(bitString.substr(pos, 6));
+        pos += 6;
+    }
 
     // Return the populated struct
     return tEval;
@@ -193,17 +207,17 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
 
     assert(bitString.length() == 15); // check that the bitstring is the correct length (this is a sanity check to make sure the bitstring is the correct length, and that the random values are being added to the base eval values correctly
 
-    bitString += intToGrayString(tEval.knight.middleGame / 10, 9);
-    bitString += intToGrayString(tEval.knight.endGame / 10, 9);
+    bitString += intToGrayString(tEval.knight.middleGame, 9);
+    bitString += intToGrayString(tEval.knight.endGame, 9);
 
-    bitString += intToGrayString(tEval.bishop.middleGame / 10, 9);
-    bitString += intToGrayString(tEval.bishop.endGame / 10, 9);
+    bitString += intToGrayString(tEval.bishop.middleGame, 9);
+    bitString += intToGrayString(tEval.bishop.endGame, 9);
 
-    bitString += intToGrayString(tEval.rook.middleGame / 10, 10);
-    bitString += intToGrayString(tEval.rook.endGame / 10, 10);
+    bitString += intToGrayString(tEval.rook.middleGame, 10);
+    bitString += intToGrayString(tEval.rook.endGame, 10);
 
-    bitString += intToGrayString(tEval.queen.middleGame / 10, 10);
-    bitString += intToGrayString(tEval.queen.endGame / 10, 10);
+    bitString += intToGrayString(tEval.queen.middleGame, 10);
+    bitString += intToGrayString(tEval.queen.endGame, 10);
 
     // Repeat for all other values, for example:
     bitString += intToGrayString(tEval.passedPawn.middleGame, 6);
@@ -266,8 +280,9 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.middleGame, 6);
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.endGame, 6);
 
-    bitString += intToGrayString(tEval.kingPressureScore.middleGame, 6);
-    bitString += intToGrayString(tEval.kingPressureScore.endGame, 6);
+    for (int i = 0; i < 62; i++) {
+        bitString += intToGrayString(tEval.kingSafetyTable[i], 6);
+    }
 
 
     return bitString;
@@ -290,7 +305,6 @@ int randomInt(int bits) {
 // first seven bits 0110010 (100 in binary) and the rest random
 TunableEval initializeRandomTunableEval() {
     TunableEval tEval = baseEval; // get global base eval values
-    assert(baseEval.kingsEG[0] == -74); // check that the base eval values are correct (this is a sanity check to make sure the base eval values are correct, and that the random values are being added to the base eval values correctly)
 
     // Initialize GamePhaseValues with random values, assuming a range
     tEval.pawn = GamePhaseValue(100, randomInt(8)); // 0 - 256 range, hard coded to 100 to allow other values to be interepretable to the base pawn value
@@ -305,6 +319,7 @@ TunableEval initializeRandomTunableEval() {
     tEval.weakSquare = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.passedPawnEnemyKingSquare = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.knightOutposts = GamePhaseValue(randomInt(5), randomInt(5)); // 0 - 128 range
+    tEval.knightMobility = GamePhaseValue(randomInt(5), randomInt(5)); // 0 - 31 range
     tEval.bishopMobility = GamePhaseValue(randomInt(5), randomInt(5)); // 0 - 128 range
     tEval.bishopPair = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookAttackKingFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
@@ -316,11 +331,27 @@ TunableEval initializeRandomTunableEval() {
     tEval.rookOpenFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookSemiOpenFile = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.rookAtckWeakPawnOpenColumn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
+    tEval.queenMobility = GamePhaseValue(randomInt(3), randomInt(3)); // 0 - 7 range
     tEval.kingFriendlyPawn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.kingNoEnemyPawnNear = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    tEval.kingPressureScore = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
+    for (int i = 0; i < 25; i++) {
+        tEval.kingSafetyTable[i] = (randomInt(6)); // 0 - 63 range, will need to multiply by ten to get the correct value
+    }
 
     return tEval;
+}
+
+// // so I can print out my king safety table
+template <typename S>
+ostream& operator<<(ostream& os,
+                    const vector<S>& vector)
+{
+    // Printing all the elements
+    // using <<
+    for (auto element : vector) {
+        os << element << " ";
+    }
+    return os;
 }
 
 
@@ -350,7 +381,7 @@ void printTunableEval(const TunableEval& tEval) {
     std::cout << "rookAtckWeakPawnOpenColumn middleGame: " << tEval.rookAtckWeakPawnOpenColumn.middleGame << " endGame: " << tEval.rookAtckWeakPawnOpenColumn.endGame << std::endl;
     std::cout << "kingFriendlyPawn middleGame: " << tEval.kingFriendlyPawn.middleGame << " endGame: " << tEval.kingFriendlyPawn.endGame << std::endl;
     std::cout << "kingNoEnemyPawnNear middleGame: " << tEval.kingNoEnemyPawnNear.middleGame << " endGame: " << tEval.kingNoEnemyPawnNear.endGame << std::endl;
-    std::cout << "kingPressureScore middleGame: " << tEval.kingPressureScore.middleGame << " endGame: " << tEval.kingPressureScore.endGame << std::endl;
+    std::cout << "kingSafetyTable: " << tEval.kingSafetyTable << std::endl;
     std::cout << "--------------------------------" << std::endl;
     std::cout << convertEvalToChromosone(tEval) << std::endl;
 }

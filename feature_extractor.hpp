@@ -139,65 +139,6 @@ Bitboard shiftNorth(Bitboard b) { return b << 8; }
 Bitboard shiftSouth(Bitboard b) { return b >> 8; }
 Bitboard shiftEast(Bitboard b) { return (b & 0xFEFEFEFEFEFEFEFEULL) << 1; } // Prevent wraparound
 Bitboard shiftWest(Bitboard b) { return (b & 0x7F7F7F7F7F7F7F7FULL) >> 1; }
-
-Bitboard detectPassedPawns(Color col, Bitboard ownPawns, Bitboard enemyPawns) {
-    Bitboard passedPawns = 0;
-
-    while (ownPawns) {
-        Bitboard pawn = ownPawns & -ownPawns; // Isolate the least significant bit representing a pawn
-        Bitboard blockSquares = blocking_squares(bitboard_to_square(pawn), col, enemyPawns);
-
-        // Check if any enemy pawn is in the blocking squares
-        if (!(blockSquares & enemyPawns)) {
-            passedPawns |= pawn;
-        }
-
-        ownPawns &= ownPawns - 1; // Move to the next pawn
-    }
-
-    return passedPawns;
-}
-
-
-
-int detectDoubledPawns(Color color, Bitboard wpawns, Bitboard bpawns) {
-    const auto& pawns = (color == Color::WHITE) ? wpawns : bpawns;
-    int doubledPawns = 0;
-
-    for (int file = 0; file < 8; ++file) {
-        Bitboard fileMask = fileBitboard(file);
-        Bitboard pawnsOnFile = pawns & fileMask;
-
-        int count = chess::builtin::popcount(pawnsOnFile);
-        if (count > 1) {
-            doubledPawns += (color == Color::WHITE) ? count - 1 : -(count - 1);
-        }
-    }
-    return doubledPawns;
-}
-
-
-Bitboard detectIsolatedPawns(Bitboard pawns) {
-    Bitboard isolatedPawns = 0;
-
-    // Iterate through each square on the board to check for isolated pawns
-    for (int sq = 0; sq < 64; ++sq) {
-        Bitboard squareBitboard = Bitboard(1) << sq; // Create a bitboard for the current square
-        if (!(squareBitboard & pawns)) continue; // Skip if there's no pawn of the given color on this square
-
-        int file = sq % 8; // Calculate file index (0-7) from square index (0-63)
-        Bitboard leftFileMask = file > 0 ? fileBitboard(file - 1) : 0;
-        Bitboard rightFileMask = file < 7 ? fileBitboard(file + 1) : 0;
-        Bitboard adjacentPawns = pawns & (leftFileMask | rightFileMask);
-
-        // If there are no pawns on adjacent files, mark this pawn as isolated
-        if (adjacentPawns == 0) {
-            isolatedPawns |= squareBitboard;
-        }
-    }
-    return isolatedPawns;
-}
-
 // Function to calculate eastward attacks for white pawns
 Bitboard wPawnEastAttacks(Bitboard wpawns) {
     return (wpawns << 9) & ~0x0101010101010101; // Avoid wraparound from H to A file
@@ -265,6 +206,85 @@ Bitboard bWestAttackFrontSpans(Bitboard bpawns) {
     }
     return spans;
 }
+
+Bitboard detectPassedPawns(Color col, Bitboard ownPawns, Bitboard enemyPawns) {
+    Bitboard passedPawns = 0;
+
+    while (ownPawns) {
+        Bitboard pawn = ownPawns & -ownPawns; // Isolate the least significant bit representing a pawn
+        Bitboard blockSquares = blocking_squares(bitboard_to_square(pawn), col, enemyPawns);
+
+        // Check if any enemy pawn is in the blocking squares
+        if (!(blockSquares & enemyPawns)) {
+            passedPawns |= pawn;
+        }
+
+        ownPawns &= ownPawns - 1; // Move to the next pawn
+    }
+
+    return passedPawns;
+}
+
+
+
+int detectDoubledPawns(Color color, Bitboard wpawns, Bitboard bpawns) {
+    const auto& pawns = (color == Color::WHITE) ? wpawns : bpawns;
+    int doubledPawns = 0;
+
+    for (int file = 0; file < 8; ++file) {
+        Bitboard fileMask = fileBitboard(file);
+        Bitboard pawnsOnFile = pawns & fileMask;
+
+        int count = chess::builtin::popcount(pawnsOnFile);
+        if (count > 1) {
+            doubledPawns += count - 1; // this way tripled pawns will be counted twice
+        }
+    }
+    return doubledPawns;
+}
+
+
+Bitboard detectIsolatedPawns(Bitboard pawns) {
+    Bitboard isolatedPawns = 0;
+
+    // Iterate through each square on the board to check for isolated pawns
+    for (int sq = 0; sq < 64; ++sq) {
+        Bitboard squareBitboard = Bitboard(1) << sq; // Create a bitboard for the current square
+        if (!(squareBitboard & pawns)) continue; // Skip if there's no pawn of the given color on this square
+
+        int file = sq % 8; // Calculate file index (0-7) from square index (0-63)
+        Bitboard leftFileMask = file > 0 ? fileBitboard(file - 1) : 0;
+        Bitboard rightFileMask = file < 7 ? fileBitboard(file + 1) : 0;
+        Bitboard adjacentPawns = pawns & (leftFileMask | rightFileMask);
+
+        // If there are no pawns on adjacent files, mark this pawn as isolated
+        if (adjacentPawns == 0) {
+            isolatedPawns |= squareBitboard;
+        }
+    }
+    return isolatedPawns;
+}
+
+
+Bitboard detectCentralPawns(Bitboard pawns) {
+    Bitboard centralPawns = 0;
+    Bitboard centerMask = 0x0000001818000000; // Mask for the central 4 squares (e4, d4, e5, d5)
+
+    // Iterate through each square on the board to check for central pawns
+    for (int sq = 0; sq < 64; ++sq) {
+        Bitboard squareBitboard = Bitboard(1) << sq; // Create a bitboard for the current square
+        if (!(squareBitboard & pawns)) continue; // Skip if there's no pawn of the given color on this square
+
+        // If the pawn is on one of the central squares, mark it as a central pawn
+        if (squareBitboard & centerMask) {
+            centralPawns |= squareBitboard;
+        }
+    }
+    return centralPawns;
+}
+
+
+
 
 
 
@@ -392,27 +412,37 @@ int knightOutposts(Bitboard weakSquares, Bitboard knightSquares, Bitboard friend
     return count;
 }
 
+// more mobility features
+int knightMobility(Bitboard knightAttacks){
+    return chess::builtin::popcount(knightAttacks);
+}
+
+// more mobility features
+int queenMobility(Bitboard queenAttacks){
+    return chess::builtin::popcount(queenAttacks);
+}
+
 // bishop mobility is the number of squares the bishop can move to
-short bishopMobility(Bitboard bAttacks){
-    return builtin::popcount(bAttacks);
+int bishopMobility(Bitboard bAttacks){
+    return chess::builtin::popcount(bAttacks);
 }
 
 
 // 1 if white has bishop pair and black doesn't, 
 // -1 if black has bishop pair and white doesn't
 // 0 if neither side has bishop pair
-short bishopPair(Bitboard bishops){
+int bishopPair(Bitboard bishops){
     if (builtin::popcount(bishops) >= 2){
         return 1;
     }
     return 0;
 }
 
-short rookAttackKingFile(Color color, Bitboard rooks, Bitboard king) {
+int rookAttackKingFile(Color color, Bitboard rooks, Bitboard king) {
     Square kingSquare = bitboard_to_square(king);
     int kingFile = file_of(kingSquare);
 
-    short count = 0;
+    int count = 0;
     Bitboard fileMask = fileBitboard(kingFile); // Assuming you have a function to generate a bitmask for a file
 
     // Check if any rooks are on the same file as the king
@@ -427,11 +457,11 @@ short rookAttackKingFile(Color color, Bitboard rooks, Bitboard king) {
 
 
 
-short rookAttackKingAdjFile(Color color, Bitboard rooks, Bitboard king) {
+int rookAttackKingAdjFile(Color color, Bitboard rooks, Bitboard king) {
     Square kingSquare = bitboard_to_square(king);
     int kingFile = file_of(kingSquare);
 
-    short count = 0;
+    int count = 0;
     // Create masks for the files adjacent to the king's file
     Bitboard adjFilesMask = 0ULL;
     if (kingFile > 0) adjFilesMask |= fileBitboard(kingFile - 1); // Left adjacent file
@@ -448,7 +478,7 @@ short rookAttackKingAdjFile(Color color, Bitboard rooks, Bitboard king) {
 }
 
 
-short rookSeventhRank(Color color, Bitboard rooks) {
+int rookSeventhRank(Color color, Bitboard rooks) {
     
     // Define masks for the 7th rank for white and the 2nd rank for black
     Bitboard seventhRankMask = color == Color::WHITE ? rankBitboard(6) : rankBitboard(1);
@@ -461,7 +491,7 @@ short rookSeventhRank(Color color, Bitboard rooks) {
 }
 
 
-short rookConnected(Color color, Bitboard rooks, Bitboard allPieces) {
+int rookConnected(Color color, Bitboard rooks, Bitboard allPieces) {
 
     if (builtin::popcount(rooks) < 2) {
         return 0;
@@ -491,14 +521,14 @@ short rookConnected(Color color, Bitboard rooks, Bitboard allPieces) {
 }
 
 
-short rookMobility(Bitboard rookAttacks){
-    return builtin::popcount(rookAttacks);
+int rookMobility(Bitboard rookAttacks){
+    return chess::builtin::popcount(rookAttacks);
 }
 
 // we only care about file based mobility
-short rookBehindPassedPawn(Color color, Bitboard rooks, Bitboard passedPawns) {
+int rookBehindPassedPawn(Color color, Bitboard rooks, Bitboard passedPawns) {
 
-    short count = 0;
+    int count = 0;
 
     // Iterate over each rook in the bitboard
     while (rooks) {
@@ -526,8 +556,8 @@ short rookBehindPassedPawn(Color color, Bitboard rooks, Bitboard passedPawns) {
 
 
 
-short rookOpenFile(Color color, Bitboard rooks, Bitboard allPawns) {
-    short count = 0;
+int rookOpenFile(Color color, Bitboard rooks, Bitboard allPawns) {
+    int count = 0;
 
     // Iterate over each rook in the bitboard
     Bitboard rooksCopy = rooks; // Make a copy to preserve original bitboard
@@ -546,8 +576,8 @@ short rookOpenFile(Color color, Bitboard rooks, Bitboard allPawns) {
 }
 
 
-short rookSemiOpenFile(Color color, Bitboard rooks, Bitboard friendlyPawns, Bitboard enemyPawns) {
-    short count = 0;
+int rookSemiOpenFile(Color color, Bitboard rooks, Bitboard friendlyPawns, Bitboard enemyPawns) {
+    int count = 0;
 
     Bitboard rooksCopy = rooks; // Make a copy to preserve the original bitboard
     while (rooksCopy) {
@@ -565,9 +595,9 @@ short rookSemiOpenFile(Color color, Bitboard rooks, Bitboard friendlyPawns, Bitb
 }
 
 
-short rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, Bitboard weakPawns) {
+int rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, Bitboard weakPawns) {
     
-    short count = 0;
+    int count = 0;
 
     Bitboard rooksCopy = rooks; // Make a copy to preserve the original bitboard
     while (rooksCopy) {
@@ -585,12 +615,12 @@ short rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, Bitboard weakPawns
 }
 
 
-short kingFriendlyPawn(Bitboard friendlyPawns, Bitboard king) {
+int kingFriendlyPawn(Bitboard friendlyPawns, Bitboard king) {
     
     Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
-    short count = 0;
+    int count = 0;
     
     Bitboard pawnsCopy = friendlyPawns; // Make a copy to preserve the original bitboard
     int pawnCount = 0; // Track the number of relevant pawns
@@ -619,11 +649,11 @@ short kingFriendlyPawn(Bitboard friendlyPawns, Bitboard king) {
 // if there is not pawns within a certain radius, it should not affect us
 
 
-short kingNoEnemyPawnNear(Bitboard enemyPawns, Bitboard king) {
+int kingNoEnemyPawnNear(Bitboard enemyPawns, Bitboard king) {
     Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
-    short count = 0;
+    int count = 0;
 
     Bitboard pawnsCopy = enemyPawns; // Make a copy to preserve the original bitboard
 
@@ -644,37 +674,105 @@ short kingNoEnemyPawnNear(Bitboard enemyPawns, Bitboard king) {
 }
 
 
-// this uses a feature known as king tropism, where
-// the score is weighted by piece value and proximity to the king it is attacking. 
-// we already account for pawns in the previous round 
-// still this is rather crude and should be improved upon
-float kingPressureScore(Bitboard king, Bitboard enemyPieces, Board board){
-    float score = 0;
-    Square kingSquare = bitboard_to_square(king);
-    int kingRank = rank_of(kingSquare);
-    int kingFile = file_of(kingSquare);
-    while (enemyPieces){
+
+// Placeholder functions for calculating the king's zone and checking if a piece attacks it.
+// You'll need to implement these based on your engine's architecture and capabilities.
+Bitboard calculateKingsZone(Bitboard kingAttacks, Color color) {
+    Bitboard kingZone = kingAttacks;
+    if (color == Color::WHITE) {
+        kingZone |= shiftNorth(kingAttacks);
+    } else {
+        kingZone |= shiftSouth(kingAttacks);
+    }
+    // should be 3x3 square around the king, plus a row of squares in front of the king
+    // in front as in relative to the king, so for white, it would usually be the 3rd rank, for black, the 6th rank...
+    return kingZone; 
+}
+
+bool isAttackingKingsZone(Square enemySquare, PieceType pieceType, Bitboard kingsZone, Board& board, Bitboard knights, Bitboard bishops, Bitboard rooks, Bitboard queens) {
+    switch (pieceType) {
+        case PieceType::KNIGHT:
+            return knights & kingsZone;
+        case PieceType::BISHOP:
+            return bishops & kingsZone;
+        case PieceType::ROOK:
+            return rooks & kingsZone;
+        case PieceType::QUEEN:
+            return queens & kingsZone;
+        case PieceType::KING:
+            return false;
+        case PieceType::PAWN:
+            return false;
+        case PieceType::NONE:
+            return false;
+        // Add cases for pawn, king if needed
+    };
+}
+
+int calculateNumberOfSquaresControlled(Bitboard kingsZone, Bitboard attacks) {
+    // Calculate the intersection of the king's zone and the attacks
+    Bitboard intersection = kingsZone & attacks;
+
+    // Count and return the number of set bits in the intersection
+    return builtin::popcount(intersection);
+}
+
+
+
+int kingPressureScore(Bitboard king, Bitboard enemyKnights, Bitboard enemyBishops, Bitboard enemyRooks, Bitboard enemyQueens, Board board, Color color,  std::vector<int> safetyTable) {
+    
+
+    
+    Bitboard enemyPieces = enemyKnights | enemyBishops | enemyRooks | enemyQueens;
+
+    // only relevant if there are more than 2 enemy pieces
+    if(enemyPieces == 0 || chess::builtin::popcount(enemyPieces) <= 1){
+        return 0;
+    }
+
+    int score = 0;
+    int attackUnits = 0;
+
+    // Define the king's zone more accurately
+    Bitboard kingsZone = calculateKingsZone(king, color);
+
+    while (enemyPieces) {
         Square enemySquare = chess::builtin::poplsb(enemyPieces);
-        int enemyRank = rank_of(enemySquare);
-        int enemyFile = file_of(enemySquare);
-        // distance is the manhattan distance
-        int distance =abs(enemyRank - kingRank) +  abs(enemyFile - kingFile);
         PieceType pieceType = board.at<PieceType>(enemySquare);
-        if (pieceType == PieceType::KNIGHT){
-            score += 3.0 / distance;
-        }
-        else if (pieceType == PieceType::BISHOP){
-            score += 3.0 / distance;
-        }
-        else if (pieceType == PieceType::ROOK){
-            score += 5.0 / distance;
-        }
-        else if (pieceType == PieceType::QUEEN){
-            score += 9.0 / distance;
+        
+        // Check if the piece attacks the king's zone
+        if (isAttackingKingsZone(enemySquare, pieceType, kingsZone, board, enemyKnights, enemyBishops, enemyRooks, enemyQueens)) {
+            switch (pieceType) {
+                case PieceType::KNIGHT:
+                    attackUnits += 1 * calculateNumberOfSquaresControlled(kingsZone, enemyKnights); // Knight attack
+                    break;
+                case PieceType::BISHOP:
+                    attackUnits += 1 * calculateNumberOfSquaresControlled(kingsZone, enemyBishops); // Minor piece attack
+                    break;
+                case PieceType::ROOK:
+                    attackUnits += 2 * calculateNumberOfSquaresControlled(kingsZone, enemyRooks); // Rook attack
+                    break;
+                case PieceType::QUEEN:
+                    attackUnits += 3 * calculateNumberOfSquaresControlled(kingsZone, enemyQueens); // Queen attack
+                    break;
+                case PieceType::KING:
+                case PieceType::PAWN:
+                case PieceType::NONE:
+                    break;
+            }
         }
     }
+    
+    // Consider adding extra units for safe contact checks if applicable
+    // attackUnits += calculateExtraUnitsForSafeChecks(king, enemyPieces, board);
+
+    // Clamp the number of attack units to the size of the scoring table to avoid out-of-bounds access
+    int index = std::min(attackUnits, 24);
+    score = safetyTable[index];
+    
     return score;
 }
+
 
 
 

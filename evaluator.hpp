@@ -10,7 +10,7 @@
 // pawn islands
 // queen mobility
 // central pawns
-// castle rights/did castle
+
 #include <vector>
 #include <string>
 #include "chess.hpp"
@@ -86,9 +86,9 @@ class Evaluator {
         Bitboard bQueenAttacks = 0;
 
         
-        // variables we need
+        // variables we need throughout the function
         float score = 0;
-        int taperedEndgameScore = 0; // Use a direct integer instead of a pointer for simplicity
+        int taperedEndgameScore = 0; 
         int mgscore = 0;
         int egscore = 0;
 
@@ -107,90 +107,70 @@ class Evaluator {
                     wPawns |= square_to_bitmap(sq);
                     wPawnAttacks |= attacks::pawn(Color::WHITE, sq);
                     taperedEndgameScore += 1;
-                    //mgscore += featureWeights.pawnsMG[sqi]; 
                     mgscore += featureWeights.pawn.middleGame;
-                    //egscore += featureWeights.pawnsEG[sqi];
                     egscore += featureWeights.pawn.endGame;
                     break;
                 case Piece::BLACKPAWN:
                     bPawns |= square_to_bitmap(sq);
                     bPawnAttacks |= attacks::pawn(Color::BLACK, sq);
                     taperedEndgameScore += 1;
-                    //mgscore -= featureWeights.pawnsMG[FLIP(sqi)];
                     mgscore -= featureWeights.pawn.middleGame;
-                    //egscore -= featureWeights.pawnsEG[FLIP(sqi)];
                     egscore -= featureWeights.pawn.endGame;
                     break;
                 case Piece::WHITEKNIGHT:
                     wKnights |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     wKnightAttacks |= attacks::knight(sq);
-                    //mgscore += featureWeights.knightsMG[sqi];
                     mgscore += featureWeights.knight.middleGame;
-                    //egscore += featureWeights.knightsEG[sqi];
                     egscore += featureWeights.knight.endGame;
                     break;
                 case Piece::BLACKKNIGHT:
                     bKnights |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     bKnightAttacks |= attacks::knight(sq);
-                   // mgscore -= featureWeights.knightsMG[FLIP(sqi)];
                     mgscore -= featureWeights.knight.middleGame;
-                    //egscore -= featureWeights.knightsEG[FLIP(sqi)];
                     egscore -= featureWeights.knight.endGame;
                     break;
                 case Piece::WHITEBISHOP:
                     wBishops |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     wBishopAttacks |= attacks::bishop(sq, pieces);
-                    //mgscore += featureWeights.bishopsMG[sqi];
                     mgscore += featureWeights.bishop.middleGame;
-                    //egscore += featureWeights.bishopsEG[sqi];
                     egscore += featureWeights.bishop.endGame;
                     break;
                 case Piece::BLACKBISHOP:
                     bBishops |= square_to_bitmap(sq);
                     taperedEndgameScore += 3;
                     bBishopAttacks |= attacks::bishop(sq, pieces);
-                    //mgscore -= featureWeights.bishopsMG[FLIP(sqi)];
                     mgscore -= featureWeights.bishop.middleGame;
-                    //egscore -= featureWeights.bishopsEG[FLIP(sqi)];
                     egscore -= featureWeights.bishop.endGame;
                     break;
                 case Piece::WHITEROOK:
                     wRooks |= square_to_bitmap(sq);
                     taperedEndgameScore += 5;
                     wRookAttacks |= attacks::rook(sq, pieces);
-                    //mgscore += featureWeights.rooksMG[sqi];
                     mgscore += featureWeights.rook.middleGame;
-                    //egscore += featureWeights.rooksEG[sqi];
                     egscore += featureWeights.rook.endGame;
                     break;
                 case Piece::BLACKROOK:
                     bRooks |= square_to_bitmap(sq);
                     taperedEndgameScore += 5;
                     bRookAttacks |= attacks::rook(sq, pieces);
-                    //mgscore -= featureWeights.rooksMG[FLIP(sqi)];
                     mgscore -= featureWeights.rook.middleGame;
-                    //egscore -= featureWeights.rooksEG[FLIP(sqi)];
                     egscore -= featureWeights.rook.endGame;
                     break;
                 case Piece::WHITEQUEEN:
                     wQueens |= square_to_bitmap(sq);
                     taperedEndgameScore += 9;
                     wQueenAttacks |= attacks::queen(sq, pieces);
-                    //mgscore += featureWeights.queensMG[sqi];
                     mgscore += featureWeights.queen.middleGame;
-                    //egscore += featureWeights.queensEG[sqi];
                     egscore += featureWeights.queen.endGame;
                     break;
                 case Piece::BLACKQUEEN:
                     bQueens |= square_to_bitmap(sq);
                     taperedEndgameScore += 9;
                     bQueenAttacks |= attacks::queen(sq, pieces);
-                    //mgscore -= featureWeights.queensMG[FLIP(sqi)];
                     mgscore -= featureWeights.queen.middleGame;
-                    //egscore -= featureWeights.queensEG[FLIP(sqi)];
                     egscore -= featureWeights.queen.endGame;
                     break;
                 case Piece::WHITEKING:
@@ -202,9 +182,24 @@ class Evaluator {
             }
         }
 
-        // divide by ten to make the piece tables less powerful
-        mgscore /= 10;
-        egscore /= 10;
+        // more precise attack bitboards
+        Bitboard allBPieces = bPawns | bKnights | bBishops | bRooks | bQueens | bKings;
+        Bitboard allWPieces = wPawns | wKnights | wBishops | wRooks | wQueens | wKings;
+        Bitboard allBPiecesXQueens = allBPieces & ~bQueens;
+        Bitboard allWPiecesXQueens = allWPieces & ~wQueens;
+        Bitboard allWPiecesXQR = allWPieces & ~(wQueens | wRooks);
+        Bitboard allBPiecesXQR = allBPieces & ~(bQueens | bRooks);
+        
+        // various x-rays and stops
+        wKnightAttacks &= ~allWPieces & ~allBPiecesXQR;
+        bKnightAttacks &= ~allBPieces & ~allWPiecesXQR;
+        wBishopAttacks &= ~allWPieces & ~allBPiecesXQR;
+        bBishopAttacks &= ~allBPieces & ~allWPiecesXQR;
+        wRookAttacks &= ~allWPieces & ~allBPiecesXQueens;
+        bRookAttacks &= ~allBPieces & ~allWPiecesXQueens;
+        wQueenAttacks &= ~allWPieces;
+        bQueenAttacks &= ~allBPieces;
+
         
         // Calculate the game phase dynamically based on the endgame score
         gamePhase = std::max(0.0f, std::min(1.0f, (taperedEndgameScore - 24) / 24.0f)); // Ensure the game phase is between 0 and 1
@@ -236,7 +231,7 @@ class Evaluator {
         Bitboard isolatedBlackPawns = detectIsolatedPawns(bPawns);
         // isolated pawns (tested and working)
         // adjusting the score negatively for isolated pawns
-        score -= (builtin::popcount(isolatedBlackPawns) - builtin::popcount(isolatedWhitePawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
+        score -= (builtin::popcount(isolatedBlackPawns) *  - builtin::popcount(isolatedWhitePawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
 
 
         // weak pawns (finally working)
@@ -248,19 +243,25 @@ class Evaluator {
         weakWhitePawns &= ~whitePassedPawns & ~isolatedWhitePawns;
         weakBlackPawns &= ~blackPassedPawns & ~isolatedBlackPawns;
 
-        score -= (popcount(weakBlackPawns) - popcount(weakWhitePawns)) * (featureWeights.weakPawn.middleGame * mgWeight + featureWeights.weakPawn.endGame * egWeight);
+        score -= (builtin::popcount(weakBlackPawns) - builtin::popcount(weakWhitePawns)) * (featureWeights.weakPawn.middleGame * mgWeight + featureWeights.weakPawn.endGame * egWeight);
+
+        // central pawns (not tested)
+        score += (builtin::popcount(detectCentralPawns(wPawns)) - builtin::popcount(detectCentralPawns(bPawns))) * (featureWeights.centralPawn.middleGame * mgWeight + featureWeights.centralPawn.endGame * egWeight);
 
         // weak squares (working finally)
         // adjusting the score negatively for weak squares
         Bitboard weakWhiteSquares = detectWeakSquares(Color::WHITE, wPawns);
         Bitboard weakBlackSquares = detectWeakSquares(Color::BLACK, bPawns);
-        score -= (popcount(weakBlackSquares) - popcount(weakWhiteSquares)) * (featureWeights.weakSquare.middleGame * mgWeight + featureWeights.weakSquare.endGame * egWeight);
+        score -= (builtin::popcount(weakBlackSquares) - builtin::popcount(weakWhiteSquares)) * (featureWeights.weakSquare.middleGame * mgWeight + featureWeights.weakSquare.endGame * egWeight);
 
         // rule of the square (tested and working)
         score += (ruleOfTheSquare(Color::WHITE, blackPassedPawns, wKings) - ruleOfTheSquare(Color::BLACK, whitePassedPawns, bKings)) * (featureWeights.passedPawnEnemyKingSquare.middleGame * mgWeight + featureWeights.passedPawnEnemyKingSquare.endGame * egWeight);
         
         // knight outposts (tested like 90% sure it works)
-        score += (popcount(knightOutposts(weakBlackSquares, wKnights, wPawnAttacks)) - popcount(knightOutposts(weakWhiteSquares, bKnights, bPawnAttacks))) * (featureWeights.knightOutposts.middleGame * mgWeight + featureWeights.knightOutposts.endGame * egWeight);
+        score += (builtin::popcount(knightOutposts(weakBlackSquares, wKnights, wPawnAttacks)) - builtin::popcount(knightOutposts(weakWhiteSquares, bKnights, bPawnAttacks))) * (featureWeights.knightOutposts.middleGame * mgWeight + featureWeights.knightOutposts.endGame * egWeight);
+
+        // knight mobility (not tested)
+        score += (knightMobility(wKnightAttacks) - knightMobility(bKnightAttacks)) * (featureWeights.knightMobility.middleGame * mgWeight + featureWeights.knightMobility.endGame * egWeight);
 
         // bishop mobility (tested)
         score += (bishopMobility(wBishopAttacks) - bishopMobility(bBishopAttacks)) * (featureWeights.bishopMobility.middleGame * mgWeight + featureWeights.bishopMobility.endGame * egWeight);
@@ -303,27 +304,34 @@ class Evaluator {
         // rook attack weak pawn on open column
         score += (rookAtckWeakPawnOpenColumn(Color::WHITE, wRooks, weakBlackPawns) - rookAtckWeakPawnOpenColumn(Color::BLACK, bRooks, weakWhitePawns)) * (featureWeights.rookAtckWeakPawnOpenColumn.middleGame * mgWeight + featureWeights.rookAtckWeakPawnOpenColumn.endGame * egWeight);
 
+        // queen mobility (not tested)
+        score += (queenMobility(wQueenAttacks) - queenMobility(bQueenAttacks)) * (featureWeights.queenMobility.middleGame * mgWeight + featureWeights.queenMobility.endGame * egWeight);
+
         // king friendly pawn
         score += (kingFriendlyPawn(wPawns, wKings) - kingFriendlyPawn(bPawns, bKings)) * (featureWeights.kingFriendlyPawn.middleGame * mgWeight + featureWeights.kingFriendlyPawn.endGame * egWeight);
 
         // king no enemy pawn near
         score += (kingNoEnemyPawnNear(bPawns, wKings) - kingNoEnemyPawnNear(wPawns, bKings)) * (featureWeights.kingNoEnemyPawnNear.middleGame * mgWeight + featureWeights.kingNoEnemyPawnNear.endGame * egWeight);
 
-        // king pressure score
-        score += (kingPressureScore(wKings, bPawns | bKnights | bBishops | bRooks | bQueens, board) - kingPressureScore(bKings, wPawns | wKnights | wBishops | wRooks | wQueens, board)) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
-
+        // revised king pressure scores  (yet to be tested)
+        // score += kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, board, Color::WHITE, featureWeights.kingSafetyTable);
+        // score -= kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, board, Color::BLACK, featureWeights.kingSafetyTable);
         return score;
         }
+
+    // used for testing only, comma delimited string of features, 
+    // format: 
+    // featurename[WVALUE:BVALUE]:totalchangeinevaluation, 
 
     private:
         TunableEval featureWeights;
         float gamePhase;
         Board& board;
 
-        //helper function to get the color of a piece
         static Color color(Piece piece) {
             return static_cast<Color>(static_cast<int>(piece) / 6);
         }
+
 
 
 };
