@@ -211,7 +211,7 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
         features += "Black Isolated Pawns: " + std::to_string(builtin::popcount(isolatedBlackPawns)) + "\n";
         // isolated pawns (tested and working)
         // adjusting the score negatively for isolated pawns
-        score -= (builtin::popcount(isolatedBlackPawns) *  - builtin::popcount(isolatedWhitePawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
+        score -= (builtin::popcount(isolatedWhitePawns) - builtin::popcount(isolatedBlackPawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
         features += "Score after evaluation isolated Pawns: " + std::to_string(score) + "\n";
 
         // weak pawns (finally working)

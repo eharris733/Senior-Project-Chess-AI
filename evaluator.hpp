@@ -231,7 +231,7 @@ class Evaluator {
         Bitboard isolatedBlackPawns = detectIsolatedPawns(bPawns);
         // isolated pawns (tested and working)
         // adjusting the score negatively for isolated pawns
-        score -= (builtin::popcount(isolatedBlackPawns) *  - builtin::popcount(isolatedWhitePawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
+        score -= (builtin::popcount(isolatedWhitePawns) - builtin::popcount(isolatedBlackPawns)) * (featureWeights.isolatedPawn.middleGame * mgWeight + featureWeights.isolatedPawn.endGame * egWeight);
 
 
         // weak pawns (finally working)
