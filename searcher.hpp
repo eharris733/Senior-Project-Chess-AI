@@ -68,7 +68,7 @@ public:
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
-          book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
+          //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
@@ -175,7 +175,7 @@ private:
     Board& board; // The board to search on
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
-    PolyglotBook book; // Opening book (commenting out for traiing purposes)
+    //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
     TunableEval evalParams; // Evaluation parameters
     int MAX_DEPTH = 100;

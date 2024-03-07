@@ -396,9 +396,7 @@ int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
 int knightOutposts(Bitboard weakSquares, Bitboard knightSquares, Bitboard friendlyPawnAttacks) {
     int count = 0;
 
-    Bitboard validOutposts = weakSquares & ~friendlyPawnAttacks; // Outposts are weak squares not attacked by friendly pawns
-    validOutposts &= knightSquares; // Only consider squares with knights
-    // sides of the board do not count as outposts
+    Bitboard validOutposts = weakSquares & friendlyPawnAttacks & knightSquares; // Outposts are weak squares guarded by pawns
     validOutposts &= ~fileBitboard(0) & ~fileBitboard(7) & ~rankBitboard(1) & ~rankBitboard(6);
 
     

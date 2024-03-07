@@ -364,7 +364,7 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
 
 
 int main() {
-    std::string fen = "8/p5kp/2np2p1/5p2/Np1q1P2/1P4PK/P1P5/4Q3 w - - 15 40";
+    std::string fen = "rnbqkbnr/pp1p1ppp/8/3Np3/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 1";
     Board board = Board(fen);
 
 
