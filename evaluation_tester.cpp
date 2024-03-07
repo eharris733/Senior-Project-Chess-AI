@@ -1,5 +1,6 @@
 #include "chess.hpp"
 #include "evaluator.hpp"
+#include "baselines.hpp"
 #include <cstdlib>
 #include <string>
 
@@ -7,7 +8,7 @@
 
 // this function should be an exact copy of the evaluation function in the evaluator class
 // only difference is this one tracks everything as it goes, so one can debug. 
-std::string testEvaluation(Board board, bool lazy = false, TunableEval featureWeights = baseEval){
+std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureWeights = baseEval){
     //bitboards we need
         std::string features = "";
         float gamePhase = 0;
@@ -112,7 +113,7 @@ std::string testEvaluation(Board board, bool lazy = false, TunableEval featureWe
                 case Piece::BLACKROOK:
                     bRooks |= square_to_bitmap(sq);
                     taperedEndgameScore += 5;
-                    bRookAttacks |= attacks::rook(sq, board.all());
+                    bRookAttacks |= attacks::rook(sq, pieces);
                     mgscore -= featureWeights.rook.middleGame;
                     egscore -= featureWeights.rook.endGame;
                     break;
@@ -353,10 +354,10 @@ std::string testEvaluation(Board board, bool lazy = false, TunableEval featureWe
         features += "Score after evaluation king no enemy pawn near: " + std::to_string(score) + "\n";
 
         // revised king pressure scores  (yet to be tested)
-        features += "white king pressure: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, board, Color::WHITE, featureWeights.kingSafetyTable)) + "\n";
-        features += "black king pressure: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, board, Color::BLACK, featureWeights.kingSafetyTable)) + "\n";
-        score += kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, board, Color::WHITE, featureWeights.kingSafetyTable);
-        score -= kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, board, Color::BLACK, featureWeights.kingSafetyTable);
+        features += "white king pressure: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, featureWeights.kingSafetyTable)) + "\n";
+        features += "black king pressure: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, featureWeights.kingSafetyTable)) + "\n";
+        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, featureWeights.kingSafetyTable);
+        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, featureWeights.kingSafetyTable);
         features += "Final Score: " + std::to_string(score) + "\n";
         std::cout << pieces << std::endl;
         return features;
@@ -365,12 +366,12 @@ std::string testEvaluation(Board board, bool lazy = false, TunableEval featureWe
 
 
 int main() {
-    std::string fen = constants::STARTPOS;
+    std::string fen = "rnb1kb2/6p1/2p4p/pp1p4/5P2/2P5/P2N1NPP/R1BK4 w - - 0 21";
     Board board = Board(fen);
-    board.setFen(fen);
+
 
     // Retrieve the features string. Make sure this string is sanitized or does not contain double quotes.
-    std::string features = testEvaluation(board); // Ensure this does not generate syntax-breaking characters
+    std::string features = testEvaluation(board, false, baseEval); // Ensure this does not generate syntax-breaking characters
 
     // Construct the command using double quotes for arguments
     std::string command = "python dbs/evaluation_tester.py \"" + fen + "\" \"" + features + "\"";

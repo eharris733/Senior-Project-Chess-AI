@@ -80,11 +80,11 @@ struct TunableSearch{
 TunableEval baseEval = {
     chess::constants::STARTPOS,
     //piece values
-    GamePhaseValue(1000, 1000), // Pawn
-    GamePhaseValue(3050, 3000), // Knight
-    GamePhaseValue(3150, 3200), // Bishop
-    GamePhaseValue(4800, 5200), // Rook
-    GamePhaseValue(9100, 9100), // Queen
+    GamePhaseValue(100, 100), // Pawn
+    GamePhaseValue(305, 300), // Knight
+    GamePhaseValue(315, 320), // Bishop
+    GamePhaseValue(480, 520), // Rook
+    GamePhaseValue(910, 910), // Queen
 
     //values are completely guessed based on whims
     GamePhaseValue(40, 80), // Passed pawn
