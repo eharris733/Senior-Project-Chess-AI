@@ -396,20 +396,13 @@ int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
 int knightOutposts(Bitboard weakSquares, Bitboard knightSquares, Bitboard friendlyPawnAttacks) {
     int count = 0;
 
-    // Iterate over the knight positions using a while loop and bit manipulation
-    while (knightSquares) {
-        // Isolate the least significant bit that is set (a knight's position)
-        Bitboard ls1b = knightSquares & -knightSquares;
+    Bitboard validOutposts = weakSquares & ~friendlyPawnAttacks; // Outposts are weak squares not attacked by friendly pawns
+    validOutposts &= knightSquares; // Only consider squares with knights
+    // sides of the board do not count as outposts
+    validOutposts &= ~fileBitboard(0) & ~fileBitboard(7) & ~rankBitboard(1) & ~rankBitboard(6);
 
-        // Check if this knight is on a weak square and defended by a pawn
-        if ((ls1b & weakSquares) && (ls1b & friendlyPawnAttacks)) {
-            count++;
-        }
-
-        // Remove this knight from the set of knights to process the next one
-        knightSquares &= ~ls1b;
-    }
-    return count;
+    
+    return builtin::popcount(validOutposts);
 }
 
 // more mobility features

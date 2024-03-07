@@ -148,9 +148,7 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
         Bitboard allWPiecesXQR = allWPieces & ~(wQueens | wRooks);
         Bitboard allBPiecesXQR = allBPieces & ~(bQueens | bRooks);
         
-        // various x-rays and stops
-        wKnightAttacks &= ~allWPieces & ~allBPiecesXQR;
-        bKnightAttacks &= ~allBPieces & ~allWPiecesXQR;
+        // various x-rays and stops for pieces that can't jump
         wBishopAttacks &= ~allWPieces & ~allBPiecesXQR;
         bBishopAttacks &= ~allBPieces & ~allWPiecesXQR;
         wRookAttacks &= ~allWPieces & ~allBPiecesXQueens;
@@ -366,7 +364,7 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
 
 
 int main() {
-    std::string fen = "rnb1kb2/6p1/2p4p/pp1p4/5P2/2P5/P2N1NPP/R1BK4 w - - 0 21";
+    std::string fen = "8/p5kp/2np2p1/5p2/Np1q1P2/1P4PK/P1P5/4Q3 w - - 15 40";
     Board board = Board(fen);
 
 

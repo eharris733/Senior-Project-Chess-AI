@@ -15,7 +15,8 @@
 using namespace chess;
 using namespace std;
 
-
+//TODO: Fractional extensions, where most moves are extended by a fraction of a ply if certain conditions are met, as well as LMR can be fractional too. Can add these paramters to the search parameters struct, 
+// to allow for tuning
 
 // this is experimental as of right now
 struct AspirationWindow {
@@ -67,7 +68,7 @@ public:
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
-          //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
+          book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
@@ -174,7 +175,7 @@ private:
     Board& board; // The board to search on
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
-    //PolyglotBook book; // Opening book (commenting out for traiing purposes)
+    PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
     TunableEval evalParams; // Evaluation parameters
     int MAX_DEPTH = 100;
@@ -359,11 +360,11 @@ int aspirationSearch() {
                     }
                 }
 
-                // one reply extensions, as inspired by https://www.chessprogramming.org/One_Reply_Extensions
-                // max of three total extensions for this one
-                if(moves.size() == 1 && plyFromRoot - state.currentDepth < 3){
-                    depthExtension = 1;
-                }
+                // // one reply extensions, as inspired by https://www.chessprogramming.org/One_Reply_Extensions
+                // // max of three total extensions for this one
+                // if(moves.size() == 1 && plyFromRoot - state.currentDepth < 3){
+                //     depthExtension = 1;
+                // }
 
                 board.makeMove(move);
                 state.nodes++;
@@ -375,15 +376,15 @@ int aspirationSearch() {
                     depthExtension = 1;
                 }
 
-                // extend if a pawn reaches the seventh rank
-                if(board.at<PieceType>(move.to()) == PieceType::PAWN) {
-                    if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
-                        depthExtension = 1;
-                    }
-                    else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
-                        depthExtension = 1;
-                    }
-                }
+                // // extend if a pawn reaches the seventh rank
+                // if(board.at<PieceType>(move.to()) == PieceType::PAWN) {
+                //     if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
+                //         depthExtension = 1;
+                //     }
+                //     else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
+                //         depthExtension = 1;
+                //     }
+                // }
 
                 //note that any extension will only set the depth extension to 1, so we can't have multiple extensions
 
