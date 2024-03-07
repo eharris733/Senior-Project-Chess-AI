@@ -89,7 +89,7 @@ TunableEval baseEval = {
     //values are completely guessed based on whims
     GamePhaseValue(40, 80), // Passed pawn
     GamePhaseValue(10, 20), // Doubled pawn (not good)
-    GamePhaseValue(20, 20), // Isolated pawn (not good)
+    GamePhaseValue(10, 20), // Isolated pawn (not good)
     GamePhaseValue(40, 40), // Weak pawn
     GamePhaseValue(10, 10), // Central pawn
     GamePhaseValue(5, 2), // Weak square
