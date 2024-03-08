@@ -719,7 +719,7 @@ int calculatePressureScore(Bitboard kingsZone, Bitboard pieceAttacks) {
     return chess::builtin::popcount(attackingSquares); // Assuming popcount function is available to count set bits
 }
 
-int kingPressureScore(Bitboard king, Bitboard enemyKnightsAttacks, Bitboard enemyBishopsAttacks, Bitboard enemyRooksAttacks, Bitboard enemyQueensAttacks, Color color, std::vector<int> safetyTable) {
+int kingPressureScore(Bitboard king, Bitboard enemyKnightsAttacks, Bitboard enemyBishopsAttacks, Bitboard enemyRooksAttacks, Bitboard enemyQueensAttacks, Color color, std::vector<int>& safetyTable) {
 
     Bitboard kingsZone = calculateKingsZone(king, color);
 

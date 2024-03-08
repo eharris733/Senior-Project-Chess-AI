@@ -17,9 +17,9 @@ atomic<bool> stop(false); // so the searcher works
 
 class GeneticAlgorithm {
 public:
-    GeneticAlgorithm(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int trainingSize, int eliteCount, int archiveSize, int reintroduceCount)
-        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount){
-        readCSV("dbs/fen_cp_evaluations.csv"); 
+    GeneticAlgorithm(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int trainingSize, int eliteCount, int archiveSize, int reintroduceCount, std::string trainingDataPath)
+        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), trainingDataPath(trainingDataPath){
+        readCSV(trainingDataPath); 
         selectNRandom(trainingSize); // Select 5,000 random evaluations
         initializePopulation();
         
@@ -32,6 +32,8 @@ public:
         currentGeneration = 0;
 
         //try baseline
+        std::cout << "Training Data Path" << trainingDataPath << std::endl;
+
         double baseline = calculateFitness(evaluations, baseEval);
         std::cout << "Baseline Fitness: " << baseline << std::endl;
         double zeroBaseline = calculateFitness(evaluations, zeroEval);
@@ -117,6 +119,7 @@ private:
     std::vector<PositionEvaluation> evaluations;
     std::random_device rd;
     std::mt19937 gen{rd()}; // random c++ magic stuff
+    std::string trainingDataPath = "dbs/quiet_evals_filtered";
 
     
 
@@ -155,7 +158,7 @@ double calculateFitnessSubset(const std::vector<PositionEvaluation>& evalsSubset
 // Modified calculateFitness function with multi-threading
 // obviously I did not write this, but damn is it nice. x5 speedup more or less
 double calculateFitness(const std::vector<PositionEvaluation>& evals, const TunableEval& params) {
-    const size_t numThreads = std::thread::hardware_concurrency(); // Use as many threads as there are CPU cores
+    const size_t numThreads = std::thread::hardware_concurrency() - 1; // Use as many threads as there are CPU cores - 1
     std::vector<std::thread> threads;
     std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
 

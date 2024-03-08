@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <map>
+#include <atomic>
 #include <iostream>
 #include <algorithm>
 #include <chrono> 

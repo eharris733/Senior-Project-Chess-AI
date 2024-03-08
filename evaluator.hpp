@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <string>
+#include <math.h>
 #include "chess.hpp"
 #include "features.hpp"
 #include "feature_extractor.hpp"
@@ -35,7 +36,7 @@ class Evaluator {
 
         Evaluator(Board& board, TunableEval featureWeights = baseEval) : board(board), featureWeights(featureWeights) {
             gamePhase = 0;
-            fillKingSafetyTable(featureWeights.maxKingSafetyScore, static_cast<double>(featureWeights.steepnessKingSafetyScore / 100), featureWeights.middlePointKingSafetyScore);
+            fillKingSafetyTable(static_cast<double>(featureWeights.maxKingSafetyScore), static_cast<double>(featureWeights.steepnessKingSafetyScore / 100.0), static_cast<double>(featureWeights.middlePointKingSafetyScore));
 
         }
 
@@ -45,8 +46,9 @@ class Evaluator {
         }
 
         void fillKingSafetyTable(double L, double k, double x0) {
+            kingSafetyTable.clear();
             for (int i = 0; i < 62; i++) {
-                kingSafetyTable[i] = adjustedLogisticFunctionInt(i, L, k, x0);
+                kingSafetyTable.push_back(adjustedLogisticFunctionInt(i, L, k, x0));
             }
         }
 

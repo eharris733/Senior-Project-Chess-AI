@@ -20,14 +20,15 @@ int main() {
     // mutation rate = 0.002
     // number of generations = 300
     double initialMutationRate = 0.1;
-    double decayRate = 0.9;
+    double decayRate = 0.85;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
-    size_t populationSize = 1000; 
-    int trainingSize = 1000;
+    size_t populationSize = 2000; 
+    int trainingSize = 2000;
     int eliteSize = 50;
     int archiveSize = 100;
     int replacementCount = 50;
+    std::string trainingDataPath = "dbs/quiet_evals_filtered.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;
     std::cout << "Population Size: " << populationSize << std::endl;
@@ -41,7 +42,7 @@ int main() {
     std::cout << "Replacement Count: " << replacementCount << std::endl;
 
     
-    GeneticAlgorithm GA = GeneticAlgorithm(populationSize, initialMutationRate, decayRate, crossoverRate, totalGenerations, trainingSize, eliteSize, archiveSize, replacementCount);
+    GeneticAlgorithm GA = GeneticAlgorithm(populationSize, initialMutationRate, decayRate, crossoverRate, totalGenerations, trainingSize, eliteSize, archiveSize, replacementCount, trainingDataPath);
     GA.run();
     return 0;
 }
