@@ -19,6 +19,11 @@ int main() {
     // crossover rate = 0.75
     // mutation rate = 0.002
     // number of generations = 300
+    // vars to time the algorithm
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+
+
     double initialMutationRate = 0.1;
     double decayRate = 0.85;
     double crossoverRate = 0.75;
@@ -44,5 +49,7 @@ int main() {
     
     GeneticAlgorithm GA = GeneticAlgorithm(populationSize, initialMutationRate, decayRate, crossoverRate, totalGenerations, trainingSize, eliteSize, archiveSize, replacementCount, trainingDataPath);
     GA.run();
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Time taken: " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " seconds" << std::endl;
     return 0;
 }

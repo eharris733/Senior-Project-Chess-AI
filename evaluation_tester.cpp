@@ -357,8 +357,8 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
         features += "white king pressure: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, kingSafetyTable)) + "\n";
         features += "black king pressure: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable)) + "\n";
         // revised king pressure scores  (yet to be tested)
-        score += kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::WHITE, kingSafetyTable);
-        score -= kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable);
+        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::WHITE, kingSafetyTable);
+        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable);
         features += "Final Score: " + std::to_string(score) + "\n";
         std::cout << pieces << std::endl;
         return features;
