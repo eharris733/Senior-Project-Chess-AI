@@ -35,11 +35,29 @@ class Evaluator {
 
         Evaluator(Board& board, TunableEval featureWeights = baseEval) : board(board), featureWeights(featureWeights) {
             gamePhase = 0;
+            fillKingSafetyTable(featureWeights.maxKingSafetyScore, static_cast<double>(featureWeights.steepnessKingSafetyScore / 100), featureWeights.middlePointKingSafetyScore);
+
         }
 
         void setFeatureWeights(TunableEval featureWeights){
             this->featureWeights = featureWeights;
+            fillKingSafetyTable(featureWeights.maxKingSafetyScore, static_cast<double>(featureWeights.steepnessKingSafetyScore / 100), featureWeights.middlePointKingSafetyScore);
         }
+
+        void fillKingSafetyTable(double L, double k, double x0) {
+            for (int i = 0; i < 62; i++) {
+                kingSafetyTable[i] = adjustedLogisticFunctionInt(i, L, k, x0);
+            }
+        }
+
+        // Function to calculate the adjusted logistic function value for a given x and round it to the nearest integer
+        int adjustedLogisticFunctionInt(double x, double L, double k, double x0) {
+            // Calculate the logistic function and round to the nearest integer
+            int y = std::round(L / (1 + exp(-k * (x - x0))));
+
+            return y;
+        }
+
         
         int getGamePhase(){
             return gamePhase;
@@ -327,10 +345,15 @@ class Evaluator {
         TunableEval featureWeights;
         float gamePhase;
         Board& board;
+        int kingSafetyTable[62];
 
         static Color color(Piece piece) {
             return static_cast<Color>(static_cast<int>(piece) / 6);
         }
+
+        
+
+        
 
 
 

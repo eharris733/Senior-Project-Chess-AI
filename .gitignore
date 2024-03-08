@@ -1,6 +1,7 @@
 *.dSYM/
 /openingbook/
 /gamelogs/
+/galogs
 /Fathom/
 /dbs/.idea/
 dbs/epd_testsuites

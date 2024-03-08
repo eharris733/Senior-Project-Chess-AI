@@ -19,7 +19,7 @@ class GeneticAlgorithm {
 public:
     GeneticAlgorithm(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int trainingSize, int eliteCount, int archiveSize, int reintroduceCount)
         : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), trainingSize(trainingSize), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount){
-        readCSV("dbs/quiet_evals_filtered.csv"); 
+        readCSV("dbs/fen_cp_evaluations.csv"); 
         selectNRandom(trainingSize); // Select 5,000 random evaluations
         initializePopulation();
         
@@ -34,9 +34,11 @@ public:
         //try baseline
         double baseline = calculateFitness(evaluations, baseEval);
         std::cout << "Baseline Fitness: " << baseline << std::endl;
+        double zeroBaseline = calculateFitness(evaluations, zeroEval);
+        std::cout << "Zero Fitness: " << zeroBaseline << std::endl;
 
         while(currentGeneration++ < totalGenerations) {
-            mutationRate = calculateMutationRate(initialMutationRate, mutationDecayRate, currentGeneration / 10);
+            mutationRate = calculateMutationRate(initialMutationRate, mutationDecayRate, currentGeneration / (totalGenerations / 10));
             
             selectNRandom(trainingSize); // Select 5,000 random evaluations
             crossover();
@@ -143,12 +145,8 @@ double calculateFitnessSubset(const std::vector<PositionEvaluation>& evalsSubset
     for (const auto& eval : evalsSubset) {
         Board board = Board();
         Evaluator evaluator = Evaluator(board, params);
-        Searcher searcher(board, baseSearch, params);
         board.setFen(eval.fen);
         double predictedScore = evaluator.evaluate(0, false);
-        // if(board.sideToMove() == Color::BLACK) {
-        //     predictedScore *= -1;
-        // }
         totalDifference += std::abs(predictedScore - eval.actualScore);
     }
     return totalDifference;

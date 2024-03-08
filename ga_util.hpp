@@ -178,12 +178,12 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.kingNoEnemyPawnNear.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
-    
-    // multiply by ten to get the correct value
-    for (int i = 0; i < 62; i++) {
-        tEval.kingSafetyTable[i] = 10 * bitsToInt(bitString.substr(pos, 6));
-        pos += 6;
-    }
+    tEval.maxKingSafetyScore = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tEval.steepnessKingSafetyScore = bitsToInt(bitString.substr(pos, 4));
+    pos += 4;
+    tEval.middlePointKingSafetyScore = bitsToInt(bitString.substr(pos, 6));
+    pos += 6;
 
     // Return the populated struct
     return tEval;
@@ -202,8 +202,8 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     };
 
     // Adding GamePhaseValue pawn (middleGame and endGame)
-    bitString += intToGrayString(tEval.pawn.middleGame / 10, 7); 
-    bitString += intToGrayString(tEval.pawn.endGame / 10, 8);
+    bitString += intToGrayString(tEval.pawn.middleGame, 7); 
+    bitString += intToGrayString(tEval.pawn.endGame, 8);
 
     assert(bitString.length() == 15); // check that the bitstring is the correct length (this is a sanity check to make sure the bitstring is the correct length, and that the random values are being added to the base eval values correctly
 
@@ -232,6 +232,9 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     bitString += intToGrayString(tEval.weakPawn.middleGame, 6);
     bitString += intToGrayString(tEval.weakPawn.endGame, 6);
 
+    bitString += intToGrayString(tEval.centralPawn.middleGame, 6);
+    bitString += intToGrayString(tEval.centralPawn.endGame, 6);
+
     bitString += intToGrayString(tEval.weakSquare.middleGame, 6);
     bitString += intToGrayString(tEval.weakSquare.endGame, 6);
 
@@ -240,6 +243,9 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
 
     bitString += intToGrayString(tEval.knightOutposts.middleGame, 6);
     bitString += intToGrayString(tEval.knightOutposts.endGame, 6);
+
+    bitString += intToGrayString(tEval.knightMobility.middleGame, 5);
+    bitString += intToGrayString(tEval.knightMobility.endGame, 5);
 
     bitString += intToGrayString(tEval.bishopMobility.middleGame, 5);
     bitString += intToGrayString(tEval.bishopMobility.endGame, 5);
@@ -277,12 +283,15 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     bitString += intToGrayString(tEval.kingFriendlyPawn.middleGame, 6);
     bitString += intToGrayString(tEval.kingFriendlyPawn.endGame, 6);
 
+    bitString += intToGrayString(tEval.queenMobility.middleGame, 3);
+    bitString += intToGrayString(tEval.queenMobility.endGame, 3);
+
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.middleGame, 6);
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.endGame, 6);
 
-    for (int i = 0; i < 62; i++) {
-        bitString += intToGrayString(tEval.kingSafetyTable[i], 6);
-    }
+    bitString += intToGrayString(tEval.maxKingSafetyScore, 10);
+    bitString += intToGrayString(tEval.steepnessKingSafetyScore, 4);
+    bitString += intToGrayString(tEval.middlePointKingSafetyScore, 6);
 
 
     return bitString;
@@ -334,17 +343,17 @@ TunableEval initializeRandomTunableEval() {
     tEval.queenMobility = GamePhaseValue(randomInt(3), randomInt(3)); // 0 - 7 range
     tEval.kingFriendlyPawn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.kingNoEnemyPawnNear = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    for (int i = 0; i < 25; i++) {
-        tEval.kingSafetyTable[i] = (randomInt(6)); // 0 - 63 range, will need to multiply by ten to get the correct value
-    }
+    tEval.maxKingSafetyScore = randomInt(10); // 0 - 1024 range
+    tEval.steepnessKingSafetyScore = randomInt(4); // 0 - 16 range
+    tEval.middlePointKingSafetyScore = randomInt(6); // 0 - 64 range
 
     return tEval;
 }
 
 // // so I can print out my king safety table
 template <typename S>
-ostream& operator<<(ostream& os,
-                    const vector<S>& vector)
+std::ostream& operator<<(std::ostream& os,
+                    const std::vector<S>& vector)
 {
     // Printing all the elements
     // using <<
@@ -365,9 +374,11 @@ void printTunableEval(const TunableEval& tEval) {
     std::cout << "doubledPawn middleGame: " << tEval.doubledPawn.middleGame << " endGame: " << tEval.doubledPawn.endGame << std::endl;
     std::cout << "isolatedPawn middleGame: " << tEval.isolatedPawn.middleGame << " endGame: " << tEval.isolatedPawn.endGame << std::endl;
     std::cout << "weakPawn middleGame: " << tEval.weakPawn.middleGame << " endGame: " << tEval.weakPawn.endGame << std::endl;
+    std::cout << "centralPawn middleGame: " << tEval.centralPawn.middleGame << " endGame: " << tEval.centralPawn.endGame << std::endl;
     std::cout << "weakSquare middleGame: " << tEval.weakSquare.middleGame << " endGame: " << tEval.weakSquare.endGame << std::endl;
     std::cout << "passedPawnEnemyKingSquare middleGame: " << tEval.passedPawnEnemyKingSquare.middleGame << " endGame: " << tEval.passedPawnEnemyKingSquare.endGame << std::endl;
     std::cout << "knightOutposts middleGame: " << tEval.knightOutposts.middleGame << " endGame: " << tEval.knightOutposts.endGame << std::endl;
+    std::cout << "knightMobility middleGame: " << tEval.knightMobility.middleGame << " endGame: " << tEval.knightMobility.endGame << std::endl;
     std::cout << "bishopMobility middleGame: " <<tEval.bishopMobility.middleGame << " endGame: " << tEval.bishopMobility.endGame << std::endl;
     std::cout << "bishopPair middleGame: " << tEval.bishopPair.middleGame << " endGame: " << tEval.bishopPair.endGame << std::endl;
     std::cout << "rookAttackKingFile middleGame: " << tEval.rookAttackKingFile.middleGame << " endGame: " << tEval.rookAttackKingFile.endGame << std::endl;
@@ -381,7 +392,10 @@ void printTunableEval(const TunableEval& tEval) {
     std::cout << "rookAtckWeakPawnOpenColumn middleGame: " << tEval.rookAtckWeakPawnOpenColumn.middleGame << " endGame: " << tEval.rookAtckWeakPawnOpenColumn.endGame << std::endl;
     std::cout << "kingFriendlyPawn middleGame: " << tEval.kingFriendlyPawn.middleGame << " endGame: " << tEval.kingFriendlyPawn.endGame << std::endl;
     std::cout << "kingNoEnemyPawnNear middleGame: " << tEval.kingNoEnemyPawnNear.middleGame << " endGame: " << tEval.kingNoEnemyPawnNear.endGame << std::endl;
-    std::cout << "kingSafetyTable: " << tEval.kingSafetyTable << std::endl;
+    std::cout << "queenMobility middleGame: " << tEval.queenMobility.middleGame << " endGame: " << tEval.queenMobility.endGame << std::endl;
+    std::cout << "maxKingSafetyScore: " << tEval.maxKingSafetyScore << std::endl;
+    std::cout << "steepnessKingSafetyScore: " << tEval.steepnessKingSafetyScore << std::endl;
+    std::cout << "middlePointKingSafetyScore: " << tEval.middlePointKingSafetyScore << std::endl;
     std::cout << "--------------------------------" << std::endl;
     std::cout << convertEvalToChromosone(tEval) << std::endl;
 }

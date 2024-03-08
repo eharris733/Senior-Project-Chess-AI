@@ -720,6 +720,7 @@ int calculatePressureScore(Bitboard kingsZone, Bitboard pieceAttacks) {
 }
 
 int kingPressureScore(Bitboard king, Bitboard enemyKnightsAttacks, Bitboard enemyBishopsAttacks, Bitboard enemyRooksAttacks, Bitboard enemyQueensAttacks, Color color, std::vector<int> safetyTable) {
+
     Bitboard kingsZone = calculateKingsZone(king, color);
 
     // Initial pressure is the sum of all attacks into the king's zone
