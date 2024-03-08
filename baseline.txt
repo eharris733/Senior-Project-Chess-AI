@@ -44,188 +44,217 @@ Loaded '/usr/lib/system/libxpc.dylib'. Symbols loaded.
 Loaded '/usr/lib/libobjc.A.dylib'. Symbols loaded.
 Loaded '/usr/lib/liboah.dylib'. Symbols loaded.
 =thread-selected,id="1"
-Loaded 11123374 entries from openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin
- info depth 1 score cp 1203 pv b3d1 nodes 279
- info depth 2 score cp 1203 pv b3d1 nodes 896
- info depth 3 score cp 1409 pv b3d3 nodes 6524
- info depth 4 score cp 1417 pv b3d3 nodes 17938
- info depth 5 score cp 1422 pv b3d3 nodes 44155
- info depth 6 score cp 1422 pv b3d3 nodes 124558
- info depth 7 score cp 1424 pv b3d1 nodes 369866
- info depth 8 score cp 1427 pv b3d1 nodes 633748
- info depth 9 score cp 1508 pv b3d1 nodes 1614092
+ info depth 1 score cp 1291 pv b3d1 nodes 275
+ info depth 2 score cp 1291 pv b3d1 nodes 882
+ info depth 3 score cp 1422 pv b3d3 nodes 8258
+ info depth 4 score cp 1451 pv b3d3 nodes 16598
+ info depth 5 score cp 1451 pv b3d3 nodes 28102
+ info depth 6 score cp 1447 pv b3d3 nodes 60445
+ info depth 7 score cp 1447 pv b3d3 nodes 141260
+ info depth 8 score cp 1453 pv b3d3 nodes 343640
+ info depth 9 score cp 1459 pv b3d3 nodes 542329
+ info depth 10 score cp 1459 pv b3d3 nodes 793538
+ info depth 11 score cp 1456 pv b3d3 nodes 1692377
 Table size: 4194304
-Percent full: 3.91817%
+Percent full: 3.8249%
 
 Position: 1n3k2/4r1b1/rp1p1n2/5p1p/3P4/Pq2P1RP/1B1N1P1R/1K6 b - - 1 30
-Suggested Move: b3d1 | Best Move: b3d1
-Search Time: 1262 ms
-Total Nodes: 1614092
-Depth Reached: 10
+Suggested Move: b3d3 | Best Move: b3d1
+Search Time: 1435 ms
+Total Nodes: 1692377
+Depth Reached: 12
 
- info depth 1 score cp -69 pv e1f2 nodes 495
- info depth 2 score cp -69 pv e1f2 nodes 937
- info depth 3 score cp -39 pv f4h4 nodes 5529
- info depth 4 score cp -39 pv f4h4 nodes 8804
- info depth 5 score cp -44 pv f4h4 nodes 37198
- info depth 6 score cp -33 pv e1f2 nodes 110001
- info depth 7 score cp -44 pv f4h4 nodes 247663
- info depth 8 score cp -33 pv e1f2 nodes 691621
- info depth 9 score cp -33 pv e1f2 nodes 2503662
+ info depth 1 score cp -201 pv e1f2 nodes 203
+ info depth 2 score cp -219 pv e1f2 nodes 844
+ info depth 3 score cp -158 pv e1f2 nodes 4159
+ info depth 4 score cp -158 pv e1f2 nodes 10069
+ info depth 5 score cp -158 pv e1f2 nodes 29744
+ info depth 6 score cp -164 pv e1f2 nodes 70177
+ info depth 7 score cp -164 pv e1f2 nodes 142159
+ info depth 8 score cp -164 pv e1f2 nodes 246159
+ info depth 9 score cp -153 pv e1f2 nodes 456742
+ info depth 10 score cp -158 pv e1f2 nodes 835512
+ info depth 11 score cp -164 pv e1f2 nodes 1453284
 Table size: 4194304
-Percent full: 6.48463%
+Percent full: 3.97308%
 
 Position: 1r3r2/4bpkp/1qb1p1p1/3pP1P1/p1pP1Q2/PpP2N1R/1Pn1B2P/3RB2K w - - 0 1
 Suggested Move: e1f2 | Best Move: f4f6
-Search Time: 2812 ms
-Total Nodes: 2503662
-Depth Reached: 10
+Search Time: 1442 ms
+Total Nodes: 1453284
+Depth Reached: 12
 
- info depth 1 score cp 119 pv b2c4 nodes 61
- info depth 2 score cp 98 pv e6f7 nodes 189
- info depth 3 score cp 105 pv b2c4 nodes 1196
- info depth 4 score cp 111 pv e6f7 nodes 6005
- info depth 5 score cp 111 pv e6f7 nodes 12216
- info depth 6 score cp 265 pv c8g8 nodes 50115
- info depth 7 score cp 265 pv c8g8 nodes 77723
- info depth 8 score cp 268 pv c8g8 nodes 132623
- info depth 9 score cp 270 pv c8g8 nodes 269548
- info depth 10 score cp 266 pv c8g8 nodes 596954
- info depth 11 score cp 288 pv c8g8 nodes 1877866
+ info depth 1 score cp 47 pv b7b5 nodes 60
+ info depth 2 score cp 47 pv b7b5 nodes 148
+ info depth 3 score cp 43 pv e6d5 nodes 1376
+ info depth 4 score cp 47 pv b2d3 nodes 5587
+ info depth 5 score cp 48 pv b2d3 nodes 13220
+ info depth 6 score cp 239 pv c8g8 nodes 50230
+ info depth 7 score cp 248 pv c8g8 nodes 60404
+ info depth 8 score cp 245 pv c8g8 nodes 78024
+ info depth 9 score cp 245 pv c8g8 nodes 108091
+ info depth 10 score cp 248 pv c8g8 nodes 152206
+ info depth 11 score cp 245 pv c8g8 nodes 262496
+ info depth 12 score cp 243 pv c8g8 nodes 475078
+ info depth 13 score cp 254 pv c8g8 nodes 778344
+ info depth 14 score cp 245 pv c8g8 nodes 1411138
 Table size: 4194304
-Percent full: 6.63819%
+Percent full: 4.70271%
 
 Position: 2r5/ppp3B1/4kp1R/8/5P2/P7/1n5P/6K1 b - - 3 29
 Suggested Move: c8g8 | Best Move: c8g8
-Search Time: 1790 ms
-Total Nodes: 1877866
-Depth Reached: 12
+Search Time: 1218 ms
+Total Nodes: 1411138
+Depth Reached: 15
 
- info depth 1 score cp 634 pv f3e1 nodes 79
- info depth 2 score cp 634 pv f3e1 nodes 465
- info depth 3 score cp 664 pv f3e1 nodes 5366
- info depth 4 score cp 690 pv f3e1 nodes 13148
- info depth 5 score cp 1210 pv d8h4 nodes 40561
- info depth 6 score cp 1210 pv d8h4 nodes 106438
- info depth 7 score cp 1210 pv d8h4 nodes 169361
- info depth 8 score cp 99993 pv d8h4 nodes 370049
+ info depth 1 score cp 477 pv d8h4 nodes 197
+ info depth 2 score cp 477 pv d8h4 nodes 673
+ info depth 3 score cp 484 pv f3e1 nodes 4907
+ info depth 4 score cp 645 pv f3e1 nodes 13879
+ info depth 5 score cp 645 pv f3e1 nodes 32552
+ info depth 6 score cp 788 pv f3e1 nodes 67609
+ info depth 7 score cp 788 pv f3e1 nodes 124560
+ info depth 8 score cp 788 pv f3e1 nodes 223361
+ info depth 9 score cp 788 pv f3e1 nodes 536846
+ info depth 10 score cp 1181 pv d8h4 nodes 1285936
 Table size: 4194304
-Percent full: 0.930119%
+Percent full: 4.34549%
 
 Position: 3qr2k/1p3rbp/2p3p1/p7/P2pBNn1/1P3n2/6P1/B1Q1RR1K b - - 1 30
 Suggested Move: d8h4 | Best Move: d8h4
-Search Time: 361 ms
-Total Nodes: 370049
-Depth Reached: 8
+Search Time: 1359 ms
+Total Nodes: 1285936
+Depth Reached: 11
 
- info depth 1 score cp 205 pv h5f4 nodes 388
- info depth 2 score cp 200 pv h5f4 nodes 3339
- info depth 3 score cp 200 pv h5f4 nodes 8179
- info depth 4 score cp 200 pv h5f4 nodes 17930
- info depth 5 score cp 221 pv h5f4 nodes 66891
- info depth 6 score cp 213 pv h5f4 nodes 162339
- info depth 7 score cp 213 pv h5f4 nodes 382065
- info depth 8 score cp 205 pv h5f4 nodes 1340593
+ info depth 1 score cp 68 pv h5f4 nodes 345
+ info depth 2 score cp 63 pv h5f4 nodes 5070
+ info depth 3 score cp 60 pv h5f4 nodes 13873
+ info depth 4 score cp 63 pv h5f4 nodes 28400
+ info depth 5 score cp 60 pv h5f4 nodes 239652
+ info depth 6 score cp 60 pv h5f4 nodes 342463
+ info depth 7 score cp 70 pv h5f4 nodes 445320
+ info depth 8 score cp 70 pv h5f4 nodes 578826
+ info depth 9 score cp 70 pv h5f4 nodes 1129841
+ info depth 10 score cp 70 pv h5f4 nodes 1664869
 Table size: 4194304
-Percent full: 2.04389%
+Percent full: 1.96819%
 
 Position: 3r1r1b/ppq2p1k/2p1p1p1/4Nn1n/2PP1P1p/1PQ2R1P/PB2N1P1/3R2K1 b - - 0 1
 Suggested Move: h5f4 | Best Move: h5f4
-Search Time: 1520 ms
-Total Nodes: 1340593
-Depth Reached: 9
+Search Time: 1397 ms
+Total Nodes: 1664869
+Depth Reached: 11
 
- info depth 1 score cp 99999 pv h4h2 nodes 1629
+ info depth 1 score cp 99999 pv h4h2 nodes 465
 Table size: 4194304
 Percent full: 0.000119209%
 
 Position: 4r2k/1p3rbp/2p1N1p1/p3n3/P2NB1nq/1P6/4R1P1/B1Q2RK1 b - - 4 32
 Suggested Move: h4h2 | Best Move: h4h2
-Search Time: 19 ms
-Total Nodes: 1629
+Search Time: 7 ms
+Total Nodes: 465
 Depth Reached: 1
 
- info depth 1 score cp 512 pv f3e1 nodes 209
- info depth 2 score cp 512 pv f3e1 nodes 974
- info depth 3 score cp 1210 pv h4g3 nodes 7070
- info depth 4 score cp 1210 pv h4g3 nodes 11150
- info depth 5 score cp 1210 pv h4g3 nodes 26759
- info depth 6 score cp 99995 pv h4g3 nodes 101715
+ info depth 1 score cp 477 pv f3e1 nodes 207
+ info depth 2 score cp 477 pv f3e1 nodes 878
+ info depth 3 score cp 1181 pv h4g3 nodes 6603
+ info depth 4 score cp 1181 pv h4g3 nodes 9651
+ info depth 5 score cp 1181 pv h4g3 nodes 18735
+ info depth 6 score cp 1200 pv h4g3 nodes 34196
+ info depth 7 score cp 1181 pv h4g3 nodes 96067
+ info depth 8 score cp 99995 pv h4g3 nodes 196912
 Table size: 4194304
-Percent full: 0.310802%
+Percent full: 0.69623%
 
 Position: 4r2k/1p3rbp/2p3p1/p7/P2pB1nq/1P3n1N/6P1/B1Q1RR1K b - - 3 31
 Suggested Move: h4g3 | Best Move: h4g3
-Search Time: 117 ms
-Total Nodes: 101715
-Depth Reached: 6
+Search Time: 211 ms
+Total Nodes: 196912
+Depth Reached: 8
 
- info depth 1 score cp 188 pv d4c5 nodes 149
- info depth 2 score cp 188 pv d4c5 nodes 716
- info depth 3 score cp 911 pv f1f8 nodes 4915
- info depth 4 score cp 1637 pv f1f8 nodes 16262
- info depth 5 score cp 99991 pv f1f8 nodes 58209
+ info depth 1 score cp 271 pv d4c5 nodes 113
+ info depth 2 score cp 271 pv d4c5 nodes 669
+ info depth 3 score cp 1053 pv f1f8 nodes 4901
+ info depth 4 score cp 1718 pv f1f8 nodes 15190
+ info depth 5 score cp 99991 pv f1f8 nodes 36815
 Table size: 4194304
-Percent full: 0.137854%
+Percent full: 0.0865698%
 
 Position: 4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24
 Suggested Move: f1f8 | Best Move: f1f8
-Search Time: 73 ms
-Total Nodes: 58209
+Search Time: 44 ms
+Total Nodes: 36815
 Depth Reached: 5
 
- info depth 1 score cp 1210 pv f8f4 nodes 245
- info depth 2 score cp 1210 pv f8f4 nodes 775
- info depth 3 score cp 99997 pv f8f4 nodes 3522
+ info depth 1 score cp 1181 pv f8f4 nodes 236
+ info depth 2 score cp 1200 pv f8f4 nodes 829
+ info depth 3 score cp 99997 pv f8f4 nodes 3571
 Table size: 4194304
 Percent full: 0.0103474%
 
 Position: 4rr1k/1p4bp/2p3p1/p7/P2pBQn1/1P3nqN/6P1/B3RR1K b - - 0 33
 Suggested Move: f8f4 | Best Move: f8f4
-Search Time: 21 ms
-Total Nodes: 3522
+Search Time: 11 ms
+Total Nodes: 3571
 Depth Reached: 3
 
- info depth 1 score cp 98 pv e2a6 nodes 240
- info depth 2 score cp 98 pv e2a6 nodes 1010
- info depth 3 score cp 72 pv d5e6 nodes 7370
- info depth 4 score cp 72 pv d5e6 nodes 26333
- info depth 5 score cp 22 pv d5e6 nodes 101947
- info depth 6 score cp 22 pv d5e6 nodes 240122
- info depth 7 score cp -12 pv d5e6 nodes 880817
+ info depth 1 score cp 64 pv e2a6 nodes 289
+ info depth 2 score cp 64 pv e2a6 nodes 1081
+ info depth 3 score cp 7 pv e2a6 nodes 5791
+ info depth 4 score cp 7 pv e2a6 nodes 18713
+ info depth 5 score cp -14 pv e2a6 nodes 89240
+ info depth 6 score cp -17 pv e2a6 nodes 191681
+ info depth 7 score cp -29 pv e2a6 nodes 385248
+ info depth 8 score cp -29 pv e2a6 nodes 731229
+ info depth 9 score cp -29 pv e2a6 nodes 1371556
 Table size: 4194304
-Percent full: 0.937724%
+Percent full: 3.03054%
 
 Position: r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -
-Suggested Move: d5e6 | Best Move: e2a6
-Search Time: 1055 ms
-Total Nodes: 880817
-Depth Reached: 8
+Suggested Move: e2a6 | Best Move: e2a6
+Search Time: 1506 ms
+Total Nodes: 1371556
+Depth Reached: 10
+
+ info depth 1 score cp 22 pv e2e4 nodes 20
+ info depth 2 score cp 0 pv e2e4 nodes 106
+ info depth 3 score cp 21 pv d2d4 nodes 925
+ info depth 4 score cp -2 pv d2d4 nodes 2540
+ info depth 5 score cp 17 pv d2d4 nodes 6947
+ info depth 6 score cp 8 pv d2d4 nodes 17534
+ info depth 7 score cp 9 pv d2d4 nodes 52606
+ info depth 8 score cp 11 pv d2d4 nodes 124798
+ info depth 9 score cp 5 pv d2d4 nodes 455051
+ info depth 10 score cp 9 pv d2d4 nodes 1043832
+Table size: 4194304
+Percent full: 3.513%
 
 Position: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 Suggested Move: d2d4 | Best Move: e2e4
-Search Time: 10 ms
-Total Nodes: 0
-Depth Reached: 1
+Search Time: 1174 ms
+Total Nodes: 1043832
+Depth Reached: 11
 
- info depth 1 score cp 708 pv c8g4 nodes 40
- info depth 2 score cp 708 pv f6c3 nodes 327
- info depth 3 score cp 337 pv f6c3 nodes 2723
- info depth 4 score cp 269 pv c8g4 nodes 15425
- info depth 5 score cp 269 pv c8g4 nodes 39219
- info depth 6 score cp 300 pv c8g4 nodes 115764
- info depth 7 score cp 246 pv c8g4 nodes 476843
- info depth 8 score cp 246 pv c8g4 nodes 1612269
+ info depth 1 score cp 658 pv c8g4 nodes 43
+ info depth 2 score cp 636 pv f6c3 nodes 357
+ info depth 3 score cp 334 pv c8g4 nodes 3326
+ info depth 4 score cp 334 pv c8g4 nodes 9080
+ info depth 5 score cp 346 pv c8g4 nodes 23112
+ info depth 6 score cp 346 pv c8g4 nodes 48918
+ info depth 7 score cp 323 pv c8g4 nodes 158052
+ info depth 8 score cp 322 pv c8g4 nodes 261570
+ info depth 9 score cp 285 pv c8g4 nodes 634956
+ info depth 10 score cp 285 pv c8g4 nodes 1047889
 Table size: 4194304
-Percent full: 3.93767%
+Percent full: 3.09002%
 
 Position: rnbqr1k1/ppp2p1p/3p1bPB/8/4P1Q1/1BN5/PPP3PP/R3K2R b KQ - 0 15
 Suggested Move: c8g4 | Best Move: c8g4
-Search Time: 1449 ms
-Total Nodes: 1612269
-Depth Reached: 9
+Search Time: 1225 ms
+Total Nodes: 1047889
+Depth Reached: 11
 
-Total Total Nodes: 10364423
-Total Total Time: 10489 ms
-Average Nodes per second: 1036442
+Total Total Nodes: 11208644
+Total Total Time: 11029 ms
+Average Nodes per second: 1018967
 The program '/Users/elliotharris/Desktop/Sproj/senior_project/mateInX' has exited with code 0 (0x00000000).

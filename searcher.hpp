@@ -182,6 +182,7 @@ private:
     TunableEval evalParams; // Evaluation parameters
     int history[2][6][64]; // history heuristic table
     int MAX_DEPTH = 100;
+    int MAX_EXTENSIONS = 16;
     bool verbose = true;
     
     // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)
@@ -271,7 +272,7 @@ int aspirationSearch() {
 
 
 
-    int negamax(int depth, int alpha, int beta, int plyFromRoot) {
+    int negamax(int depth, int alpha, int beta, int plyFromRoot, int depthExtension = 0) {
         
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
@@ -349,7 +350,6 @@ int aspirationSearch() {
                 //we should already know this from our sort moves
                 bool isCapture = board.isCapture(move);
                 bool isCheck = board.inCheck();
-                int depthExtension = 0;
 
                 // Reverse Futility Pruning at depth 1-3, with increasing margins
                 //completely winning position
@@ -369,27 +369,29 @@ int aspirationSearch() {
                 // if(moves.size() == 1 && plyFromRoot - state.currentDepth < 3){
                 //     depthExtension = 1;
                 // }
-
+                int currentMoveExtensions = 0;
                 board.makeMove(move);
                 state.nodes++;
                 // recheck our pruning conditions
                 isCheck = board.inCheck();
                 PieceType pieceType = board.at<PieceType>(move.to());
                 
-                //check extension in the right place now
+                if (depthExtension < MAX_EXTENSIONS){
+                    //check extension in the right place now
                 if (isCheck) {
-                    depthExtension = 1;
+                    currentMoveExtensions = 1;
                 }
-
-                // // extend if a pawn reaches the seventh rank
-                // if(board.at<PieceType>(move.to()) == PieceType::PAWN) {
-                //     if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
-                //         depthExtension = 1;
-                //     }
-                //     else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
-                //         depthExtension = 1;
-                //     }
-                // }
+                // extend if a pawn reaches the seventh rank
+                else if(board.at<PieceType>(move.to()) == PieceType::PAWN) {
+                    if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
+                        currentMoveExtensions = 1;
+                    }
+                    else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
+                        currentMoveExtensions = 1;
+                    }
+                }
+                }
+                
 
                 //note that any extension will only set the depth extension to 1, so we can't have multiple extensions
 
@@ -411,7 +413,7 @@ int aspirationSearch() {
                 // right now we only reduce by 1 move, but it is likely that with better move sorting
                 // we can reduce by more the more moves we look at
                 // also only going to look at depth 3 and on
-                bool doLMR = depth >= searchParams.initalDepthLMR && moveCount > searchParams.initialMoveCountLMR && !isRoot && !isCapture && !isCheck && !isPvs && depthExtension == 0;
+                bool doLMR = depth >= searchParams.initalDepthLMR && moveCount > searchParams.initialMoveCountLMR && !isRoot && !isCapture && !isCheck && !isPvs && currentMoveExtensions == 0; 
                 // if (doLMR) {
                 //     int reduction = max(1.0, log(depth) * log(moveCount) / 2);
                 //     depth -= reduction; // Apply dynamic reduction based on depth and move count
@@ -420,9 +422,9 @@ int aspirationSearch() {
                     // another layer of reduction later in the search and late in the move order
                     // ideally would be percentage based
                     if(moveCount > searchParams.secondaryMoveCountLMR && depth >= searchParams.secondaryDepthLMR){
-                        depthExtension -= 1; // Apply dynamic reduction based on depth and move count
+                        depth -= 1; // Apply dynamic reduction based on depth and move count
                     }
-                    depthExtension -= 1; // Apply dynamic reduction based on depth and move count
+                    depth -= 1; // Apply dynamic reduction based on depth and move count
                 }
 
                 
@@ -431,16 +433,16 @@ int aspirationSearch() {
                 int eval;
                 // we have a pvs after one search
                 if (isPvs) {
-                    eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
+                    eval = -negamax(depth - 1 + currentMoveExtensions, -beta, -alpha, plyFromRoot + 1, depthExtension + currentMoveExtensions);
                 }
                 // zero window search, to try and prune a bunch
                 else {
-                    eval = -negamax(depth - 1 + depthExtension, -alpha - 1, -alpha, plyFromRoot + 1);
+                    eval = -negamax(depth - 1 + currentMoveExtensions, -alpha - 1, -alpha, plyFromRoot + 1, depthExtension + currentMoveExtensions);
 
                     // move is better than expected, so we do a full research
                     if (eval > alpha && eval < beta) {
                         // The move is better than expected, re-search with a full window
-                        eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
+                        eval = -negamax(depth - 1 + currentMoveExtensions, -beta, -alpha, plyFromRoot + 1, depthExtension + currentMoveExtensions);
                     }
                 }
                 board.unmakeMove(move);
