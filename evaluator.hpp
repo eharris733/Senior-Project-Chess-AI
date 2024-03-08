@@ -50,6 +50,10 @@ class Evaluator {
             }
         }
 
+        std::vector<int> getKingSafetyTable(){
+            return kingSafetyTable;
+        }
+
         // Function to calculate the adjusted logistic function value for a given x and round it to the nearest integer
         int adjustedLogisticFunctionInt(double x, double L, double k, double x0) {
             // Calculate the logistic function and round to the nearest integer
@@ -332,8 +336,8 @@ class Evaluator {
         score += (kingNoEnemyPawnNear(bPawns, wKings) - kingNoEnemyPawnNear(wPawns, bKings)) * (featureWeights.kingNoEnemyPawnNear.middleGame * mgWeight + featureWeights.kingNoEnemyPawnNear.endGame * egWeight);
 
         // revised king pressure scores  (yet to be tested)
-        // score += kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, board, Color::WHITE, featureWeights.kingSafetyTable);
-        // score -= kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, board, Color::BLACK, featureWeights.kingSafetyTable);
+        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::WHITE, kingSafetyTable);
+        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable);
         return score;
         }
 
@@ -345,7 +349,7 @@ class Evaluator {
         TunableEval featureWeights;
         float gamePhase;
         Board& board;
-        int kingSafetyTable[62];
+        std::vector<int> kingSafetyTable;
 
         static Color color(Piece piece) {
             return static_cast<Color>(static_cast<int>(piece) / 6);

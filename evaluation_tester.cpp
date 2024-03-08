@@ -350,12 +350,15 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
         features += "black king no enemy pawn near: " + std::to_string(kingNoEnemyPawnNear(bPawns, wKings)) + "\n";
         score += (kingNoEnemyPawnNear(bPawns, wKings) - kingNoEnemyPawnNear(wPawns, bKings)) * (featureWeights.kingNoEnemyPawnNear.middleGame * mgWeight + featureWeights.kingNoEnemyPawnNear.endGame * egWeight);
         features += "Score after evaluation king no enemy pawn near: " + std::to_string(score) + "\n";
-
+        
+        Evaluator evaluator = Evaluator(board, featureWeights);
+        std::vector<int> kingSafetyTable = evaluator.getKingSafetyTable();
         // revised king pressure scores  (yet to be tested)
-        features += "white king pressure: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, featureWeights.kingSafetyTable)) + "\n";
-        features += "black king pressure: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, featureWeights.kingSafetyTable)) + "\n";
-        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, featureWeights.kingSafetyTable);
-        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, featureWeights.kingSafetyTable);
+        features += "white king pressure: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, kingSafetyTable)) + "\n";
+        features += "black king pressure: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable)) + "\n";
+        // revised king pressure scores  (yet to be tested)
+        score += kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::WHITE, kingSafetyTable);
+        score -= kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable);
         features += "Final Score: " + std::to_string(score) + "\n";
         std::cout << pieces << std::endl;
         return features;
@@ -364,7 +367,7 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
 
 
 int main() {
-    std::string fen = "r4k1r/2p2pb1/np4p1/pN1Pp1N1/q6p/1PP1B1nP/P3Q1P1/2R2RK1 w - - 1 20";
+    std::string fen = "rnbqkbnr/pp3ppp/2p1p3/3p4/3P4/4PN2/PPP2PPP/RNBQKB1R w KQkq - 0 4";
     Board board = Board(fen);
 
 

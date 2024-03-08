@@ -162,6 +162,41 @@ TunableEval zeroEval = {
     0, // middlePointKingSafetyScore
 };
 
+TunableEval result1 = {
+"",
+    GamePhaseValue(100, 135), // Pawn
+    GamePhaseValue(383, 290), // Knight
+    GamePhaseValue(428, 298), // Bishop
+    GamePhaseValue(534, 621), // Rook
+    GamePhaseValue(914, 1017), // Queen
+    GamePhaseValue(21, 35), // Passed pawn
+    GamePhaseValue(44, 19), // Doubled pawn (not good)
+    GamePhaseValue(19, 12), // Isolated pawn (not good)
+    GamePhaseValue(5, 34), // Weak pawn
+    GamePhaseValue(11, 9), // Central pawn
+    GamePhaseValue(1, 2), // Weak square
+    GamePhaseValue(4, 8), // Passed pawn enemy king square
+    GamePhaseValue(32, 12), // Knight outposts
+    GamePhaseValue(11, 21), // Knight mobility
+    GamePhaseValue(4, 17), // Bishop mobility
+    GamePhaseValue(62, 8), // Bishop pair
+    GamePhaseValue(32, 27), // Rook is on same file as enemy king
+    GamePhaseValue(11, 18), // Rook is on adjacent file to enemy king
+    GamePhaseValue(34, 54), // Rook is on second to last rank
+    GamePhaseValue(25, 23), // Rooks can guard each other
+    GamePhaseValue(3, 1), // Rook mobility
+    GamePhaseValue(11, 12), // Rook is behind a passed pawn
+    GamePhaseValue(32, 24), // Rook has no pawns in its file
+    GamePhaseValue(13, 11), // Rook has no friendly pawns in its file
+    GamePhaseValue(52, 18), // Rook can directly attack a weak enemy pawn
+    GamePhaseValue(2, 7), // Queen mobility
+    GamePhaseValue(9, 12), // King friendly pawn
+    GamePhaseValue(1, 0), // King no enemy pawn near
+    464, // maxKingSafetyScore
+    9, // steepnessKingSafetyScore
+    3, // middlePointKingSafetyScore
+};
+
 
 
 // this version of iterative deepening is heavily influened 
