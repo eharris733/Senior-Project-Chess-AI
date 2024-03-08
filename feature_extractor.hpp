@@ -704,9 +704,9 @@ Bitboard calculateKingsZone(Bitboard kingPosition, Color color) {
 
     // Assuming shiftNorth and shiftSouth functions to add a row in front of the king based on color
     if (color == Color::WHITE) {
-        kingZone |= shiftNorth(kingPosition);
+        kingZone |= shiftNorth(kingZone);
     } else {
-        kingZone |= shiftSouth(kingPosition);
+        kingZone |= shiftSouth(kingZone);
     }
 
     return kingZone;
