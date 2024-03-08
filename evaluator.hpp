@@ -212,7 +212,7 @@ class Evaluator {
 
         // if lazy evaluation is enabled, return the score here
         // we can also be lazy in evaluating completely winning positions not in the endgame
-        if(lazy || ((abs(score) > 500 && gamePhase > .2))){
+        if(lazy){
             return score;
         }
 

@@ -72,6 +72,8 @@ public:
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
+        std::memset(history, 0, sizeof(history)); 
+
     }
 
     // getter method for the state of the search
@@ -178,6 +180,7 @@ private:
     //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
     TunableEval evalParams; // Evaluation parameters
+    int history[2][6][64]; // history heuristic table
     int MAX_DEPTH = 100;
     bool verbose = true;
     
@@ -197,8 +200,9 @@ private:
         state.nodes = 0;
         state.currentIterationBestMove = Move::NULL_MOVE;
         state.currentIterationBestScore = neg_infinity;
-        // state.killerMoves[0] = Move::NULL_MOVE; // maybe don't reset them?
-        // state.killerMoves[1] = Move::NULL_MOVE;
+        state.killerMoves[0] = Move::NULL_MOVE; // maybe don't reset them?
+        state.killerMoves[1] = Move::NULL_MOVE;
+        std::memset(history, 0, sizeof(history)); // set everything back to 0
     }
 
 
@@ -353,7 +357,7 @@ int aspirationSearch() {
                 // also can't prune only legal move
                 if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3
                     && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
-                    float evaluation = evaluate(1, true); // lazy eval to avoid expensive evals
+                    float evaluation = evaluate(1); // lazy eval to avoid expensive evals
                     if (evaluation + searchParams.futilityMargin[depth] <= alpha) {
                         // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
                         continue;
@@ -370,6 +374,7 @@ int aspirationSearch() {
                 state.nodes++;
                 // recheck our pruning conditions
                 isCheck = board.inCheck();
+                PieceType pieceType = board.at<PieceType>(move.to());
                 
                 //check extension in the right place now
                 if (isCheck) {
@@ -448,12 +453,17 @@ int aspirationSearch() {
                     // store history and killer moves if move is quiet here
                     // update killer moves only if not a capture
 
-                    if (!isCapture && move != state.killerMoves[0]) {
-                        state.killerMoves[1] = state.killerMoves[0];
-                        state.killerMoves[0] = move;
+                    if (!isCapture)  {
+                        if (move != state.killerMoves[0]){
+                            state.killerMoves[1] = state.killerMoves[0];
+                            state.killerMoves[0] = move;
+                        }
+                        // update history
+                        history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())] += depth * depth;
+                        
                     }
 
-                    // im not using history hueristic right now, im not sure I like it, but it might be worth it
+                    
 
                     return beta; // Alpha-beta cutoff.
                 }
@@ -527,6 +537,9 @@ int aspirationSearch() {
 
             // move ordering needs to be tuned
             int MVV_LVA_Score(const Move& move, const Board& board) {
+                if (move == Move::NULL_MOVE) {
+                    return 0;
+                }
                 if (move == state.bestMove) {
                     return infinity; // PV move
                 }
@@ -544,7 +557,8 @@ int aspirationSearch() {
                     if (move == state.killerMoves[0] || move == state.killerMoves[1]) {
                         return searchParams.killerMoveScore; // Score for killer moves
                     }
-                    return searchParams.baseScore; // Base score for quiet moves
+                    // should always be less than a killer move score
+                    return std::min(history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())], searchParams.killerMoveScore - 1);
                 }
 
                 // MVV-LVA Scoring refined
