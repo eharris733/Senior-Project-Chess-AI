@@ -24,12 +24,12 @@ int main() {
 
 
 
-    double initialMutationRate = 0.1;
-    double decayRate = 0.85;
+    double initialMutationRate = 0.08;
+    double decayRate = 0.8;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
-    size_t populationSize = 2000; 
-    int trainingSize = 2000;
+    size_t populationSize = 1000; 
+    int trainingSize = 1000;
     int eliteSize = 50;
     int archiveSize = 100;
     int replacementCount = 50;
