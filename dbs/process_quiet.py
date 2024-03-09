@@ -7,8 +7,8 @@ import csv
 # Adjust the path to where your Stockfish engine is located
 STOCKFISH_PATH = '/usr/local/Cellar/stockfish/16/bin/stockfish'
 EPD_FILE_PATH = 'quiet-labeled.v7.epd'
-CSV_POSITIONS_PATH = 'fen_cp_evaluations_20000.csv'
-CSV_FILE_PATH = 'no_search_evals.csv'
+CSV_POSITIONS_PATH = 'mastergames/random_positions_no_duplicates.csv'
+CSV_FILE_PATH = 'depth2stockfishCN.csv'
 
 N = 20000  # Number of lines to read and process
 
@@ -47,7 +47,7 @@ def evaluate_positions(positions, stockfish_path, csv_file_path):
         for fen in positions:
             try:
                 board = chess.Board(fen)
-                info = engine.analyse(board, chess.engine.Limit(nodes=0, ))  # Set the analysis time limit to 0.1 seconds
+                info = engine.analyse(board, chess.engine.Limit(depth=2))  # Set the analysis time limit to 0.1 seconds
                 evaluation = info['score'].white().score(mate_score=10000)
                 if abs(evaluation) < 9000:  # exclude mate scores
                     if len(board.piece_map()) > 6:  # exclude endgames that are solved
