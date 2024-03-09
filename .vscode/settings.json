@@ -71,7 +71,17 @@
         "algorithm": "cpp",
         "numeric": "cpp",
         "random": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "*.tcc": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "functional": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp",
+        "utility": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp"
     },
     
         "files.exclude": {

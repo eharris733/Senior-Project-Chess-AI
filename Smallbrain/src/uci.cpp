@@ -268,11 +268,11 @@ std::string convertScore(int score) {
     if (std::abs(score) <= 4) score = 0;
 
     if (score >= VALUE_MATE_IN_PLY)
-        return "mate " + std::to_string(((VALUE_MATE - score) / 2) + ((VALUE_MATE - score) & 1));
+        return std::to_string(((VALUE_MATE - score) / 2) + ((VALUE_MATE - score) & 1));
     else if (score <= VALUE_MATED_IN_PLY)
-        return "mate " + std::to_string(-((VALUE_MATE + score) / 2) + ((VALUE_MATE + score) & 1));
+        return std::to_string(-((VALUE_MATE + score) / 2) + ((VALUE_MATE + score) & 1));
     else
-        return "cp " + std::to_string(score * 100 / NormalizeToPawnValue);
+        return std::to_string(score * 100 / NormalizeToPawnValue);
 }
 
 // https://github.com/official-stockfish/Stockfish/blob/master/src/uci.cpp#L202

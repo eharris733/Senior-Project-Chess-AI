@@ -24,16 +24,16 @@ int main() {
 
 
 
-    double initialMutationRate = 0.08;
-    double decayRate = 0.8;
+    double initialMutationRate = 0.002;
+    double decayRate = 0;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
     size_t populationSize = 1000; 
     int trainingSize = 1000;
-    int eliteSize = 50;
-    int archiveSize = 100;
-    int replacementCount = 50;
-    std::string trainingDataPath = "dbs/no_search_evals.csv";
+    int eliteSize = 15;
+    int archiveSize = 0;
+    int replacementCount = 0;
+    std::string trainingDataPath = "dbs/master";
 
     std::cout << "Running Genetic Algorithm" << std::endl;
     std::cout << "Population Size: " << populationSize << std::endl;

@@ -9,46 +9,45 @@
 
 
 
-// Assuming 'Board' and 'eval' namespaces are correctly set up as per your project
+std::vector<std::string> readCSV(const std::string& filename) {
+        std::ifstream file(filename);
+        std::string line;
+        std::vector<std::string> positions;
 
-void updateEvals(const std::string& inputFile, const std::string& outputFile) {
-    std::ifstream inFile(inputFile);
-    std::ofstream outFile(outputFile);
+        while (std::getline(file, line)) {
+            std::stringstream ss(line);
+            std::string fen;
+            double score;
+            if (std::getline(ss, fen, ',') && ss >> score) {
+                positions.push_back(fen);
+            }
+        }
+        return positions;
+    }  
 
-    if (!inFile.is_open() || !outFile.is_open()) {
-        std::cerr << "Error opening files!" << std::endl;
-        return;
-    }
 
+int main() {
     nnue::init(""); // Initialize the NNUE neural network
+    Board board; // Create a board object
+    std::vector<std::string> positions = readCSV("/home/eh5954/Desktop/Senior-Project-Chess-AI/dbs/quiet_evals_filteredcd.csv");
 
-    std::string line;
-    while (getline(inFile, line)) {
-        std::stringstream ss(line);
-        std::string fen, oldEval;
-        getline(ss, fen, ','); // Assuming FEN and EVAL are separated by a comma
-        getline(ss, oldEval);  // This value is ignored since we'll calculate a new evaluation
-
-        Board board = Board(fen); // Set up the board with the FEN string
-        int newEval = eval::evaluate(board); // Evaluate the board position
-        
-        // Convert the evaluation score to a string representation, if necessary
-        std::string newEvalStr = uci::convertScore(newEval); // Assuming you have implemented this function
-
-        outFile << fen << "," << newEvalStr << std::endl; // Write the updated FEN and EVAL to the output file
+    // Specify the path to your output CSV file
+    std::ofstream outFile("/home/eh5954/Desktop/Senior-Project-Chess-AI/dbs/smallbrain_evals.csv");
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to open output file." << std::endl;
+        return 1; // Or handle the error as appropriate
     }
 
-    inFile.close();
-    outFile.close();
-}
+    for (const auto& position : positions) {
+        board.setFen(position);
+        int score = eval::evaluate(board); // Get the evaluation score
+        std::string evalStr = uci::convertScore(score); // Convert the score to a string
 
-int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <input_csv_file> <output_csv_file>" << std::endl;
-        return 1;
+        // Write the FEN string and its evaluation to the output file
+        outFile << position << "," << evalStr << std::endl;
     }
 
-    updateEvals(argv[1], argv[2]);
+    outFile.close(); // Don't forget to close the file
 
     return 0;
 }
