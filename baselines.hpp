@@ -163,38 +163,38 @@ TunableEval zeroEval = {
 };
 
 TunableEval result1 = {
-"",
-    GamePhaseValue(100, 135), // Pawn
-    GamePhaseValue(383, 290), // Knight
-    GamePhaseValue(428, 298), // Bishop
-    GamePhaseValue(534, 621), // Rook
-    GamePhaseValue(914, 1017), // Queen
-    GamePhaseValue(21, 35), // Passed pawn
-    GamePhaseValue(44, 19), // Doubled pawn (not good)
-    GamePhaseValue(19, 12), // Isolated pawn (not good)
-    GamePhaseValue(5, 34), // Weak pawn
-    GamePhaseValue(11, 9), // Central pawn
-    GamePhaseValue(1, 2), // Weak square
-    GamePhaseValue(4, 8), // Passed pawn enemy king square
-    GamePhaseValue(32, 12), // Knight outposts
-    GamePhaseValue(11, 21), // Knight mobility
-    GamePhaseValue(4, 17), // Bishop mobility
-    GamePhaseValue(62, 8), // Bishop pair
-    GamePhaseValue(32, 27), // Rook is on same file as enemy king
-    GamePhaseValue(11, 18), // Rook is on adjacent file to enemy king
-    GamePhaseValue(34, 54), // Rook is on second to last rank
-    GamePhaseValue(25, 23), // Rooks can guard each other
-    GamePhaseValue(3, 1), // Rook mobility
-    GamePhaseValue(11, 12), // Rook is behind a passed pawn
-    GamePhaseValue(32, 24), // Rook has no pawns in its file
-    GamePhaseValue(13, 11), // Rook has no friendly pawns in its file
-    GamePhaseValue(52, 18), // Rook can directly attack a weak enemy pawn
-    GamePhaseValue(2, 7), // Queen mobility
-    GamePhaseValue(9, 12), // King friendly pawn
-    GamePhaseValue(1, 0), // King no enemy pawn near
-    464, // maxKingSafetyScore
-    9, // steepnessKingSafetyScore
-    3, // middlePointKingSafetyScore
+    "",
+    GamePhaseValue(100, 127), // Pawn
+    GamePhaseValue(386, 317), // Knight
+    GamePhaseValue(371, 366), // Bishop
+    GamePhaseValue(516, 554), // Rook
+    GamePhaseValue(816, 955), // Queen
+    GamePhaseValue(33, 55), // Passed pawn
+    GamePhaseValue(63, 25), // Doubled pawn (not good)
+    GamePhaseValue(35, 29), // Isolated pawn (not good)
+    GamePhaseValue(12, 2), // Weak pawn
+    GamePhaseValue(13, 10), // Central pawn
+    GamePhaseValue(6, 10), // Weak square
+    GamePhaseValue(15, 4), // Passed pawn enemy king square
+    GamePhaseValue(21, 59), // Knight on outpost (knightOutposts)
+    GamePhaseValue(5, 6), // Knight mobility (knightMobility)
+    GamePhaseValue(10, 6), // Bishop mobility (bishopMobility)
+    GamePhaseValue(56, 9), // Possessing both colored bishops (bishopPair)
+    GamePhaseValue(57, 31), // Rook is on same file as enemy king (rookAttackKingFile)
+    GamePhaseValue(41, 15), // Rook is on adjacent file to enemy king (rookAttackKingAdjFile)
+    GamePhaseValue(23, 48), // Rook is on second to last rank (rook7thRank)
+    GamePhaseValue(62, 24), // Rooks can guard each other (rookConnected)
+    GamePhaseValue(5, 2), // Rook mobility (rookMobility)
+    GamePhaseValue(8, 51), // Rook is behind a passed pawn (rookBehindPassedPawn)
+    GamePhaseValue(50, 38), // Rook has no pawns in its file (rookOpenFile)
+    GamePhaseValue(33, 18), // Rook has no friendly pawns in its file (rookSemiOpenFile)
+    GamePhaseValue(62, 18), // Rook can directly attack a weak enemy pawn (rookAtckWeakPawnOpenColumn)
+    GamePhaseValue(2, 2), // Queen mobility (queenMobility)
+    GamePhaseValue(14, 1), // King friendly pawn closeness (kingFriendlyPawn)
+    GamePhaseValue(14, 1), // King distance from enemy pawns (kingNoEnemyPawnNear)
+    242, // maxKingSafetyScore
+    1, // steepnessKingSafetyScore
+    8, // middlePointKingSafetyScore
 };
 
 

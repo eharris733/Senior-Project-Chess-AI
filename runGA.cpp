@@ -33,7 +33,7 @@ int main() {
     int eliteSize = 15;
     int archiveSize = 0;
     int replacementCount = 0;
-    std::string trainingDataPath = "dbs/smallbrain_evals.csv";
+    std::string trainingDataPath = "dbs/quiet_evals_filtered.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;
     std::cout << "Population Size: " << populationSize << std::endl;

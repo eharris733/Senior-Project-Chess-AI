@@ -29,7 +29,7 @@ std::vector<std::string> readCSV(const std::string& filename) {
 int main() {
     nnue::init(""); // Initialize the NNUE neural network
     Board board; // Create a board object
-    std::vector<std::string> positions = readCSV("/home/eh5954/Desktop/Senior-Project-Chess-AI/dbs/mastergames/random_positions_no_duplicates.csv");
+    std::vector<std::string> positions = readCSV("/home/eh5954/Desktop/Senior-Project-Chess-AI/dbs/depth2stockfishCN.csv");
 
     // Specify the path to your output CSV file
     std::ofstream outFile("/home/eh5954/Desktop/Senior-Project-Chess-AI/dbs/smallbrain_evals.csv");
