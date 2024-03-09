@@ -65,7 +65,7 @@ public:
     
 
     SearchState state;
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = result1) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = result2) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time

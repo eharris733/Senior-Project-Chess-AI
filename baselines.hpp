@@ -197,6 +197,42 @@ TunableEval result1 = {
     8, // middlePointKingSafetyScore
 };
 
+TunableEval result2 = {
+    "",
+    GamePhaseValue(100, 123), // Pawn
+    GamePhaseValue(375, 275), // Knight
+    GamePhaseValue(385, 254), // Bishop
+    GamePhaseValue(519, 657), // Rook
+    GamePhaseValue(957, 953), // Queen
+    GamePhaseValue(7, 46), // Passed pawn
+    GamePhaseValue(54, 38), // Doubled pawn (not good)
+    GamePhaseValue(28, 2), // Isolated pawn (not good)
+    GamePhaseValue(3, 18), // Weak pawn
+    GamePhaseValue(15, 11), // Central pawn
+    GamePhaseValue(0, 2), // Weak square
+    GamePhaseValue(5, 23), // Passed pawn enemy king square
+    GamePhaseValue(3, 33), // Knight on outpost (knightOutposts)
+    GamePhaseValue(12, 17), // Knight mobility (knightMobility)
+    GamePhaseValue(7, 19), // Bishop mobility (bishopMobility)
+    GamePhaseValue(48, 6), // Possessing both colored bishops (bishopPair)
+    GamePhaseValue(9, 33), // Rook is on same file as enemy king (rookAttackKingFile)
+    GamePhaseValue(18, 18), // Rook is on adjacent file to enemy king (rookAttackKingAdjFile)
+    GamePhaseValue(23, 52), // Rook is on second to last rank (rook7thRank)
+    GamePhaseValue(24, 16), // Rooks can guard each other (rookConnected)
+    GamePhaseValue(0, 0), // Rook mobility (rookMobility)
+    GamePhaseValue(50, 4), // Rook is behind a passed pawn (rookBehindPassedPawn)
+    GamePhaseValue(35, 19), // Rook has no pawns in its file (rookOpenFile)
+    GamePhaseValue(19, 40), // Rook has no friendly pawns in its file (rookSemiOpenFile)
+    GamePhaseValue(58, 17), // Rook can directly attack a weak enemy pawn (rookAtckWeakPawnOpenColumn)
+    GamePhaseValue(2, 0), // Queen mobility (queenMobility)
+    GamePhaseValue(15, 10), // King friendly pawn closeness (kingFriendlyPawn)
+    GamePhaseValue(9, 0), // King distance from enemy pawns (kingNoEnemyPawnNear)
+    326, // maxKingSafetyScore
+    14, // steepnessKingSafetyScore
+    53, // middlePointKingSafetyScore
+};
+
+
 
 
 // this version of iterative deepening is heavily influened 

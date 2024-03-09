@@ -24,15 +24,15 @@ int main() {
 
 
 
-    double initialMutationRate = 0.002;
-    double decayRate = 0;
+    double initialMutationRate = 0.075;
+    double decayRate = .5;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
-    size_t populationSize = 1000; 
+    size_t populationSize = 1500; 
     int trainingSize = 1000;
-    int eliteSize = 15;
-    int archiveSize = 0;
-    int replacementCount = 0;
+    int eliteSize = 50;
+    int archiveSize = 100;
+    int replacementCount = 50;
     std::string trainingDataPath = "dbs/quiet_evals_filtered.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;
