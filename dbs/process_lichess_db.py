@@ -6,7 +6,7 @@ import zstandard as zstd
 import io
 
 # Define the number of lines you want to read
-num_lines_to_read = 10000  # For example, read only the first 1000 lines
+num_lines_to_read = 20000  # For example, read only the first 1000 lines
 
 # Create a Zstandard decompressor
 decompressor = zstd.ZstdDecompressor()
@@ -48,7 +48,7 @@ def parse_deepest_eval(line):
 
 
 # Open the output CSV file for writing
-with open("fen_cp_evaluations.csv", "w", newline='') as csvfile:
+with open("fen_cp_evaluations_20000.csv", "w", newline='') as csvfile:
     csvwriter = csv.writer(csvfile)
     csvwriter.writerow(["FEN", "Evaluation"])  # Write the header
 
