@@ -6,13 +6,13 @@
 
 // for now just going to test my utility functions
 int main() {
-    // TunableEval randomEvals = initializeRandomTunableEval();
-    // std::string randomChromosone = convertEvalToChromosone(randomEvals);
-    // TunableEval randomEvalsClone = convertChromosoneToEval(randomChromosone);
+    TunableEval randomEvals = initializeRandomTunableEval();
+    std::string randomChromosone = convertEvalToChromosone(randomEvals);
+    TunableEval randomEvalsClone = convertChromosoneToEval(randomChromosone);
 
-    // // assert to see if they are the same
-    // assert(randomEvals.pawn.endGame == randomEvalsClone.pawn.endGame / 10); 
-    // assert(randomEvals.kingPressureScore.endGame == randomEvalsClone.kingPressureScore.endGame);
+    // assert to see if they are the same
+    assert(randomEvals.pawn.endGame == randomEvalsClone.pawn.endGame); 
+    assert(randomEvals.maxKingSafetyScore == randomEvalsClone.maxKingSafetyScore);
 
     // values from 2008 paper
     // population size = 1000
@@ -33,7 +33,7 @@ int main() {
     int eliteSize = 15;
     int archiveSize = 0;
     int replacementCount = 0;
-    std::string trainingDataPath = "dbs/master";
+    std::string trainingDataPath = "dbs/smallbrain_evals.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;
     std::cout << "Population Size: " << populationSize << std::endl;

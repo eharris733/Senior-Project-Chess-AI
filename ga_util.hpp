@@ -123,9 +123,9 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     tEval.knightMobility.endGame = bitsToInt(bitString.substr(pos, 5));
     pos += 5;
     tEval.bishopMobility.middleGame = bitsToInt(bitString.substr(pos, 5));
-    pos += 6;
+    pos += 5;
     tEval.bishopMobility.endGame = bitsToInt(bitString.substr(pos, 5));
-    pos += 6;
+    pos += 5;
     tEval.bishopPair.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
     tEval.bishopPair.endGame = bitsToInt(bitString.substr(pos, 6));
@@ -147,9 +147,9 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     tEval.rookConnected.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
     tEval.rookMobility.middleGame = bitsToInt(bitString.substr(pos, 5));
-    pos += 6;
+    pos += 5;
     tEval.rookMobility.endGame = bitsToInt(bitString.substr(pos, 5));
-    pos += 6;
+    pos += 5;
     tEval.rookBehindPassedPawn.middleGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
     tEval.rookBehindPassedPawn.endGame = bitsToInt(bitString.substr(pos, 6));
