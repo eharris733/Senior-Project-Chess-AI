@@ -65,10 +65,10 @@ public:
     
 
     SearchState state;
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = result2) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = result2, int tt_size = 1 << 20) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
-          tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
+          tt(tt_size), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
