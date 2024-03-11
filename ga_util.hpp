@@ -5,6 +5,7 @@
 #include <iostream>
 #include "chess.hpp"
 #include "baselines.hpp"
+#include "logger.hpp"
 
 
 
@@ -365,39 +366,49 @@ std::ostream& operator<<(std::ostream& os,
 
 
 void printTunableEval(const TunableEval& tEval) {
-    std::cout << "pawn middleGame: " << tEval.pawn.middleGame << " endGame: " << tEval.pawn.endGame << std::endl;
-    std::cout << "knight middleGame: " << tEval.knight.middleGame << " endGame: " << tEval.knight.endGame << std::endl;
-    std::cout << "bishop middleGame: " << tEval.bishop.middleGame << " endGame: " << tEval.bishop.endGame << std::endl;
-    std::cout << "rook middleGame: " << tEval.rook.middleGame << " endGame: " << tEval.rook.endGame << std::endl;
-    std::cout << "queen middleGame: " << tEval.queen.middleGame << " endGame: " << tEval.queen.endGame << std::endl;
-    std::cout << "passedPawn middleGame: " << tEval.passedPawn.middleGame << " endGame: " << tEval.passedPawn.endGame << std::endl;
-    std::cout << "doubledPawn middleGame: " << tEval.doubledPawn.middleGame << " endGame: " << tEval.doubledPawn.endGame << std::endl;
-    std::cout << "isolatedPawn middleGame: " << tEval.isolatedPawn.middleGame << " endGame: " << tEval.isolatedPawn.endGame << std::endl;
-    std::cout << "weakPawn middleGame: " << tEval.weakPawn.middleGame << " endGame: " << tEval.weakPawn.endGame << std::endl;
-    std::cout << "centralPawn middleGame: " << tEval.centralPawn.middleGame << " endGame: " << tEval.centralPawn.endGame << std::endl;
-    std::cout << "weakSquare middleGame: " << tEval.weakSquare.middleGame << " endGame: " << tEval.weakSquare.endGame << std::endl;
-    std::cout << "passedPawnEnemyKingSquare middleGame: " << tEval.passedPawnEnemyKingSquare.middleGame << " endGame: " << tEval.passedPawnEnemyKingSquare.endGame << std::endl;
-    std::cout << "knightOutposts middleGame: " << tEval.knightOutposts.middleGame << " endGame: " << tEval.knightOutposts.endGame << std::endl;
-    std::cout << "knightMobility middleGame: " << tEval.knightMobility.middleGame << " endGame: " << tEval.knightMobility.endGame << std::endl;
-    std::cout << "bishopMobility middleGame: " <<tEval.bishopMobility.middleGame << " endGame: " << tEval.bishopMobility.endGame << std::endl;
-    std::cout << "bishopPair middleGame: " << tEval.bishopPair.middleGame << " endGame: " << tEval.bishopPair.endGame << std::endl;
-    std::cout << "rookAttackKingFile middleGame: " << tEval.rookAttackKingFile.middleGame << " endGame: " << tEval.rookAttackKingFile.endGame << std::endl;
-    std::cout << "rookAttackKingAdjFile middleGame: " << tEval.rookAttackKingAdjFile.middleGame << " endGame: " << tEval.rookAttackKingAdjFile.endGame << std::endl;
-    std::cout << "rook7thRank middleGame: " << tEval.rook7thRank.middleGame << " endGame: " << tEval.rook7thRank.endGame << std::endl;
-    std::cout << "rookConnected middleGame: " << tEval.rookConnected.middleGame << " endGame: " << tEval.rookConnected.endGame << std::endl;
-    std::cout << "rookMobility middleGame: " << tEval.rookMobility.middleGame << " endGame: " << tEval.rookMobility.endGame << std::endl;
-    std::cout << "rookBehindPassedPawn middleGame: " << tEval.rookBehindPassedPawn.middleGame << " endGame: " << tEval.rookBehindPassedPawn.endGame << std::endl;
-    std::cout << "rookOpenFile middleGame: " << tEval.rookOpenFile.middleGame << " endGame: " << tEval.rookOpenFile.endGame << std::endl;
-    std::cout << "rookSemiOpenFile middleGame: " << tEval.rookSemiOpenFile.middleGame << " endGame: " << tEval.rookSemiOpenFile.endGame << std::endl;
-    std::cout << "rookAtckWeakPawnOpenColumn middleGame: " << tEval.rookAtckWeakPawnOpenColumn.middleGame << " endGame: " << tEval.rookAtckWeakPawnOpenColumn.endGame << std::endl;
-    std::cout << "kingFriendlyPawn middleGame: " << tEval.kingFriendlyPawn.middleGame << " endGame: " << tEval.kingFriendlyPawn.endGame << std::endl;
-    std::cout << "kingNoEnemyPawnNear middleGame: " << tEval.kingNoEnemyPawnNear.middleGame << " endGame: " << tEval.kingNoEnemyPawnNear.endGame << std::endl;
-    std::cout << "queenMobility middleGame: " << tEval.queenMobility.middleGame << " endGame: " << tEval.queenMobility.endGame << std::endl;
-    std::cout << "maxKingSafetyScore: " << tEval.maxKingSafetyScore << std::endl;
-    std::cout << "steepnessKingSafetyScore: " << tEval.steepnessKingSafetyScore << std::endl;
-    std::cout << "middlePointKingSafetyScore: " << tEval.middlePointKingSafetyScore << std::endl;
-    std::cout << "--------------------------------" << std::endl;
-    std::cout << convertEvalToChromosone(tEval) << std::endl;
+    std::ostringstream logMsg;
+
+    logMsg << "TunableEval baseEval = {\n";
+    logMsg << "    chess::constants::STARTPOS,\n";
+    // Piece values
+    logMsg << "    GamePhaseValue(" << tEval.pawn.middleGame << ", " << tEval.pawn.endGame << "), // Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.knight.middleGame << ", " << tEval.knight.endGame << "), // Knight\n";
+    logMsg << "    GamePhaseValue(" << tEval.bishop.middleGame << ", " << tEval.bishop.endGame << "), // Bishop\n";
+    logMsg << "    GamePhaseValue(" << tEval.rook.middleGame << ", " << tEval.rook.endGame << "), // Rook\n";
+    logMsg << "    GamePhaseValue(" << tEval.queen.middleGame << ", " << tEval.queen.endGame << "), // Queen\n";
+    // Other values based on whims
+    logMsg << "    GamePhaseValue(" << tEval.passedPawn.middleGame << ", " << tEval.passedPawn.endGame << "), // Passed Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.doubledPawn.middleGame << ", " << tEval.doubledPawn.endGame << "), // Doubled Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.isolatedPawn.middleGame << ", " << tEval.isolatedPawn.endGame << "), // Isolated Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.weakPawn.middleGame << ", " << tEval.weakPawn.endGame << "), // Weak Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.centralPawn.middleGame << ", " << tEval.centralPawn.endGame << "), // Central Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.weakSquare.middleGame << ", " << tEval.weakSquare.endGame << "), // Weak Square\n";
+    logMsg << "    GamePhaseValue(" << tEval.passedPawnEnemyKingSquare.middleGame << ", " << tEval.passedPawnEnemyKingSquare.endGame << "), // Passed Pawn Enemy King Square\n";
+    logMsg << "    GamePhaseValue(" << tEval.knightOutposts.middleGame << ", " << tEval.knightOutposts.endGame << "), // Knight Outposts\n";
+    logMsg << "    GamePhaseValue(" << tEval.knightMobility.middleGame << ", " << tEval.knightMobility.endGame << "), // Knight Mobility\n";
+    logMsg << "    GamePhaseValue(" << tEval.bishopMobility.middleGame << ", " << tEval.bishopMobility.endGame << "), // Bishop Mobility\n";
+    logMsg << "    GamePhaseValue(" << tEval.bishopPair.middleGame << ", " << tEval.bishopPair.endGame << "), // Bishop Pair\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookAttackKingFile.middleGame << ", " << tEval.rookAttackKingFile.endGame << "), // Rook Attack King File\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookAttackKingAdjFile.middleGame << ", " << tEval.rookAttackKingAdjFile.endGame << "), // Rook Attack King Adjacent File\n";
+    logMsg << "    GamePhaseValue(" << tEval.rook7thRank.middleGame << ", " << tEval.rook7thRank.endGame << "), // Rook 7th Rank\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookConnected.middleGame << ", " << tEval.rookConnected.endGame << "), // Rook Connected\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookMobility.middleGame << ", " << tEval.rookMobility.endGame << "), // Rook Mobility\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookBehindPassedPawn.middleGame << ", " << tEval.rookBehindPassedPawn.endGame << "), // Rook Behind Passed Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookOpenFile.middleGame << ", " << tEval.rookOpenFile.endGame << "), // Rook Open File\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookSemiOpenFile.middleGame << ", " << tEval.rookSemiOpenFile.endGame << "), // Rook Semi Open File\n";
+    logMsg << "    GamePhaseValue(" << tEval.rookAtckWeakPawnOpenColumn.middleGame << ", " << tEval.rookAtckWeakPawnOpenColumn.endGame << "), // Rook Attack Weak Pawn Open Column\n";
+    logMsg << "    GamePhaseValue(" << tEval.kingFriendlyPawn.middleGame << ", " << tEval.kingFriendlyPawn.endGame << "), // King Friendly Pawn\n";
+    logMsg << "    GamePhaseValue(" << tEval.kingNoEnemyPawnNear.middleGame << ", " << tEval.kingNoEnemyPawnNear.endGame << "), // King No Enemy Pawn Near\n";
+    logMsg << "    GamePhaseValue(" << tEval.queenMobility.middleGame << ", " << tEval.queenMobility.endGame << "), // Queen Mobility\n";
+    // King safety
+    logMsg << "    " << tEval.maxKingSafetyScore << ", // maxKingSafetyScore\n";
+    logMsg << "    " << tEval.steepnessKingSafetyScore << ", // steepnessKingSafetyScore (will be divided by 100)\n";
+    logMsg << "    " << tEval.middlePointKingSafetyScore << ", // middlePointKingSafetyScore\n";
+    logMsg << "};\n";
+
+    // Use the Logger to log the message
+    Logger::getInstance().openLogFile("ga_log.txt");
+    Logger::getInstance().log(logMsg.str());
 }
 
 

@@ -69,7 +69,7 @@ public:
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(tt_size), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
-          //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
+          book("/Users/elliotharris/Desktop/Sproj/senior_project/openingbook/Human.bin"),
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
@@ -97,10 +97,10 @@ public:
         // disabling this for now while I'm training the GA
         // // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
         // // perfect, but not really a factor of performance
-        // Move openingMove = book.pickRandomMove(board);
-        // if (openingMove != Move::NULL_MOVE) {
-        //     state.bestMove = openingMove;
-        // }
+        Move openingMove = book.pickRandomMove(board);
+        if (openingMove != Move::NULL_MOVE) {
+            state.bestMove = openingMove;
+        }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
         // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
@@ -178,7 +178,7 @@ private:
     Board& board; // The board to search on
     Evaluator evaluator; // our evaluation function
     TranspositionTable tt; // Transposition table
-    //PolyglotBook book; // Opening book (commenting out for traiing purposes)
+    PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
     TunableEval evalParams; // Evaluation parameters
     int history[2][6][64]; // history heuristic table

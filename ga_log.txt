@@ -1,0 +1,9 @@
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.005000
+Mutation Decay Rate: 0.050000
+Crossover Rate: 0.750000
+Total Generations: 50
+Elite Size: 2
+Archive Size: 40
+Replacement Count: 2

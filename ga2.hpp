@@ -129,11 +129,11 @@ private:
         int numCorrect = 0;
         for (const auto& eval : evalsSubset) {
             Board board = Board();
-            Searcher searcher = Searcher(board, baseSearch, params, 2 << 4); // useless size for a tt
-            searcher.setMaxDepth(2);
+            Searcher searcher = Searcher(board, baseSearch, params, 2 << 16); // useless size for a tt
+            searcher.setMaxDepth(1);
             searcher.setVerbose(false);
             board.setFen(eval.fen);
-            Move predictedMove = searcher.search(10, 0, 1).bestMove;
+            Move predictedMove = searcher.search(1000, 0, 1).bestMove;
             searcher.clear();
             if (predictedMove == uci::uciToMove(board, eval.move)){
                 numCorrect++;
