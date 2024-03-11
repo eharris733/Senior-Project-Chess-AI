@@ -28,12 +28,12 @@ int main() {
 
 
 
-    double initialMutationRate = 0.005;
+    double initialMutationRate = 0.05;
     double decayRate = 0.01;
     double crossoverRate = 0.75;
-    int totalGenerations = 50;
+    int totalGenerations = 100;
     size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20
-    int eliteSize = 2;
+    int eliteSize = 3;
     int archiveSize = 40;
     int replacementCount = 1;
 

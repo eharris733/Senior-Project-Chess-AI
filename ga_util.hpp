@@ -179,10 +179,10 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.kingNoEnemyPawnNear.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
-    tEval.kingPressureScore.middleGame = bitsToInt(bitString.substr(pos, 6));
-    pos += 6;
-    tEval.kingPressureScore.endGame = bitsToInt(bitString.substr(pos, 6));
-    pos += 6;
+    tEval.kingPressureScore.middleGame = bitsToInt(bitString.substr(pos, 4));
+    pos += 4;
+    tEval.kingPressureScore.endGame = bitsToInt(bitString.substr(pos, 4));
+    pos += 4;
 
     // Return the populated struct
     return tEval;
@@ -288,8 +288,8 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.middleGame, 6);
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.endGame, 6);
 
-    bitString += intToGrayString(tEval.kingPressureScore.middleGame, 6);
-    bitString += intToGrayString(tEval.kingPressureScore.endGame, 6);
+    bitString += intToGrayString(tEval.kingPressureScore.middleGame, 4);
+    bitString += intToGrayString(tEval.kingPressureScore.endGame, 4);
 
 
     return bitString;
@@ -341,7 +341,7 @@ TunableEval initializeRandomTunableEval() {
     tEval.queenMobility = GamePhaseValue(randomInt(3), randomInt(3)); // 0 - 7 range
     tEval.kingFriendlyPawn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.kingNoEnemyPawnNear = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    tEval.kingPressureScore = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
+    tEval.kingPressureScore = GamePhaseValue(randomInt(4), randomInt(4)); // 0 - 128 range
 
 
     return tEval;

@@ -11,6 +11,8 @@
 #include <iostream>
 #include <algorithm>
 #include <chrono> 
+#include <cstring>
+#include <atomic>
 
 using namespace chess;
 using namespace std;
@@ -67,7 +69,7 @@ public:
     Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
-          tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
+          tt(1 << 21), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {

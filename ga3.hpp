@@ -29,13 +29,20 @@ public:
 
     void run() {
 
-        Logger::getInstance().openLogFile("ga_log.txt");
-
         chromosome best = population.front();
         chromosome worst = population.front();
         currentGeneration = 0;
 
         while(currentGeneration++ < totalGenerations) {
+
+            mutationRate = calculateMutationRate(initialMutationRate, mutationDecayRate, currentGeneration);
+            selection();
+            crossover();
+            mutation();
+            calculateFitness();
+            // Before replacing the old population, update the archive with solutions from the current generation
+            updateArchive(population);
+
             // sort the population by fitness
             std::sort(population.begin(), population.end(), [](const chromosome& a, const chromosome& b) {
                 return a.fitness > b.fitness;
@@ -71,14 +78,7 @@ public:
                 Logger::getInstance().log("Best Chromosome: "); 
                 printTunableEval(bestEval);
             }
-            mutationRate = calculateMutationRate(initialMutationRate, mutationDecayRate, currentGeneration);
-            selection();
-            crossover();
-            mutation();
-            calculateFitness();
-            // Before replacing the old population, update the archive with solutions from the current generation
-            updateArchive(population);
-
+            
             
         }
 
@@ -126,25 +126,23 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     int result = 0;
     int moveCount = 0;
     board.setFen(constants::STARTPOS); // Set the board to the starting position
-    // play 10 moves into the book, randomly selecting moves
+    // play 8 moves into the book, randomly selecting moves
     Move openingMove = book.pickRandomMove(board);
-    while (openingMove != Move::NULL_MOVE && moveCount < 10) {
-        
-        try {
-            board.makeMove(openingMove);
-        } catch (const std::exception& e) {
-            // Handle the exception here
-            // You can log the error or perform any necessary actions
-            // For example:
+    while (openingMove != Move::NULL_MOVE && moveCount < 8) {
+        if (board.at<Piece>(openingMove.from()) == Piece::NONE){
+            std::cerr << "Error: " << "Move from square with no piece in opening book" << std::endl;
+            std::cerr << "Move: " << openingMove << std::endl;
+            std::cerr << "Fen: " << board.getFen() << std::endl; 
             break;
         }
+        board.makeMove(openingMove);
         moveCount++;
         openingMove = book.pickRandomMove(board);
     }
     
     
-    whiteSearcher.setMaxDepth(6); // Set the search depth for white
-    blackSearcher.setMaxDepth(6); // Set the search depth for black
+    whiteSearcher.setMaxDepth(1); // Set the search depth for white
+    blackSearcher.setMaxDepth(1); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
@@ -165,13 +163,27 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
             }
             break;
         }
-        board.makeMove(searchResult.bestMove); // Assume makeMove applies the move to the board
-        moveCount++;
-        if (moveCount > 200) {
+
+
+            if (board.at<Piece>(searchResult.bestMove.from()) == Piece::NONE){
+                whiteSearcher.clear();
+                blackSearcher.clear();
+                std::cerr << "Error: " << "Move from square with no piece" << std::endl;
+                std::cerr << "Move: " << searchResult.bestMove << std::endl;
+                std::cerr << "Fen: " << board.getFen() << std::endl; 
+                result = 0;
+                break;   
+            }
+            board.makeMove(searchResult.bestMove); // Assume makeMove applies the move to the board
+            moveCount++;
+        
+        // if the game is 150 moves for each side, too long, abort
+        if (moveCount > 300) {
             result = 0;
             break;
         } 
     }
+    // reach this point GameReslult is not NONE, so must be DRAW, WIN, or LOSE
     // Check for game end conditions    
         if (board.isGameOver().second == GameResult::LOSE) {
             result = board.sideToMove() == Color::WHITE ? -1: 1;
@@ -188,10 +200,10 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 double calculateFitnessSingleGame(const TunableEval& params, const TunableEval& opponent) {
     double totalPoints = 0.0;
     Board board = Board();
-    Searcher white = Searcher(board, baseSearch, params, 2 << 20); 
+    Searcher white = Searcher(board, baseSearch, params); 
 
     
-        Searcher black = Searcher(board, baseSearch, opponent, 2 << 20);
+        Searcher black = Searcher(board, baseSearch, opponent);
         return simulateGame(white, black, board);
 }
 
@@ -332,20 +344,27 @@ double calculateFitness() {
 
 
 chromosome rouletteWheelSelectionWithScaling(const std::vector<chromosome>& parents) {
-    // Calculate the total fitness of the population
+    // Find the minimum fitness value to adjust negative fitness values
+    double minFitness = std::numeric_limits<double>::max();
+    for (const auto& individual : parents) {
+        if (individual.fitness < minFitness) {
+            minFitness = individual.fitness;
+        }
+    }
+    double fitnessOffset = (minFitness < 0) ? -minFitness : 0;
+
+    // Calculate the total adjusted fitness of the population
     double totalFitness = 0.0;
     for (const auto& individual : parents) {
-        totalFitness += individual.fitness; // Directly use fitness
+        totalFitness += individual.fitness + fitnessOffset;
     }
 
-    // Generate a random number between 0 and the total fitness
     std::uniform_real_distribution<> dist(0.0, totalFitness);
     double randomFitness = dist(gen);
 
-    // Find and return the first individual for which the sum of fitnesses up to that point exceeds the random number
     double currentSum = 0.0;
     for (const auto& individual : parents) {
-        currentSum += individual.fitness; // Use direct fitness
+        currentSum += individual.fitness + fitnessOffset;
         if (currentSum >= randomFitness) {
             return individual;
         }
@@ -354,6 +373,7 @@ chromosome rouletteWheelSelectionWithScaling(const std::vector<chromosome>& pare
     // This point should theoretically never be reached, but return the last individual as a fallback
     return parents.back();
 }
+
 
 
 // random single point crossover
@@ -427,39 +447,50 @@ void crossover() {
 void selection() {
     // Sort the population by fitness in descending order to identify the elites
     std::sort(population.begin(), population.end(), [](const chromosome& a, const chromosome& b) {
-        return a.fitness > b.fitness; // Now assuming higher fitness values are better
+        return a.fitness > b.fitness;
     });
 
     // Directly copy the eliteCount individuals to the new population
     std::vector<chromosome> newPopulation(population.begin(), population.begin() + eliteCount);
 
-    // Before filling the rest of the new population, reintroduce solutions from the archive
+    // Reintroduce solutions from the archive to the new population
     reintroduceFromArchive(newPopulation);
 
-    // Calculate the total fitness of the non-elite population
-    double totalFitness = 0.0;
+    // Find the minimum fitness value among non-elites
+    double minFitness = std::numeric_limits<double>::max();
     for (size_t i = eliteCount; i < population.size(); ++i) {
-        totalFitness += population[i].fitness;
+        if (population[i].fitness < minFitness) {
+            minFitness = population[i].fitness;
+        }
     }
 
-    // Calculate the selection probability for each non-elite individual
+    // Adjust fitness to ensure all values are non-negative
+    double fitnessOffset = 0;
+    if (minFitness < 0) {
+        fitnessOffset = -minFitness;
+    }
+
+    // Calculate the total adjusted fitness of the non-elite population
+    double totalAdjustedFitness = 0.0;
+    for (size_t i = eliteCount; i < population.size(); ++i) {
+        totalAdjustedFitness += population[i].fitness + fitnessOffset;
+    }
+
+    // Calculate the selection probability for each non-elite individual based on adjusted fitness
     std::vector<double> selectionProbabilities;
     for (size_t i = eliteCount; i < population.size(); ++i) {
-        double selectionProbability = population[i].fitness / totalFitness;
+        double selectionProbability = (population[i].fitness + fitnessOffset) / totalAdjustedFitness;
         selectionProbabilities.push_back(selectionProbability);
     }
 
-    // Adjust the selection process for non-elites
+    // Use std::discrete_distribution to select indices based on adjusted selection probabilities
     std::discrete_distribution<size_t> distribution(selectionProbabilities.begin(), selectionProbabilities.end());
 
     // Fill the remaining slots in the new population based on selection probabilities
     while (newPopulation.size() < populationSize) {
         size_t selectedIndex = distribution(gen);
-        // Ensure selectedIndex accounts for eliteCount offset if necessary
         newPopulation.push_back(population[selectedIndex + eliteCount]);
     }
-
-    
 
     // Update the population with the new generation, including elites
     population = std::move(newPopulation);
