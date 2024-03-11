@@ -719,20 +719,48 @@ int calculatePressureScore(Bitboard kingsZone, Bitboard pieceAttacks) {
     return chess::builtin::popcount(attackingSquares); // Assuming popcount function is available to count set bits
 }
 
-int kingPressureScore(Bitboard king, Bitboard enemyKnightsAttacks, Bitboard enemyBishopsAttacks, Bitboard enemyRooksAttacks, Bitboard enemyQueensAttacks, Color color, std::vector<int>& safetyTable) {
+// int kingPressureScore(Bitboard king, Bitboard enemyKnightsAttacks, Bitboard enemyBishopsAttacks, Bitboard enemyRooksAttacks, Bitboard enemyQueensAttacks, Color color, std::vector<int>& safetyTable) {
 
-    Bitboard kingsZone = calculateKingsZone(king, color);
+//     Bitboard kingsZone = calculateKingsZone(king, color);
 
-    // Initial pressure is the sum of all attacks into the king's zone
-    int pressure = 0;
-    pressure += calculatePressureScore(kingsZone, enemyKnightsAttacks) * 3;
-    pressure += calculatePressureScore(kingsZone, enemyBishopsAttacks) * 3;
-    pressure += calculatePressureScore(kingsZone, enemyRooksAttacks) * 4;
-    pressure += calculatePressureScore(kingsZone, enemyQueensAttacks) * 6;
+//     // Initial pressure is the sum of all attacks into the king's zone
+//     int pressure = 0;
+//     pressure += calculatePressureScore(kingsZone, enemyKnightsAttacks) * 3;
+//     pressure += calculatePressureScore(kingsZone, enemyBishopsAttacks) * 3;
+//     pressure += calculatePressureScore(kingsZone, enemyRooksAttacks) * 4;
+//     pressure += calculatePressureScore(kingsZone, enemyQueensAttacks) * 6;
 
-    // Map the total pressure to the safety table, ensuring we don't exceed its bounds
-    int index = std::min(pressure, static_cast<int>(safetyTable.size()) - 1);
-    return safetyTable[index];
+//     // Map the total pressure to the safety table, ensuring we don't exceed its bounds
+//     int index = std::min(pressure, static_cast<int>(safetyTable.size()) - 1);
+//     return safetyTable[index];
+// }
+
+float kingPressureScore(Bitboard king, Bitboard enemyPieces, Board board){
+    float score = 0;
+    Square kingSquare = bitboard_to_square(king);
+    int kingRank = rank_of(kingSquare);
+    int kingFile = file_of(kingSquare);
+    while (enemyPieces){
+        Square enemySquare = chess::builtin::poplsb(enemyPieces);
+        int enemyRank = rank_of(enemySquare);
+        int enemyFile = file_of(enemySquare);
+        // distance is the manhattan distance
+        int distance =abs(enemyRank - kingRank) +  abs(enemyFile - kingFile);
+        PieceType pieceType = board.at<PieceType>(enemySquare);
+        if (pieceType == PieceType::KNIGHT){
+            score += 3.0 / distance;
+        }
+        else if (pieceType == PieceType::BISHOP){
+            score += 3.0 / distance;
+        }
+        else if (pieceType == PieceType::ROOK){
+            score += 5.0 / distance;
+        }
+        else if (pieceType == PieceType::QUEEN){
+            score += 9.0 / distance;
+        }
+    }
+    return score;
 }
 
 

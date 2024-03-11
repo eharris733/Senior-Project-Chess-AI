@@ -36,34 +36,12 @@ class Evaluator {
 
         Evaluator(Board& board, TunableEval featureWeights = baseEval) : board(board), featureWeights(featureWeights) {
             gamePhase = 0;
-            fillKingSafetyTable(static_cast<double>(featureWeights.maxKingSafetyScore), static_cast<double>(featureWeights.steepnessKingSafetyScore / 100.0), static_cast<double>(featureWeights.middlePointKingSafetyScore));
 
         }
 
         void setFeatureWeights(TunableEval featureWeights){
             this->featureWeights = featureWeights;
-            fillKingSafetyTable(featureWeights.maxKingSafetyScore, static_cast<double>(featureWeights.steepnessKingSafetyScore / 100), featureWeights.middlePointKingSafetyScore);
         }
-
-        void fillKingSafetyTable(double L, double k, double x0) {
-            kingSafetyTable.clear();
-            for (int i = 0; i < 62; i++) {
-                kingSafetyTable.push_back(adjustedLogisticFunctionInt(i, L, k, x0));
-            }
-        }
-
-        std::vector<int> getKingSafetyTable(){
-            return kingSafetyTable;
-        }
-
-        // Function to calculate the adjusted logistic function value for a given x and round it to the nearest integer
-        int adjustedLogisticFunctionInt(double x, double L, double k, double x0) {
-            // Calculate the logistic function and round to the nearest integer
-            int y = std::round(L / (1 + exp(-k * (x - x0))));
-
-            return y;
-        }
-
         
         int getGamePhase(){
             return gamePhase;
@@ -337,15 +315,13 @@ class Evaluator {
         // king no enemy pawn near
         score += (kingNoEnemyPawnNear(bPawns, wKings) - kingNoEnemyPawnNear(wPawns, bKings)) * (featureWeights.kingNoEnemyPawnNear.middleGame * mgWeight + featureWeights.kingNoEnemyPawnNear.endGame * egWeight);
 
-        // revised king pressure scores  (yet to be tested)
-        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::WHITE, kingSafetyTable);
-        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable);
+        // king pressure score
+        score += (kingPressureScore(wKings, bPawns | bKnights | bBishops | bRooks | bQueens, board) - kingPressureScore(bKings, wPawns | wKnights | wBishops | wRooks | wQueens, board)) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
+        
         return score;
         }
 
-    // used for testing only, comma delimited string of features, 
-    // format: 
-    // featurename[WVALUE:BVALUE]:totalchangeinevaluation, 
+ 
 
     private:
         TunableEval featureWeights;

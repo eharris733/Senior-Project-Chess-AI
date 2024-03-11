@@ -179,11 +179,9 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     pos += 6;
     tEval.kingNoEnemyPawnNear.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
-    tEval.maxKingSafetyScore = bitsToInt(bitString.substr(pos, 10));
-    pos += 10;
-    tEval.steepnessKingSafetyScore = bitsToInt(bitString.substr(pos, 4));
-    pos += 4;
-    tEval.middlePointKingSafetyScore = bitsToInt(bitString.substr(pos, 6));
+    tEval.kingPressureScore.middleGame = bitsToInt(bitString.substr(pos, 6));
+    pos += 6;
+    tEval.kingPressureScore.endGame = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
 
     // Return the populated struct
@@ -290,9 +288,8 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.middleGame, 6);
     bitString += intToGrayString(tEval.kingNoEnemyPawnNear.endGame, 6);
 
-    bitString += intToGrayString(tEval.maxKingSafetyScore, 10);
-    bitString += intToGrayString(tEval.steepnessKingSafetyScore, 4);
-    bitString += intToGrayString(tEval.middlePointKingSafetyScore, 6);
+    bitString += intToGrayString(tEval.kingPressureScore.middleGame, 6);
+    bitString += intToGrayString(tEval.kingPressureScore.endGame, 6);
 
 
     return bitString;
@@ -344,9 +341,8 @@ TunableEval initializeRandomTunableEval() {
     tEval.queenMobility = GamePhaseValue(randomInt(3), randomInt(3)); // 0 - 7 range
     tEval.kingFriendlyPawn = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
     tEval.kingNoEnemyPawnNear = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
-    tEval.maxKingSafetyScore = randomInt(10); // 0 - 1024 range
-    tEval.steepnessKingSafetyScore = randomInt(4); // 0 - 16 range
-    tEval.middlePointKingSafetyScore = randomInt(6); // 0 - 64 range
+    tEval.kingPressureScore = GamePhaseValue(randomInt(6), randomInt(6)); // 0 - 128 range
+
 
     return tEval;
 }
@@ -401,13 +397,8 @@ void printTunableEval(const TunableEval& tEval) {
     logMsg << "    GamePhaseValue(" << tEval.kingNoEnemyPawnNear.middleGame << ", " << tEval.kingNoEnemyPawnNear.endGame << "), // King No Enemy Pawn Near\n";
     logMsg << "    GamePhaseValue(" << tEval.queenMobility.middleGame << ", " << tEval.queenMobility.endGame << "), // Queen Mobility\n";
     // King safety
-    logMsg << "    " << tEval.maxKingSafetyScore << ", // maxKingSafetyScore\n";
-    logMsg << "    " << tEval.steepnessKingSafetyScore << ", // steepnessKingSafetyScore (will be divided by 100)\n";
-    logMsg << "    " << tEval.middlePointKingSafetyScore << ", // middlePointKingSafetyScore\n";
+    logMsg << "    GamePhaseValue(" << tEval.kingPressureScore.middleGame << ", " << tEval.kingPressureScore.endGame << "), // King Pressure Score\n";
     logMsg << "};\n";
-
-    // Use the Logger to log the message
-    Logger::getInstance().openLogFile("ga_log.txt");
     Logger::getInstance().log(logMsg.str());
 }
 
