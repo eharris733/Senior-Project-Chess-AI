@@ -24,11 +24,13 @@ def extract_unique_positions_with_eval_from_pgn(file_path, output_csv):
                 if fen not in seen_fens:
                     positions.append(fen)
                     seen_fens.add(fen)
+                elif fen in seen_fens:
+                    print(fen)
 
-            # If there are unique positions, choose one randomly and write its FEN along with a temporary eval to the CSV
-            if positions:
-                random_fen = random.choice(positions)
-                writer.writerow([random_fen, 0])  # Assigning a temporary evaluation of 0
+            # # If there are unique positions, choose one randomly and write its FEN along with a temporary eval to the CSV
+            # if positions:
+            #     random_fen = random.choice(positions)
+            #     writer.writerow([random_fen, 0])  # Assigning a temporary evaluation of 0
 
 
 # Example usage
