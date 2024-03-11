@@ -22,7 +22,7 @@ atomic<bool> stop(false); // so the searcher works
 class GA3 {
 public:
     GA3(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int eliteCount, int archiveSize, int reintroduceCount)
-        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("Titans.bin") {
+        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("Perfect2023.bin") {
         initializePopulation();
         
     }
@@ -132,7 +132,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         if (board.at<Piece>(openingMove.from()) == Piece::NONE){
             std::cerr << "Error: " << "Move from square with no piece in opening book" << std::endl;
             std::cerr << "Move: " << openingMove << std::endl;
-            std::cerr << "Fen: " << board.getFen() << std::endl; 
+            std::cerr << "Fen: " << board.getFen() << std::endl;
+            Logger::getInstance().log("Error:  Move from square with no piece in opening book"); 
             break;
         }
         board.makeMove(openingMove);
@@ -141,8 +142,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     }
     
     
-    whiteSearcher.setMaxDepth(1); // Set the search depth for white
-    blackSearcher.setMaxDepth(1); // Set the search depth for black
+    whiteSearcher.setMaxDepth(6); // Set the search depth for white
+    blackSearcher.setMaxDepth(6); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
@@ -166,12 +167,12 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 
 
             if (board.at<Piece>(searchResult.bestMove.from()) == Piece::NONE){
-                whiteSearcher.clear();
-                blackSearcher.clear();
                 std::cerr << "Error: " << "Move from square with no piece" << std::endl;
                 std::cerr << "Move: " << searchResult.bestMove << std::endl;
                 std::cerr << "Fen: " << board.getFen() << std::endl; 
-                result = 0;
+                result = 0; // inconclusive result, might skew things
+                // but happens so rarely that its probably fine
+                Logger::getInstance().log("Error:  Move from square with no piece");
                 break;   
             }
             board.makeMove(searchResult.bestMove); // Assume makeMove applies the move to the board
