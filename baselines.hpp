@@ -110,7 +110,7 @@ TunableEval baseEval = {
     GamePhaseValue(1, 1), // How many squares a queen can move to
     GamePhaseValue(4, 0), // How many and how close are friendly pawns (closeness * numberofpawns / numberofpawns)
     GamePhaseValue(5, 0), // How far king is from closest enemy pawn// taken from the 
-    GamePhaseValue(10, 10),
+    GamePhaseValue(3, 1),
 
 };
 

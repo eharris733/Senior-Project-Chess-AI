@@ -13,7 +13,6 @@
 
 #include <vector>
 #include <string>
-#include <math.h>
 #include "chess.hpp"
 #include "features.hpp"
 #include "feature_extractor.hpp"
@@ -36,7 +35,6 @@ class Evaluator {
 
         Evaluator(Board& board, TunableEval featureWeights = baseEval) : board(board), featureWeights(featureWeights) {
             gamePhase = 0;
-
         }
 
         void setFeatureWeights(TunableEval featureWeights){
@@ -315,27 +313,24 @@ class Evaluator {
         // king no enemy pawn near
         score += (kingNoEnemyPawnNear(bPawns, wKings) - kingNoEnemyPawnNear(wPawns, bKings)) * (featureWeights.kingNoEnemyPawnNear.middleGame * mgWeight + featureWeights.kingNoEnemyPawnNear.endGame * egWeight);
 
-        // king pressure score
-        score += (kingPressureScore(wKings, bPawns | bKnights | bBishops | bRooks | bQueens, board) - kingPressureScore(bKings, wPawns | wKnights | wBishops | wRooks | wQueens, board)) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
-        
+        // revised king pressure scores  (yet to be tested)
+        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::BLACK, board) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
+        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, Color::WHITE, board) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
         return score;
         }
 
- 
+    // used for testing only, comma delimited string of features, 
+    // format: 
+    // featurename[WVALUE:BVALUE]:totalchangeinevaluation, 
 
     private:
         TunableEval featureWeights;
         float gamePhase;
         Board& board;
-        std::vector<int> kingSafetyTable;
 
         static Color color(Piece piece) {
             return static_cast<Color>(static_cast<int>(piece) / 6);
         }
-
-        
-
-        
 
 
 
