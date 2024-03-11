@@ -143,8 +143,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     }
     
     
-    whiteSearcher.setMaxDepth(1); // Set the search depth for white
-    blackSearcher.setMaxDepth(1); // Set the search depth for black
+    whiteSearcher.setMaxDepth(4); // Set the search depth for white
+    blackSearcher.setMaxDepth(4); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
@@ -254,23 +254,51 @@ double calculateFitness() {
 
    
 
-    // looks good
+    // uses the ten dad values, reproduced population / 10 times
     void initializePopulation() {
-        chromosome base = chromosome();
-        base.chromosome = convertEvalToChromosone(baseEval);
-        mutationRate = initialMutationRate * 4; // 4 times the initial mutation rate
-        population.push_back(base); // add the base eval to the population (the best one so far
-        //mutationRate = .002; // will be reset
-        for (size_t i = 0; i < populationSize - 1; ++i) {
-            TunableEval tempBaseEval = baseEval;
-            chromosome randomVariation = chromosome();
-            randomVariation.chromosome = convertEvalToChromosone(tempBaseEval);
-            mutate(randomVariation); // don't recalculate
-            population.push_back(randomVariation); 
+        int multiplier = populationSize / 10;
+        for(int i = 0; i < multiplier; i++) {
+            chromosome d1;
+            d1.chromosome = convertEvalToChromosone(dad1);
+            d1.fitness = 0;
+            population.push_back(d1);  
+            chromosome d2;
+            d2.chromosome = convertEvalToChromosone(dad2);
+            d2.fitness = 0;
+            population.push_back(d2);
+            chromosome d3;
+            d3.chromosome = convertEvalToChromosone(dad3);
+            d3.fitness = 0;
+            population.push_back(d3);
+            chromosome d4;
+            d4.chromosome = convertEvalToChromosone(dad4);
+            d4.fitness = 0;
+            population.push_back(d4);
+            chromosome d5;
+            d5.chromosome = convertEvalToChromosone(dad5);
+            d5.fitness = 0;
+            population.push_back(d5);
+            chromosome d6;
+            d6.chromosome = convertEvalToChromosone(dad6);
+            d6.fitness = 0;
+            population.push_back(d6);
+            chromosome d7;
+            d7.chromosome = convertEvalToChromosone(dad7);
+            d7.fitness = 0;
+            population.push_back(d7);
+            chromosome d8;
+            d8.chromosome = convertEvalToChromosone(dad8);
+            d8.fitness = 0;
+            population.push_back(d8);
+            chromosome d9;
+            d9.chromosome = convertEvalToChromosone(dad9);
+            d9.fitness = 0;
+            population.push_back(d9);
+            chromosome d10;
+            d10.chromosome = convertEvalToChromosone(dad10);
+            d10.fitness = 0;  
         }
-        calculateFitness();
-
-        mutationRate = initialMutationRate;
+        
     }
 
     // looks good
