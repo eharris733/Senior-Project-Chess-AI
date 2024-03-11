@@ -22,7 +22,7 @@ atomic<bool> stop(false); // so the searcher works
 class GA3 {
 public:
     GA3(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int eliteCount, int archiveSize, int reintroduceCount)
-        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount){
+        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("Titans.bin") {
         initializePopulation();
         
     }
@@ -32,6 +32,7 @@ public:
         Logger::getInstance().openLogFile("ga_log.txt");
 
         chromosome best = population.front();
+        chromosome worst = population.front();
         currentGeneration = 0;
 
         while(currentGeneration++ < totalGenerations) {
@@ -44,6 +45,9 @@ public:
             if(population.front().fitness < best.fitness) {
                 best = population.front();
             }
+            if(population.back().fitness > worst.fitness) {
+                worst = population.back();
+            }
 
             // Example: Tracking best and average fitness
             double totalFitness = 0.0;
@@ -51,15 +55,17 @@ public:
             
 
             chromosome best = population.front();
+            chromosome worst = population.back();
             TunableEval bestEval = convertChromosoneToEval(best.chromosome);
             double bestFitness = best.fitness; // Assuming population is sorted
+            double worstFitness = worst.fitness; // Assuming population is sorted
             for (const auto& individual : population) {
                 totalFitness += individual.fitness;
             }
             double averageFitness = totalFitness / population.size();
             Logger::getInstance().log( "Generation: " + std::to_string( currentGeneration));
             Logger::getInstance().log( "Mutation Rate: " + to_string(mutationRate)); 
-            Logger::getInstance().log( "Best Fitness: " + to_string(bestFitness) + ", Average Fitness: " + to_string(averageFitness)); 
+            Logger::getInstance().log( "Best Fitness: " + to_string(bestFitness) + ", Average Fitness: " + to_string(averageFitness) + ", Worst Fitness: " + to_string(worstFitness)); 
 
             if(currentGeneration % 10 == 0) {
                 Logger::getInstance().log("Best Chromosome: "); 
@@ -70,6 +76,8 @@ public:
             crossover();
             mutation();
             calculateFitness();
+            // Before replacing the old population, update the archive with solutions from the current generation
+            updateArchive(population);
 
             
         }
@@ -99,7 +107,7 @@ private:
     std::vector<chromosome> archive; // for historical mechanism as described in 2013 paper
     size_t archiveSize; // N: Maximum size of the archive
     size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
-
+    PolyglotBook book;
 
     std::vector<chromosome> population; // a vector of pairs of chromosomes and their fitness levels
     std::random_device rd;
@@ -116,22 +124,53 @@ private:
     // Function to simulate a game between two searchers
 int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board) {
     int result = 0;
+    int moveCount = 0;
     board.setFen(constants::STARTPOS); // Set the board to the starting position
-    whiteSearcher.setMaxDepth(2); // Set the search depth for white
-    blackSearcher.setMaxDepth(2); // Set the search depth for black
+    // play 10 moves into the book, randomly selecting moves
+    Move openingMove = book.pickRandomMove(board);
+    while (openingMove != Move::NULL_MOVE && moveCount < 10) {
+        
+        try {
+            board.makeMove(openingMove);
+        } catch (const std::exception& e) {
+            // Handle the exception here
+            // You can log the error or perform any necessary actions
+            // For example:
+            break;
+        }
+        moveCount++;
+        openingMove = book.pickRandomMove(board);
+    }
+    
+    
+    whiteSearcher.setMaxDepth(1); // Set the search depth for white
+    blackSearcher.setMaxDepth(1); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
+    // cap games at 100 moves for time
     while (board.isGameOver().second == GameResult::NONE) {
-        Move move;
+        SearchState searchResult;
 
         if (board.sideToMove() == Color::WHITE) {
-            move = whiteSearcher.search(1000, 0, 1).bestMove; //100ms, 0ms increment, 1 move to go
+            searchResult = whiteSearcher.search(1000, 0, 1); //100ms, 0ms increment, 1 move to go
         } else {
-            move = blackSearcher.search(1000, 0, 1).bestMove; // should reach depth 6 first, but just in case
+            searchResult = blackSearcher.search(1000, 0, 1); // should reach depth 6 first, but just in case
         }
-
-        board.makeMove(move); // Assume makeMove applies the move to the board
-        
+        if (searchResult.bestScore < -700){
+            if (board.sideToMove() == Color::WHITE){
+                result = -1;
+            }
+            else{
+                result = 1;
+            }
+            break;
+        }
+        board.makeMove(searchResult.bestMove); // Assume makeMove applies the move to the board
+        moveCount++;
+        if (moveCount > 200) {
+            result = 0;
+            break;
+        } 
     }
     // Check for game end conditions    
         if (board.isGameOver().second == GameResult::LOSE) {
@@ -139,8 +178,9 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         } else if (board.isGameOver().second == GameResult::DRAW){
             result = 0;
         }
-        
-
+        else if (board.isGameOver().second == GameResult::WIN){
+            result = board.sideToMove() == Color::WHITE ? 1: -1;
+        }
     return result;
 }
 
@@ -148,20 +188,11 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 double calculateFitnessSingleGame(const TunableEval& params, const TunableEval& opponent) {
     double totalPoints = 0.0;
     Board board = Board();
-    Searcher white = Searcher(board, baseSearch, params, 2 << 16); 
+    Searcher white = Searcher(board, baseSearch, params, 2 << 20); 
 
     
-        Searcher black = Searcher(board, baseSearch, opponent, 2 << 16);
-        int gameResult = simulateGame(white, black, board);
-        // Assuming win = 1 point, draw = 0.5 points, loss = 0
-        if (gameResult == 1) {
-            totalPoints += 1; // Player wins
-        } else if (gameResult == 0) {
-            totalPoints += 0.5; // Draw
-        }
-        // No points added for a loss
-    
-    return totalPoints;
+        Searcher black = Searcher(board, baseSearch, opponent, 2 << 20);
+        return simulateGame(white, black, board);
 }
 
 
@@ -189,8 +220,7 @@ double calculateFitness() {
                     std::lock_guard<std::mutex> guard(updateMutex);
                     playerScore += matchResult; // Update player's score
                     // Update opponent's score based on game result, consider draw and loss
-
-                    fitnessScores[j] += (1 - matchResult); // Adjust this logic as needed
+                    fitnessScores[j] += (matchResult * -1); 
                 }
             }
 
@@ -272,57 +302,31 @@ double calculateFitness() {
         return {offspring1, offspring2};
     }
 
-    // Tournament selection function
-chromosome tournamentSelection(const std::vector<chromosome>& parents, int tournamentSize) {
-    std::uniform_int_distribution<> dist(0, parents.size() - 1);
-    int bestIndex = dist(gen); // Randomly select one individual as the initial "best"
-    double bestFitness = parents[bestIndex].fitness;
 
-    // Perform the tournament
-    for (int i = 1; i < tournamentSize; ++i) {
-        int newIndex = dist(gen); // Select another individual
-        if (parents[newIndex].fitness < bestFitness) { // Assuming lower fitness is better
-            bestFitness = parents[newIndex].fitness;
-            bestIndex = newIndex;
-        }
-    }
-
-    return population[bestIndex]; // Return the best individual from the tournament
-}
-
-// alternative approach to selection based on the research paper
 chromosome rouletteWheelSelectionWithScaling(const std::vector<chromosome>& parents) {
-    // Find the maximum fitness in the population to scale fitness values
-    double maxFitness = std::numeric_limits<double>::lowest();
+    // Calculate the total fitness of the population
+    double totalFitness = 0.0;
     for (const auto& individual : parents) {
-        if (individual.fitness > maxFitness) {
-            maxFitness = individual.fitness;
-        }
-    }
-    double scalingFactor = maxFitness + 1; // Add 1 or a small value to ensure even the best individual has a positive scaled fitness
-
-    // Calculate the total scaled fitness of the population
-    double totalScaledFitness = 0.0;
-    for (const auto& individual : parents) {
-        totalScaledFitness += (scalingFactor - individual.fitness); // Invert the fitness
+        totalFitness += individual.fitness; // Directly use fitness
     }
 
-    // Generate a random number between 0 and the total scaled fitness
-    std::uniform_real_distribution<> dist(0.0, totalScaledFitness);
+    // Generate a random number between 0 and the total fitness
+    std::uniform_real_distribution<> dist(0.0, totalFitness);
     double randomFitness = dist(gen);
 
-    // Find and return the first individual for which the sum of scaled fitnesses up to that point exceeds the random number
+    // Find and return the first individual for which the sum of fitnesses up to that point exceeds the random number
     double currentSum = 0.0;
     for (const auto& individual : parents) {
-        currentSum += (scalingFactor - individual.fitness); // Use scaled fitness
+        currentSum += individual.fitness; // Use direct fitness
         if (currentSum >= randomFitness) {
             return individual;
         }
     }
 
     // This point should theoretically never be reached, but return the last individual as a fallback
-    return population.back();
+    return parents.back();
 }
+
 
 // random single point crossover
 void crossover() {
@@ -427,8 +431,7 @@ void selection() {
         newPopulation.push_back(population[selectedIndex + eliteCount]);
     }
 
-    // Before replacing the old population, update the archive with solutions from the current generation
-    updateArchive(population);
+    
 
     // Update the population with the new generation, including elites
     population = std::move(newPopulation);

@@ -233,6 +233,41 @@ TunableEval result2 = {
 };
 
 
+TunableEval result3 = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 100), // Pawn
+    GamePhaseValue(334, 300), // Knight
+    GamePhaseValue(187, 320), // Bishop
+    GamePhaseValue(480, 520), // Rook
+    GamePhaseValue(624, 910), // Queen
+    GamePhaseValue(39, 31), // Passed Pawn
+    GamePhaseValue(10, 23), // Doubled Pawn
+    GamePhaseValue(9, 23), // Isolated Pawn
+    GamePhaseValue(39, 40), // Weak Pawn
+    GamePhaseValue(10, 21), // Central Pawn
+    GamePhaseValue(9, 29), // Weak Square
+    GamePhaseValue(0, 50), // Passed Pawn Enemy King Square
+    GamePhaseValue(39, 35), // Knight Outposts
+    GamePhaseValue(1, 13), // Knight Mobility
+    GamePhaseValue(12, 14), // Bishop Mobility
+    GamePhaseValue(15, 20), // Bishop Pair
+    GamePhaseValue(15, 4), // Rook Attack King File
+    GamePhaseValue(10, 5), // Rook Attack King Adjacent File
+    GamePhaseValue(25, 35), // Rook 7th Rank
+    GamePhaseValue(21, 10), // Rook Connected
+    GamePhaseValue(10, 1), // Rook Mobility
+    GamePhaseValue(10, 35), // Rook Behind Passed Pawn
+    GamePhaseValue(7, 26), // Rook Open File
+    GamePhaseValue(20, 8), // Rook Semi Open File
+    GamePhaseValue(60, 30), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(0, 14), // King Friendly Pawn
+    GamePhaseValue(4, 15), // King No Enemy Pawn Near
+    GamePhaseValue(0, 5), // Queen Mobility
+    500, // maxKingSafetyScore
+    3, // steepnessKingSafetyScore (will be divided by 100)
+    38, // middlePointKingSafetyScore
+};
+
 
 
 // this version of iterative deepening is heavily influened 
