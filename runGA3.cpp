@@ -15,7 +15,7 @@ int main() {
 
     // assert to see if they are the same
     assert(randomEvals.pawn.endGame == randomEvalsClone.pawn.endGame); 
-    assert(randomEvals.maxKingSafetyScore == randomEvalsClone.maxKingSafetyScore);
+    assert(randomEvals.kingPressureScore.endGame == randomEvalsClone.kingPressureScore.endGame);
 
     // values from 2008 paper
     // population size = 1000

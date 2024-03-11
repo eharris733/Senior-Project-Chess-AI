@@ -82,8 +82,8 @@ public:
             
         }
 
-        std::cout << "Best Chromosome: "  << std::endl;
-        printTunableEval(convertChromosoneToEval(best.chromosome));
+        std::cout << "Best Chromosome from archive: "  << std::endl;
+        printTunableEval(convertChromosoneToEval(archive.front().chromosome));
 
     }
 
@@ -143,8 +143,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     }
     
     
-    whiteSearcher.setMaxDepth(4); // Set the search depth for white
-    blackSearcher.setMaxDepth(4); // Set the search depth for black
+    whiteSearcher.setMaxDepth(6); // Set the search depth for white
+    blackSearcher.setMaxDepth(6); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
