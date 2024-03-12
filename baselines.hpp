@@ -606,10 +606,10 @@ TunableEval dad5 = {
     GamePhaseValue(10, 10), // Rook Open File
     GamePhaseValue(10, 10), // Rook Semi Open File
     GamePhaseValue(10, 10), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(3, 3), // Queen Mobility
     GamePhaseValue(3, 3), // King Friendly Pawn
     GamePhaseValue(3, 3), // King No Enemy Pawn Near
-    GamePhaseValue(3, 3), // Queen Mobility
-    (3, 2)
+    GamePhaseValue(3, 2)
 };
 
 // non-materialistic, super aggresive
@@ -643,7 +643,7 @@ TunableEval dad6 = {
     GamePhaseValue(6, 6), // Queen Mobility
     GamePhaseValue(3, 3), // King Friendly Pawn
     GamePhaseValue(20, 20), // King No Enemy Pawn Near
-    (15, 11)
+    GamePhaseValue(15, 11)
 };
 
 // super conserative, prefers static advantages

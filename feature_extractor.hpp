@@ -307,42 +307,52 @@ Bitboard bBackward(Bitboard bpawns, Bitboard wpawns) {
 
 
 Bitboard detectWeakSquares(Color color, Bitboard pawns) {
-    Bitboard potentialCoverage = pawns; // a pawn on the square is not a weak square
-    Bitboard targetArea;
+    Bitboard potentialCoverage = 0; // Initially, no squares are covered.
 
     while (pawns) {
         Bitboard pawnPos = pawns & -pawns; // Isolate the least significant bit representing a pawn
         pawns &= pawns - 1; // Remove this pawn from consideration
 
+        // Project pawn attacks upwards or downwards through the entire board
+        // For White, project attacks to the left and right diagonally upwards
+        // For Black, project attacks to the left and right diagonally downwards
         if (color == Color::WHITE) {
-            while (pawnPos) {
-                pawnPos <<= 8; // Move to the next rank
-                if (pawnPos == 0) break; // If we have moved off the board, stop
-                potentialCoverage |= (pawnPos & ~fileBitboard(0)) << 1; // Add coverage to the right
-                potentialCoverage |= (pawnPos & ~fileBitboard(7)) >> 1; // Add coverage to the left
+            Bitboard attacksLeft = (pawnPos & ~fileBitboard(0)) << 9; // Project left attacks upwards
+            Bitboard attacksRight = (pawnPos & ~fileBitboard(7)) << 7; // Project right attacks upwards
+            // Fill upwards
+            while (attacksLeft) {
+                potentialCoverage |= attacksLeft;
+                attacksLeft <<= 8; // Move straight up
+            }
+            while (attacksRight) {
+                potentialCoverage |= attacksRight;
+                attacksRight <<= 8; // Move straight up
             }
         } else {
-            while (pawnPos) {
-                pawnPos >>= 8; // Move to the next rank down
-                if (pawnPos == 0) break; // If we have moved off the board, stop
-                potentialCoverage |= (pawnPos & ~fileBitboard(0)) >> 1; // Add coverage to the left
-                potentialCoverage |= (pawnPos & ~fileBitboard(7)) << 1; // Add coverage to the right
+            Bitboard attacksLeft = (pawnPos & ~fileBitboard(0)) >> 7; // Project left attacks downwards
+            Bitboard attacksRight = (pawnPos & ~fileBitboard(7)) >> 9; // Project right attacks downwards
+            // Fill downwards
+            while (attacksLeft) {
+                potentialCoverage |= attacksLeft;
+                attacksLeft >>= 8; // Move straight down
+            }
+            while (attacksRight) {
+                potentialCoverage |= attacksRight;
+                attacksRight >>= 8; // Move straight down
             }
         }
     }
 
-    // Define the target area based on color
-    if (color == Color::WHITE) {
-        targetArea = rankBitboard(2) | rankBitboard(3) | rankBitboard(4); // Target ranks 3 and 4 for white
-    } else {
-        targetArea = rankBitboard(3) | rankBitboard(4) | rankBitboard(5); // Target ranks 5 and 6 for black
-    }
+    // Define the target area for weak square analysis
+    // Assuming we're interested in the middle of the board for both sides
+    Bitboard targetArea = rankBitboard(2) | rankBitboard(3) | rankBitboard(4) | rankBitboard(5);
 
     // Weak squares are those in the target area not covered by potential pawn moves
     Bitboard weakSquares = targetArea & ~potentialCoverage;
 
     return weakSquares;
 }
+
 
 
 
@@ -666,28 +676,28 @@ int kingNoEnemyPawnNear(Bitboard enemyPawns, Bitboard king) {
 
 // stuff for king pressure
 // Constants for edge masks to prevent wrapping around the board
-const uint64_t NOT_A_FILE = 0xfefefefefefefefe; // ~0x0101010101010101
-const uint64_t NOT_H_FILE = 0x7f7f7f7f7f7f7f7f; // ~0x8080808080808080
+const Bitboard NOT_A_FILE = 0xfefefefefefefefe; // ~0x0101010101010101
+const Bitboard NOT_H_FILE = 0x7f7f7f7f7f7f7f7f; // ~0x8080808080808080
 
 
-uint64_t shiftNE(uint64_t bitboard) {
+Bitboard shiftNE(Bitboard bitboard) {
     return (bitboard << 9) & NOT_A_FILE;
 }
 
-uint64_t shiftNW(uint64_t bitboard) {
+Bitboard shiftNW(Bitboard bitboard) {
     return (bitboard << 7) & NOT_H_FILE;
 }
 
-uint64_t shiftSE(uint64_t bitboard) {
+Bitboard shiftSE(Bitboard bitboard) {
     return (bitboard >> 7) & NOT_A_FILE;
 }
 
-uint64_t shiftSW(uint64_t bitboard) {
+Bitboard shiftSW(Bitboard bitboard) {
     return (bitboard >> 9) & NOT_H_FILE;
 }
 
-uint64_t expandToAdjacentSquares(uint64_t bitboard) {
-    uint64_t expanded = bitboard;
+Bitboard expandToAdjacentSquares(Bitboard bitboard) {
+    Bitboard expanded = bitboard;
     expanded |= shiftNorth(bitboard) | shiftSouth(bitboard);
     expanded |= shiftEast(bitboard) | shiftWest(bitboard);
     expanded |= shiftNE(bitboard) | shiftNW(bitboard);
@@ -696,44 +706,19 @@ uint64_t expandToAdjacentSquares(uint64_t bitboard) {
 }
 
 
-
 Bitboard calculateKingsZone(Bitboard kingPosition, Color color) {
-    Bitboard kingZone = kingPosition;
-    // Assuming you have a function to expand a bitboard to include adjacent squares, plus one row ahead based on color
-    kingZone |= expandToAdjacentSquares(kingPosition); // Expand king's position to a 3x3 zone
+    Bitboard kingZone = 0;
 
-    // Assuming shiftNorth and shiftSouth functions to add a row in front of the king based on color
-    if (color == Color::WHITE) {
-        kingZone |= shiftNorth(kingZone);
-    } else {
-        kingZone |= shiftSouth(kingZone);
-    }
+    // Expand to include all adjacent squares in the king's zone.
+    kingZone |= expandToAdjacentSquares(kingPosition);
+    kingZone |= shiftNorth(kingZone) | shiftSouth(kingZone);
 
     return kingZone;
 }
 
-int calculatePressureScore(Bitboard kingsZone, Bitboard pieceAttacks) {
-    // Calculate the intersection of the king's zone and the piece attacks
-    Bitboard attackingSquares = kingsZone & pieceAttacks;
-    // Count and return the number of set bits (squares) in the intersection
-    return chess::builtin::popcount(attackingSquares); // Assuming popcount function is available to count set bits
-}
 
-// int kingPressureScore(Bitboard king, Bitboard enemyKnightsAttacks, Bitboard enemyBishopsAttacks, Bitboard enemyRooksAttacks, Bitboard enemyQueensAttacks, Color color, std::vector<int>& safetyTable) {
 
-//     Bitboard kingsZone = calculateKingsZone(king, color);
 
-//     // Initial pressure is the sum of all attacks into the king's zone
-//     int pressure = 0;
-//     pressure += calculatePressureScore(kingsZone, enemyKnightsAttacks) * 3;
-//     pressure += calculatePressureScore(kingsZone, enemyBishopsAttacks) * 3;
-//     pressure += calculatePressureScore(kingsZone, enemyRooksAttacks) * 4;
-//     pressure += calculatePressureScore(kingsZone, enemyQueensAttacks) * 6;
-
-//     // Map the total pressure to the safety table, ensuring we don't exceed its bounds
-//     int index = std::min(pressure, static_cast<int>(safetyTable.size()) - 1);
-//     return safetyTable[index];
-// }
 
 int kingPressureScore(Bitboard king, Bitboard enemyKnights, Bitboard enemyBishops, Bitboard enemyRooks, Bitboard enemyQueens, Color color, const Board& board) {
     int score = 0;

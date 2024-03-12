@@ -418,10 +418,17 @@ std::string mirrorFen(const std::string& fen) {
 int main() {
     std::string fen = "2b1r3/1p2qpkp/2p3p1/4r3/R4Q2/2P2RP1/P1B2P1P/6K1 b - - 0 1";
     std::string fenMirror = mirrorFen(fen);
+    std::cout << "original fen: " << fen << std::endl;
     std::cout << "mirrored fen: " << fenMirror << std::endl;
     Board board = Board(fen);
 
+    Evaluator evalauator = Evaluator(board, baseEval);
+    std::cout << "" << evalauator.evaluate(0, false) << std::endl;
+    board.setFen(fenMirror);
+    std::cout << "" << evalauator.evaluate(0, false) << std::endl;
 
+
+    board.setFen(fen);
     // Retrieve the features string. Make sure this string is sanitized or does not contain double quotes.
     std::string features = testEvaluation(board, false, baseEval); // Ensure this does not generate syntax-breaking characters
 
