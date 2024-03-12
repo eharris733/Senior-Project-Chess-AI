@@ -351,23 +351,74 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
         score += (kingNoEnemyPawnNear(bPawns, wKings) - kingNoEnemyPawnNear(wPawns, bKings)) * (featureWeights.kingNoEnemyPawnNear.middleGame * mgWeight + featureWeights.kingNoEnemyPawnNear.endGame * egWeight);
         features += "Score after evaluation king no enemy pawn near: " + std::to_string(score) + "\n";
         
-        Evaluator evaluator = Evaluator(board, featureWeights);
-        std::vector<int> kingSafetyTable = evaluator.getKingSafetyTable();
         // revised king pressure scores  (yet to be tested)
-        features += "white king pressure: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks,  Color::WHITE, kingSafetyTable)) + "\n";
-        features += "black king pressure: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable)) + "\n";
         // revised king pressure scores  (yet to be tested)
-        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::WHITE, kingSafetyTable);
-        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks,  Color::BLACK, kingSafetyTable);
-        features += "Final Score: " + std::to_string(score) + "\n";
-        std::cout << pieces << std::endl;
+        features += "white king pressure score: " + std::to_string(kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::BLACK, board)) + "\n";
+        features += "black king pressure score: " + std::to_string(kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, Color::WHITE, board)) + "\n";
+        score -= kingPressureScore(wKings, bKnightAttacks, bBishopAttacks, bRookAttacks, bQueenAttacks, Color::BLACK, board) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
+
+
+        score += kingPressureScore(bKings, wKnightAttacks, wBishopAttacks, wRookAttacks, wQueenAttacks, Color::WHITE, board) * (featureWeights.kingPressureScore.middleGame * mgWeight + featureWeights.kingPressureScore.endGame * egWeight);
+        features += "Score after evaluation king pressure score: " + std::to_string(score) + "\n";
         return features;
 }
+
+
+// Helper function to split the FEN string
+std::vector<std::string> splitFen(const std::string& fen) {
+    std::vector<std::string> parts;
+    std::string part;
+    std::istringstream fenStream(fen);
+    while (fenStream >> part) {
+        parts.push_back(part);
+    }
+    return parts;
+}
+
+
+// for mirroring
+std::string mirrorFen(const std::string& fen) {
+    std::string mirroredFen;
+    auto fenParts = splitFen(fen); // Assume splitFen is a function that splits a FEN string into its components.
+
+    // 1. Flip the board and swap colors
+    std::string board = fenParts[0];
+    std::reverse(board.begin(), board.end());
+    for (char& c : board) {
+        if (std::islower(c)) c = std::toupper(c);
+        else if (std::isupper(c)) c = std::tolower(c);
+    }
+
+    // 2. Swap the side to move
+    std::string sideToMove = fenParts[1] == "w" ? "b" : "w";
+
+    // 3. Adjust castling rights
+    std::string castlingRights;
+    for (char c : fenParts[2]) {
+        if (std::islower(c)) castlingRights += std::toupper(c);
+        else if (std::isupper(c)) castlingRights += std::tolower(c);
+    }
+
+    // 4. Adjust the en passant target square
+    std::string enPassant = fenParts[3];
+    if (enPassant != "-") {
+        if (enPassant[1] == '3') enPassant[1] = '6';
+        else if (enPassant[1] == '6') enPassant[1] = '3';
+    }
+
+    // 5. Reassemble the FEN string
+    mirroredFen = board + " " + sideToMove + " " + castlingRights + " " + enPassant + " " + fenParts[4] + " " + fenParts[5];
+
+    return mirroredFen;
+}
+
 
 
 
 int main() {
     std::string fen = "2b1r3/1p2qpkp/2p3p1/4r3/R4Q2/2P2RP1/P1B2P1P/6K1 b - - 0 1";
+    std::string fenMirror = mirrorFen(fen);
+    std::cout << "mirrored fen: " << fenMirror << std::endl;
     Board board = Board(fen);
 
 
