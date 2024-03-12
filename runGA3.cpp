@@ -32,7 +32,7 @@ int main() {
     double decayRate = 0.02;
     double crossoverRate = 0.75;
     int totalGenerations = 200;
-    size_t populationSize = 40; // because we have twenty threads, we will almost always have a pop size of at least 20
+    size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20
     int eliteSize = 4;
     int archiveSize = 40;
     int replacementCount = 2;

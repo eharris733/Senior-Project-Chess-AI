@@ -22,7 +22,7 @@ atomic<bool> stop(false); // so the searcher works
 class GA3 {
 public:
     GA3(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int eliteCount, int archiveSize, int reintroduceCount)
-        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("Perfect2023.bin") {
+        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("BalsaBook.bin") {
         initializePopulation();
         
     }
@@ -167,7 +167,6 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 
 
             if (board.at<Piece>(searchResult.bestMove.from()) == Piece::NONE){
-                std::cerr << "Error: " << "Move from square with no piece" << std::endl;
                 std::cerr << "Move: " << searchResult.bestMove << std::endl;
                 std::cerr << "Fen: " << board.getFen() << std::endl; 
                 result = 0; // inconclusive result, might skew things
