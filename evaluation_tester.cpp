@@ -148,7 +148,9 @@ std::string testEvaluation(Board& board, bool lazy = false, TunableEval featureW
         Bitboard allWPiecesXQR = allWPieces & ~(wQueens | wRooks);
         Bitboard allBPiecesXQR = allBPieces & ~(bQueens | bRooks);
         
-        // various x-rays and stops for pieces that can't jump
+        // various x-rays and stops for piece mobility
+        wKnightAttacks &= ~allWPieces;
+        bKnightAttacks &= ~allBPieces;
         wBishopAttacks &= ~allWPieces & ~allBPiecesXQR;
         bBishopAttacks &= ~allBPieces & ~allWPiecesXQR;
         wRookAttacks &= ~allWPieces & ~allBPiecesXQueens;
@@ -416,7 +418,7 @@ std::string mirrorFen(const std::string& fen) {
 
 
 int main() {
-    std::string fen = "2b1r3/1p2qpkp/2p3p1/4r3/R4Q2/2P2RP1/P1B2P1P/6K1 b - - 0 1";
+    std::string fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
     std::string fenMirror = mirrorFen(fen);
     std::cout << "original fen: " << fen << std::endl;
     std::cout << "mirrored fen: " << fenMirror << std::endl;
