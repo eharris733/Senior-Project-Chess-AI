@@ -4258,3 +4258,461 @@ TunableEval baseEval = {
 };
 
 Time taken: 38106 seconds
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.060000
+Mutation Decay Rate: 0.022000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 2
+Archive Size: 200
+Replacement Count: 2
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 100
+Elite Size: 2
+Archive Size: 200
+Replacement Count: 2
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 100
+Elite Size: 2
+Archive Size: 200
+Replacement Count: 2
+Generation: 1
+Mutation Rate: 0.048765
+Best Fitness: 7.000000, Average Fitness: 0.250000, Worst Fitness: -13.000000
+Generation: 2
+Mutation Rate: 0.047561
+Best Fitness: 12.000000, Average Fitness: 1.100000, Worst Fitness: -15.000000
+Generation: 3
+Mutation Rate: 0.046387
+Best Fitness: 8.000000, Average Fitness: -0.100000, Worst Fitness: -17.000000
+Generation: 4
+Mutation Rate: 0.045242
+Best Fitness: 14.000000, Average Fitness: 2.300000, Worst Fitness: -16.000000
+Generation: 5
+Mutation Rate: 0.044125
+Best Fitness: 9.000000, Average Fitness: 0.850000, Worst Fitness: -12.000000
+Error:  Move from square with no piece
+Generation: 6
+Mutation Rate: 0.043035
+Best Fitness: 9.000000, Average Fitness: -0.050000, Worst Fitness: -22.000000
+Error:  Move from square with no piece
+Generation: 7
+Mutation Rate: 0.041973
+Best Fitness: 13.000000, Average Fitness: 0.650000, Worst Fitness: -14.000000
+Generation: 8
+Mutation Rate: 0.040937
+Best Fitness: 9.000000, Average Fitness: 1.200000, Worst Fitness: -6.000000
+Generation: 9
+Mutation Rate: 0.039926
+Best Fitness: 17.000000, Average Fitness: 0.500000, Worst Fitness: -15.000000
+Generation: 10
+Mutation Rate: 0.038940
+Best Fitness: 11.000000, Average Fitness: 1.250000, Worst Fitness: -15.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 172), // Pawn
+    GamePhaseValue(380, 442), // Knight
+    GamePhaseValue(444, 268), // Bishop
+    GamePhaseValue(475, 452), // Rook
+    GamePhaseValue(955, 302), // Queen
+    GamePhaseValue(5, 26), // Passed Pawn
+    GamePhaseValue(21, 21), // Doubled Pawn
+    GamePhaseValue(6, 11), // Isolated Pawn
+    GamePhaseValue(16, 4), // Weak Pawn
+    GamePhaseValue(2, 63), // Central Pawn
+    GamePhaseValue(4, 4), // Weak Square
+    GamePhaseValue(62, 58), // Passed Pawn Enemy King Square
+    GamePhaseValue(3, 23), // Knight Outposts
+    GamePhaseValue(14, 15), // Knight Mobility
+    GamePhaseValue(9, 5), // Bishop Mobility
+    GamePhaseValue(33, 3), // Bishop Pair
+    GamePhaseValue(30, 30), // Rook Attack King File
+    GamePhaseValue(22, 27), // Rook Attack King Adjacent File
+    GamePhaseValue(33, 48), // Rook 7th Rank
+    GamePhaseValue(12, 18), // Rook Connected
+    GamePhaseValue(13, 28), // Rook Mobility
+    GamePhaseValue(40, 55), // Rook Behind Passed Pawn
+    GamePhaseValue(12, 12), // Rook Open File
+    GamePhaseValue(0, 5), // Rook Semi Open File
+    GamePhaseValue(11, 7), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(36, 0), // King Friendly Pawn
+    GamePhaseValue(20, 12), // King No Enemy Pawn Near
+    GamePhaseValue(3, 3), // Queen Mobility
+    GamePhaseValue(7, 11), // King Pressure Score
+};
+
+Error:  Move from square with no piece
+Generation: 11
+Mutation Rate: 0.037979
+Best Fitness: 11.000000, Average Fitness: 0.900000, Worst Fitness: -15.000000
+Generation: 12
+Mutation Rate: 0.037041
+Best Fitness: 10.000000, Average Fitness: 0.550000, Worst Fitness: -14.000000
+Error:  Move from square with no piece
+Generation: 13
+Mutation Rate: 0.036126
+Best Fitness: 9.000000, Average Fitness: 0.650000, Worst Fitness: -14.000000
+Generation: 14
+Mutation Rate: 0.035234
+Best Fitness: 8.000000, Average Fitness: 0.700000, Worst Fitness: -12.000000
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 100
+Elite Size: 2
+Archive Size: 200
+Replacement Count: 2
+Error:  Move from square with no piece
+Generation: 1
+Mutation Rate: 0.048765
+Best Fitness: 10.000000, Average Fitness: 0.900000, Worst Fitness: -17.000000
+Error:  Move from square with no piece
+Generation: 2
+Mutation Rate: 0.047561
+Best Fitness: 8.000000, Average Fitness: -0.150000, Worst Fitness: -17.000000
+Generation: 3
+Mutation Rate: 0.046387
+Best Fitness: 8.000000, Average Fitness: 0.900000, Worst Fitness: -13.000000
+Generation: 4
+Mutation Rate: 0.045242
+Best Fitness: 11.000000, Average Fitness: 1.800000, Worst Fitness: -12.000000
+Generation: 5
+Mutation Rate: 0.044125
+Best Fitness: 14.000000, Average Fitness: 0.350000, Worst Fitness: -15.000000
+Error:  Move from square with no piece
+Generation: 6
+Mutation Rate: 0.043035
+Best Fitness: 11.000000, Average Fitness: -0.750000, Worst Fitness: -34.000000
+Generation: 7
+Mutation Rate: 0.041973
+Best Fitness: 12.000000, Average Fitness: 0.100000, Worst Fitness: -13.000000
+Generation: 8
+Mutation Rate: 0.040937
+Best Fitness: 15.000000, Average Fitness: 0.700000, Worst Fitness: -16.000000
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 100
+Elite Size: 2
+Archive Size: 200
+Replacement Count: 2
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 100
+Elite Size: 2
+Archive Size: 200
+Replacement Count: 2
+Generation: 1
+Mutation Rate: 0.048765
+Best Fitness: 10.000000, Average Fitness: 0.850000, Worst Fitness: -15.000000
+Generation: 2
+Mutation Rate: 0.047561
+Best Fitness: 12.000000, Average Fitness: 0.300000, Worst Fitness: -24.000000
+Generation: 3
+Mutation Rate: 0.046387
+Best Fitness: 9.000000, Average Fitness: 0.900000, Worst Fitness: -14.000000
+Generation: 4
+Mutation Rate: 0.045242
+Best Fitness: 11.000000, Average Fitness: 1.050000, Worst Fitness: -12.000000
+Generation: 5
+Mutation Rate: 0.044125
+Best Fitness: 13.000000, Average Fitness: 0.900000, Worst Fitness: -11.000000
+Generation: 6
+Mutation Rate: 0.043035
+Best Fitness: 14.000000, Average Fitness: 0.750000, Worst Fitness: -17.000000
+Generation: 7
+Mutation Rate: 0.041973
+Best Fitness: 13.000000, Average Fitness: 0.000000, Worst Fitness: -28.000000
+Generation: 8
+Mutation Rate: 0.040937
+Best Fitness: 9.000000, Average Fitness: 0.500000, Worst Fitness: -14.000000
+Generation: 9
+Mutation Rate: 0.039926
+Best Fitness: 10.000000, Average Fitness: 0.500000, Worst Fitness: -13.000000
+Generation: 10
+Mutation Rate: 0.038940
+Best Fitness: 15.000000, Average Fitness: 0.600000, Worst Fitness: -9.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 108), // Pawn
+    GamePhaseValue(325, 445), // Knight
+    GamePhaseValue(339, 291), // Bishop
+    GamePhaseValue(477, 490), // Rook
+    GamePhaseValue(933, 925), // Queen
+    GamePhaseValue(5, 13), // Passed Pawn
+    GamePhaseValue(42, 42), // Doubled Pawn
+    GamePhaseValue(13, 52), // Isolated Pawn
+    GamePhaseValue(19, 6), // Weak Pawn
+    GamePhaseValue(15, 0), // Central Pawn
+    GamePhaseValue(7, 7), // Weak Square
+    GamePhaseValue(2, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(48, 11), // Knight Outposts
+    GamePhaseValue(15, 1), // Knight Mobility
+    GamePhaseValue(5, 5), // Bishop Mobility
+    GamePhaseValue(3, 44), // Bishop Pair
+    GamePhaseValue(25, 30), // Rook Attack King File
+    GamePhaseValue(63, 2), // Rook Attack King Adjacent File
+    GamePhaseValue(28, 32), // Rook 7th Rank
+    GamePhaseValue(5, 2), // Rook Connected
+    GamePhaseValue(18, 2), // Rook Mobility
+    GamePhaseValue(46, 46), // Rook Behind Passed Pawn
+    GamePhaseValue(11, 15), // Rook Open File
+    GamePhaseValue(33, 25), // Rook Semi Open File
+    GamePhaseValue(7, 7), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(11, 3), // King Friendly Pawn
+    GamePhaseValue(11, 10), // King No Enemy Pawn Near
+    GamePhaseValue(3, 6), // Queen Mobility
+    GamePhaseValue(4, 1), // King Pressure Score
+};
+
+Generation: 11
+Mutation Rate: 0.037979
+Best Fitness: 11.000000, Average Fitness: 0.300000, Worst Fitness: -16.000000
+Generation: 12
+Mutation Rate: 0.037041
+Best Fitness: 11.000000, Average Fitness: 1.250000, Worst Fitness: -15.000000
+Generation: 13
+Mutation Rate: 0.036126
+Best Fitness: 10.000000, Average Fitness: 0.900000, Worst Fitness: -12.000000
+Generation: 14
+Mutation Rate: 0.035234
+Best Fitness: 10.000000, Average Fitness: 0.150000, Worst Fitness: -18.000000
+Generation: 15
+Mutation Rate: 0.034364
+Best Fitness: 12.000000, Average Fitness: 0.050000, Worst Fitness: -13.000000
+Generation: 16
+Mutation Rate: 0.033516
+Best Fitness: 12.000000, Average Fitness: 1.200000, Worst Fitness: -19.000000
+Error:  Null Move returned from search, game aborted
+Generation: 17
+Mutation Rate: 0.032688
+Best Fitness: 14.000000, Average Fitness: 0.200000, Worst Fitness: -30.000000
+Generation: 18
+Mutation Rate: 0.031881
+Best Fitness: 11.000000, Average Fitness: 1.600000, Worst Fitness: -18.000000
+Generation: 19
+Mutation Rate: 0.031094
+Best Fitness: 9.000000, Average Fitness: 0.050000, Worst Fitness: -25.000000
+Generation: 20
+Mutation Rate: 0.030327
+Best Fitness: 9.000000, Average Fitness: 0.800000, Worst Fitness: -19.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 144), // Pawn
+    GamePhaseValue(356, 389), // Knight
+    GamePhaseValue(371, 307), // Bishop
+    GamePhaseValue(605, 491), // Rook
+    GamePhaseValue(859, 925), // Queen
+    GamePhaseValue(21, 13), // Passed Pawn
+    GamePhaseValue(42, 42), // Doubled Pawn
+    GamePhaseValue(13, 59), // Isolated Pawn
+    GamePhaseValue(0, 6), // Weak Pawn
+    GamePhaseValue(15, 0), // Central Pawn
+    GamePhaseValue(7, 7), // Weak Square
+    GamePhaseValue(2, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(48, 12), // Knight Outposts
+    GamePhaseValue(15, 1), // Knight Mobility
+    GamePhaseValue(5, 0), // Bishop Mobility
+    GamePhaseValue(28, 43), // Bishop Pair
+    GamePhaseValue(22, 1), // Rook Attack King File
+    GamePhaseValue(0, 13), // Rook Attack King Adjacent File
+    GamePhaseValue(28, 32), // Rook 7th Rank
+    GamePhaseValue(6, 2), // Rook Connected
+    GamePhaseValue(18, 5), // Rook Mobility
+    GamePhaseValue(16, 45), // Rook Behind Passed Pawn
+    GamePhaseValue(11, 15), // Rook Open File
+    GamePhaseValue(33, 25), // Rook Semi Open File
+    GamePhaseValue(7, 7), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(11, 3), // King Friendly Pawn
+    GamePhaseValue(11, 13), // King No Enemy Pawn Near
+    GamePhaseValue(3, 6), // Queen Mobility
+    GamePhaseValue(4, 2), // King Pressure Score
+};
+
+Error:  Null Move returned from search, game aborted
+Generation: 21
+Mutation Rate: 0.029578
+Best Fitness: 7.000000, Average Fitness: 0.050000, Worst Fitness: -28.000000
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 4
+Archive Size: 400
+Replacement Count: 4
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 4
+Archive Size: 400
+Replacement Count: 4
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 4
+Archive Size: 400
+Replacement Count: 4
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 4
+Archive Size: 400
+Replacement Count: 4
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 1
+Mutation Rate: 0.048765
+Best Fitness: 22.000000, Average Fitness: 1.675000, Worst Fitness: -27.000000
+Error:  Null Move returned from search, game aborted
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 4
+Archive Size: 400
+Replacement Count: 4
+Running Genetic Algorithm
+Population Size: 40
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.025000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 4
+Archive Size: 400
+Replacement Count: 4
+Error:  Null Move returned from search, game aborted
+Generation: 1
+Mutation Rate: 0.048765
+Best Fitness: 20.000000, Average Fitness: 0.450000, Worst Fitness: -61.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 2
+Mutation Rate: 0.047561
+Best Fitness: 29.000000, Average Fitness: 1.625000, Worst Fitness: -29.000000
+Generation: 3
+Mutation Rate: 0.046387
+Best Fitness: 14.000000, Average Fitness: 0.425000, Worst Fitness: -32.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 4
+Mutation Rate: 0.045242
+Best Fitness: 22.000000, Average Fitness: 0.300000, Worst Fitness: -60.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 5
+Mutation Rate: 0.044125
+Best Fitness: 18.000000, Average Fitness: 1.800000, Worst Fitness: -26.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 6
+Mutation Rate: 0.043035
+Best Fitness: 22.000000, Average Fitness: 1.825000, Worst Fitness: -26.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 7
+Mutation Rate: 0.041973
+Best Fitness: 20.000000, Average Fitness: 1.100000, Worst Fitness: -24.000000
+Error:  Null Move returned from search, game aborted
+Generation: 8
+Mutation Rate: 0.040937
+Best Fitness: 30.000000, Average Fitness: 2.025000, Worst Fitness: -25.000000
+Generation: 9
+Mutation Rate: 0.039926
+Best Fitness: 24.000000, Average Fitness: 1.475000, Worst Fitness: -31.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 10
+Mutation Rate: 0.038940
+Best Fitness: 26.000000, Average Fitness: 1.500000, Worst Fitness: -27.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 95), // Pawn
+    GamePhaseValue(414, 191), // Knight
+    GamePhaseValue(323, 335), // Bishop
+    GamePhaseValue(464, 541), // Rook
+    GamePhaseValue(860, 953), // Queen
+    GamePhaseValue(6, 5), // Passed Pawn
+    GamePhaseValue(21, 21), // Doubled Pawn
+    GamePhaseValue(11, 19), // Isolated Pawn
+    GamePhaseValue(15, 4), // Weak Pawn
+    GamePhaseValue(16, 16), // Central Pawn
+    GamePhaseValue(9, 6), // Weak Square
+    GamePhaseValue(21, 4), // Passed Pawn Enemy King Square
+    GamePhaseValue(15, 15), // Knight Outposts
+    GamePhaseValue(0, 0), // Knight Mobility
+    GamePhaseValue(21, 5), // Bishop Mobility
+    GamePhaseValue(60, 30), // Bishop Pair
+    GamePhaseValue(2, 25), // Rook Attack King File
+    GamePhaseValue(31, 1), // Rook Attack King Adjacent File
+    GamePhaseValue(47, 32), // Rook 7th Rank
+    GamePhaseValue(18, 2), // Rook Connected
+    GamePhaseValue(14, 11), // Rook Mobility
+    GamePhaseValue(51, 8), // Rook Behind Passed Pawn
+    GamePhaseValue(12, 3), // Rook Open File
+    GamePhaseValue(9, 30), // Rook Semi Open File
+    GamePhaseValue(30, 5), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(27, 0), // King Friendly Pawn
+    GamePhaseValue(7, 11), // King No Enemy Pawn Near
+    GamePhaseValue(5, 0), // Queen Mobility
+    GamePhaseValue(9, 0), // King Pressure Score
+};
+
+Error:  Null Move returned from search, game aborted
+Generation: 11
+Mutation Rate: 0.037979
+Best Fitness: 17.000000, Average Fitness: 1.175000, Worst Fitness: -39.000000
+Generation: 12
+Mutation Rate: 0.037041
+Best Fitness: 20.000000, Average Fitness: 2.175000, Worst Fitness: -22.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted
+Generation: 13
+Mutation Rate: 0.036126
+Best Fitness: 20.000000, Average Fitness: 1.650000, Worst Fitness: -46.000000
+Error:  Null Move returned from search, game aborted
+Error:  Null Move returned from search, game aborted

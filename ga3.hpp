@@ -129,11 +129,10 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     // play 8 moves into the book, randomly selecting moves
     Move openingMove = book.pickRandomMove(board);
     while (openingMove != Move::NULL_MOVE && moveCount < 8) {
-        if (board.at<Piece>(openingMove.from()) == Piece::NONE){
-            std::cerr << "Error: " << "Move from square with no piece in opening book" << std::endl;
+        if (openingMove == Move::NULL_MOVE) {
+            std::cerr << "Error: " << "Null Move in opening" << std::endl;
             std::cerr << "Move: " << openingMove << std::endl;
-            std::cerr << "Fen: " << board.getFen() << std::endl;
-            Logger::getInstance().log("Error:  Move from square with no piece in opening book"); 
+            std::cerr << "Fen: " << board.getFen() << std::endl; 
             break;
         }
         board.makeMove(openingMove);
@@ -142,8 +141,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     }
     
     
-    whiteSearcher.setMaxDepth(6); // Set the search depth for white
-    blackSearcher.setMaxDepth(6); // Set the search depth for black
+    whiteSearcher.setMaxDepth(7); // Set the search depth for white
+    blackSearcher.setMaxDepth(7); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
@@ -151,11 +150,11 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         SearchState searchResult;
 
         if (board.sideToMove() == Color::WHITE) {
-            searchResult = whiteSearcher.search(1000, 0, 1); //100ms, 0ms increment, 1 move to go
+            searchResult = whiteSearcher.search(2000, 0, 1); //100ms, 0ms increment, 1 move to go
         } else {
-            searchResult = blackSearcher.search(1000, 0, 1); // should reach depth 6 first, but just in case
+            searchResult = blackSearcher.search(2000, 0, 1); // should reach max depth first, but just in case, call cutoff after two seconds in extreme circumstances
         }
-        if (searchResult.bestScore < -700){
+        if (searchResult.bestScore < -500){
             if (board.sideToMove() == Color::WHITE){
                 result = -1;
             }
@@ -166,12 +165,12 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         }
 
 
-            if (board.at<Piece>(searchResult.bestMove.from()) == Piece::NONE){
+            if (searchResult.bestMove == Move::NULL_MOVE) {
                 std::cerr << "Move: " << searchResult.bestMove << std::endl;
                 std::cerr << "Fen: " << board.getFen() << std::endl; 
                 result = 0; // inconclusive result, might skew things
                 // but happens so rarely that its probably fine
-                Logger::getInstance().log("Error:  Move from square with no piece");
+                Logger::getInstance().log("Error:  Null Move returned from search, game aborted");
                 break;   
             }
             board.makeMove(searchResult.bestMove); // Assume makeMove applies the move to the board

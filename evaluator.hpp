@@ -191,8 +191,8 @@ class Evaluator {
         Bitboard allBPiecesXQR = allBPieces & ~(bQueens | bRooks);
         
         // various x-rays and stops
-        wKnightAttacks &= ~allWPieces & ~allBPiecesXQR;
-        bKnightAttacks &= ~allBPieces & ~allWPiecesXQR;
+        wKnightAttacks &= ~allWPieces;
+        bKnightAttacks &= ~allBPieces;
         wBishopAttacks &= ~allWPieces & ~allBPiecesXQR;
         bBishopAttacks &= ~allBPieces & ~allWPiecesXQR;
         wRookAttacks &= ~allWPieces & ~allBPiecesXQueens;

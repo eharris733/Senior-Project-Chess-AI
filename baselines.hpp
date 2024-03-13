@@ -424,7 +424,7 @@ TunableSearch baseSearch = {
         //tuneable search parameters
         {100, 350}, //aspiration window progression
         20, //aspiration window initial delta
-        7, // use aspiration window depth (temporarily set to 7 so GA doesn't use it)
+        10, // use aspiration window depth (temporarily set to 10 so GA doesn't use it)
         true, // use lazy eval for null move reductions
         {300, 900, 1300}, // futility pruning margin
         true, // use futility pruning lazy eval
