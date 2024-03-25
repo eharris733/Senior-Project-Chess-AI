@@ -261,3 +261,46 @@ TunableEval ga1result6 ={
     GamePhaseValue(0, 6), // Queen Mobility
     GamePhaseValue(2, 0), // King Pressure Score
 };
+
+// double initialMutationRate = 0.03;
+    // double decayRate = 0.05;
+    // double crossoverRate = 0.75;
+    // int totalGenerations = 300;
+    // size_t populationSize = 2000; 
+    // int trainingSize = 1000;
+    // int eliteSize = 0;
+    // int archiveSize = 2000;
+    // int replacementCount = 100;
+    // std::string trainingDataPath = "dbs/stockfish11.csv";
+TunableEval ga1result7 = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 99), // Pawn
+    GamePhaseValue(351, 220), // Knight
+    GamePhaseValue(359, 249), // Bishop
+    GamePhaseValue(529, 489), // Rook
+    GamePhaseValue(1009, 984), // Queen
+    GamePhaseValue(5, 31), // Passed Pawn
+    GamePhaseValue(55, 30), // Doubled Pawn
+    GamePhaseValue(19, 11), // Isolated Pawn
+    GamePhaseValue(8, 0), // Weak Pawn
+    GamePhaseValue(9, 5), // Central Pawn
+    GamePhaseValue(0, 4), // Weak Square
+    GamePhaseValue(8, 1), // Passed Pawn Enemy King Square
+    GamePhaseValue(3, 19), // Knight Outposts
+    GamePhaseValue(10, 16), // Knight Mobility
+    GamePhaseValue(6, 12), // Bishop Mobility
+    GamePhaseValue(52, 50), // Bishop Pair
+    GamePhaseValue(9, 9), // Rook Attack King File
+    GamePhaseValue(2, 1), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 30), // Rook 7th Rank
+    GamePhaseValue(26, 7), // Rook Connected
+    GamePhaseValue(1, 4), // Rook Mobility
+    GamePhaseValue(16, 24), // Rook Behind Passed Pawn
+    GamePhaseValue(40, 15), // Rook Open File
+    GamePhaseValue(18, 14), // Rook Semi Open File
+    GamePhaseValue(58, 35), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(10, 2), // King Friendly Pawn
+    GamePhaseValue(4, 0), // King No Enemy Pawn Near
+    GamePhaseValue(1, 6), // Queen Mobility
+    GamePhaseValue(2, 0), // King Pressure Score
+};

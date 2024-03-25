@@ -11,7 +11,7 @@ int main() {
     TunableSearch randomSearchClone = convertChromosomeToSearch(randomChromosone);
 
     // assert to see if they are the same
-    assert(randomSearch.aspirationWindow1 = randomSearchClone.aspirationWindow1); 
+    assert(randomSearch.aspirationWindow1 == randomSearchClone.aspirationWindow1); 
     assert(randomSearch.secondaryDepthLMR == randomSearchClone.secondaryDepthLMR);
 
     // values from 2008 paper
@@ -28,8 +28,8 @@ int main() {
     double decayRate = 0.05;
     double crossoverRate = 0.75;
     int totalGenerations = 50;
-    size_t populationSize = 3; 
-    int trainingSize = 10;
+    size_t populationSize = 10; 
+    int trainingSize = 20;
     int eliteSize = 1;
     int archiveSize = 200;
     int replacementCount = 1;

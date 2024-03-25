@@ -158,9 +158,8 @@ double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const T
         SearchState result = searcher.search(100, 0, 1);
         Move bestMove = result.bestMove;
         int depthReached = result.currentDepth;
-        std::cout << uci::moveToLan(board, bestMove).substr(0, 1) + uci::moveToLan(board, bestMove).substr(3) << "\n";
-        std::cout << move.move << "\n";
-        if (move.move == uci::moveToLan(board, bestMove).substr(0, 1) + uci::moveToLan(board, bestMove).substr(3)){
+        std::string uciMove = uci::moveToUci(bestMove);
+        if (move.move == uciMove){
             totalSuccesfulDepth += depthReached;
         }
     }
