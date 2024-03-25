@@ -5,6 +5,7 @@
 #include "polyglot.hpp"
 #include "baselines.hpp"   
 #include "ga_util.hpp" 
+#include "ga1results.hpp"
 #include <cstdlib>
 #include <ctime>
 #include <map>
@@ -66,10 +67,10 @@ public:
     
 
     SearchState state;
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = result8) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
-          tt(1 << 21), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
+          tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
@@ -149,7 +150,7 @@ public:
                 }
                 
 
-                 // stop if we have a mate, since it will never be a false mate
+                 // stop if we have a mate, perhapds be a little more catius with this?
                  if(state.currentIterationBestScore > mateScore - MAX_DEPTH){
                      break;
                  }
@@ -234,32 +235,44 @@ int aspirationSearch() {
         // Update our aspiration windows based on the evaluation
         if (eval <= state.aspirationWindow.alpha) {
             // Fail low, widen the window downwards
-            state.aspirationWindow.failLow++;
+            
             state.aspirationWindow.beta = state.aspirationWindow.alpha; // Adjust beta to the current alpha
             
             if(state.aspirationWindow.failLow < 2){
-                state.aspirationWindow.delta += searchParams.aspirationWindowProgression[state.aspirationWindow.failLow]; 
+                if (state.aspirationWindow.failLow == 0){
+                    state.aspirationWindow.delta += searchParams.aspirationWindow1;
+                }
+                else{
+                    state.aspirationWindow.delta += searchParams.aspirationWindow2;
+                }
+                
                 state.aspirationWindow.alpha -= state.aspirationWindow.delta; // Decrease alpha
             }
             else{
                 isOpenWindow = true;
             }
             
-            
+        state.aspirationWindow.failLow++;
             
         } else if (eval >= state.aspirationWindow.beta) {
             // Fail high, widen the window upwards
-            state.aspirationWindow.failHigh++;
+            
             state.aspirationWindow.alpha = state.aspirationWindow.beta; // Adjust alpha to the current beta
             
             if(state.aspirationWindow.failHigh < 2){
-                state.aspirationWindow.delta += searchParams.aspirationWindowProgression[state.aspirationWindow.failHigh]; 
+                if (state.aspirationWindow.failHigh == 0){
+                    state.aspirationWindow.delta += searchParams.aspirationWindow1; 
+                }
+                else{
+                    state.aspirationWindow.delta += searchParams.aspirationWindow2;
+                }
+                
                 state.aspirationWindow.beta += state.aspirationWindow.delta; // Increase beta
             }
             else{
                 isOpenWindow = true;
             }
-            
+            state.aspirationWindow.failHigh++;
         } else {
             // Score is within the window, search is successful
             return eval;
@@ -359,18 +372,19 @@ int aspirationSearch() {
                 // also can't prune only legal move
                 if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3
                     && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
-                    float evaluation = evaluate(1); // lazy eval to avoid expensive evals
-                    if (evaluation + searchParams.futilityMargin[depth] <= alpha) {
+                    float evaluation = evaluate(1, searchParams.useLazyEvalFutility); // lazy eval to avoid expensive evals
+                    if (depth == 1 && evaluation + searchParams.futilityMargin1 <= alpha) {
                         // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
                         continue;
                     }
+                    else if (depth == 2 && evaluation + searchParams.futilityMargin2 <= alpha){
+                        continue;
+                    }
+                    else if(depth == 3 && evaluation + searchParams.futilityMargin3 <= alpha){
+                        continue;
+                    }
+                    
                 }
-
-                // // one reply extensions, as inspired by https://www.chessprogramming.org/One_Reply_Extensions
-                // // max of three total extensions for this one
-                // if(moves.size() == 1 && plyFromRoot - state.currentDepth < 3){
-                //     depthExtension = 1;
-                // }
 
                 board.makeMove(move);
                 state.nodes++;
@@ -383,15 +397,16 @@ int aspirationSearch() {
                     depthExtension = 1;
                 }
 
-                // // extend if a pawn reaches the seventh rank
-                // if(board.at<PieceType>(move.to()) == PieceType::PAWN) {
-                //     if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
-                //         depthExtension = 1;
-                //     }
-                //     else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
-                //         depthExtension = 1;
-                //     }
-                // }
+                // extend if a passed pawn reaches the seventh rank
+                // only if in pvs
+                if(isPvs && board.at<PieceType>(move.to()) == PieceType::PAWN) {
+                    if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
+                        depthExtension = 1;
+                    }
+                    else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
+                        depthExtension = 1;
+                    }
+                }
 
                 //note that any extension will only set the depth extension to 1, so we can't have multiple extensions
 

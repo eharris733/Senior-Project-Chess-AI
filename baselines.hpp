@@ -51,7 +51,8 @@ struct TunableSearch{
     //tuneable search parameters
 
     // for aspiration window
-    int aspirationWindowProgression[2];
+    int aspirationWindow1;
+    int aspirationWindow2;
     int aspirationWindowInitialDelta;
     int useAspirationWindowDepth;
 
@@ -59,7 +60,9 @@ struct TunableSearch{
     bool useLazyEvalNMR;
 
     // for futility pruning
-    int futilityMargin[3];
+    int futilityMargin1;
+    int futilityMargin2;
+    int futilityMargin3;
     bool useLazyEvalFutility;
     // for delta pruning in QS search
     int deltaMargin;
@@ -67,7 +70,6 @@ struct TunableSearch{
     // for move ordering
     int promotionMoveScore;
     int killerMoveScore;
-    int baseScore;
 
     //for late move reductions
     int initalDepthLMR;
@@ -113,6 +115,28 @@ TunableEval baseEval = {
     GamePhaseValue(3, 1),
 
 };
+
+// this version of iterative deepening is heavily influened 
+// by Sebastian Lague's chess engine tutorial
+TunableSearch baseSearch = {
+        //tuneable search parameters
+        20, // aspiration window progression1
+        100, //aspiration window progression 2
+        5, //aspiration window initial delta
+        5, // use aspiration window depth (temporarily set to 10 so GA doesn't use it)
+        true, // use lazy eval for null move reductions
+        300, 
+        900, 
+        1300, // futility pruning margin
+        true, // use futility pruning lazy eval
+        300, // delta pruning in QS search
+        200, // promotion score
+        100, // killer move score
+        3, // initial depth for late move reductions
+        6, // secondary depth for late move reductions
+        3, // initial move count for late move reductions
+        4, // secondary move count for late move reductions
+    };
 
 TunableEval zeroEval = {
     "",
@@ -414,29 +438,72 @@ TunableEval result8 = {
     GamePhaseValue(8, 15), // King Pressure Score
 };
 
+TunableEval result9 = {
+     chess::constants::STARTPOS,
+    GamePhaseValue(100, 163), // Pawn
+    GamePhaseValue(322, 346), // Knight
+    GamePhaseValue(371, 318), // Bishop
+    GamePhaseValue(476, 551), // Rook
+    GamePhaseValue(965, 853), // Queen
+    GamePhaseValue(6, 26), // Passed Pawn
+    GamePhaseValue(21, 44), // Doubled Pawn
+    GamePhaseValue(27, 18), // Isolated Pawn
+    GamePhaseValue(3, 3), // Weak Pawn
+    GamePhaseValue(0, 0), // Central Pawn
+    GamePhaseValue(9, 7), // Weak Square
+    GamePhaseValue(9, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(0, 16), // Knight Outposts
+    GamePhaseValue(16, 7), // Knight Mobility
+    GamePhaseValue(10, 5), // Bishop Mobility
+    GamePhaseValue(3, 30), // Bishop Pair
+    GamePhaseValue(2, 9), // Rook Attack King File
+    GamePhaseValue(25, 5), // Rook Attack King Adjacent File
+    GamePhaseValue(40, 60), // Rook 7th Rank
+    GamePhaseValue(61, 12), // Rook Connected
+    GamePhaseValue(12, 5), // Rook Mobility
+    GamePhaseValue(48, 55), // Rook Behind Passed Pawn
+    GamePhaseValue(12, 35), // Rook Open File
+    GamePhaseValue(9, 30), // Rook Semi Open File
+    GamePhaseValue(30, 5), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(27, 0), // King Friendly Pawn
+    GamePhaseValue(7, 11), // King No Enemy Pawn Near
+    GamePhaseValue(5, 0), // Queen Mobility
+    GamePhaseValue(9, 0), // King Pressure Score
+};
 
+TunableEval result10 = {
+     chess::constants::STARTPOS,
+    GamePhaseValue(100, 163), // Pawn
+    GamePhaseValue(322, 346), // Knight
+    GamePhaseValue(371, 318), // Bishop
+    GamePhaseValue(483, 544), // Rook
+    GamePhaseValue(1018, 852), // Queen
+    GamePhaseValue(24, 27), // Passed Pawn
+    GamePhaseValue(53, 44), // Doubled Pawn
+    GamePhaseValue(39, 51), // Isolated Pawn
+    GamePhaseValue(8, 28), // Weak Pawn
+    GamePhaseValue(31, 7), // Central Pawn
+    GamePhaseValue(9, 7), // Weak Square
+    GamePhaseValue(42, 60), // Passed Pawn Enemy King Square
+    GamePhaseValue(24, 16), // Knight Outposts
+    GamePhaseValue(16, 1), // Knight Mobility
+    GamePhaseValue(9, 5), // Bishop Mobility
+    GamePhaseValue(2, 30), // Bishop Pair
+    GamePhaseValue(26, 17), // Rook Attack King File
+    GamePhaseValue(25, 5), // Rook Attack King Adjacent File
+    GamePhaseValue(40, 60), // Rook 7th Rank
+    GamePhaseValue(61, 4), // Rook Connected
+    GamePhaseValue(12, 5), // Rook Mobility
+    GamePhaseValue(48, 48), // Rook Behind Passed Pawn
+    GamePhaseValue(12, 44), // Rook Open File
+    GamePhaseValue(25, 10), // Rook Semi Open File
+    GamePhaseValue(56, 15), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(27, 0), // King Friendly Pawn
+    GamePhaseValue(10, 8), // King No Enemy Pawn Near
+    GamePhaseValue(3, 4), // Queen Mobility
+    GamePhaseValue(7, 8), // King Pressure Score
+};
 
-
-
-// this version of iterative deepening is heavily influened 
-// by Sebastian Lague's chess engine tutorial
-TunableSearch baseSearch = {
-        //tuneable search parameters
-        {100, 350}, //aspiration window progression
-        20, //aspiration window initial delta
-        10, // use aspiration window depth (temporarily set to 10 so GA doesn't use it)
-        true, // use lazy eval for null move reductions
-        {300, 900, 1300}, // futility pruning margin
-        true, // use futility pruning lazy eval
-        300, // delta pruning in QS search
-        200, // promotion score
-        100, // killer move score
-        10, // base move score
-        3, // initial depth for late move reductions
-        6, // secondary depth for late move reductions
-        3, // initial move count for late move reductions
-        4, // secondary move count for late move reductions
-    };
 
 
     /*

@@ -10,10 +10,10 @@
 int main(){
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     double mutationThreshold = .85;
-    double mutationRate = 0.005;
+    double mutationRate = 0.01;
     int totalGenerations = 200;
-    size_t populationSize = 100; 
-    int trainingSize = 1000;
+    size_t populationSize = 20; 
+    int trainingSize = 500;
     std::string trainingDataPath = "dbs/mastergames/ga2_all.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;

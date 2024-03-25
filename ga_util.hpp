@@ -9,6 +9,8 @@
 
 
 
+std::random_device rd;  // Obtain a random number from hardware
+std::mt19937 gen(rd()); // Seed the generator
 
 
 // the way I see it, there are three possible encoding schemas:
@@ -56,6 +58,14 @@ int bitsToInt(const std::string& bits) {
     unsigned int grayNum = static_cast<unsigned int>(gray.to_ulong());
     unsigned int binaryNum = grayToBinary(grayNum);
     return static_cast<int>(binaryNum);
+}
+
+// Function to generate a random integer within a given range
+// takes in the num of bits, and whether the number is signed or not    
+int randomInt(int bits) {
+    std::uniform_int_distribution<int> distrib(0, (1 << bits) - 1);
+    int randInt = distrib(gen);
+    return randInt;
 }
 
 // a bit clunky, but it works...
@@ -188,6 +198,94 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
     return tEval;
 }
 
+TunableSearch convertChromosomeToSearch(const std::string& bitString){
+    TunableSearch tSearch;
+    int pos = 0;
+    tSearch.aspirationWindow1 = bitsToInt(bitString.substr(pos, 8));
+    pos += 8;
+    tSearch.aspirationWindow2 = bitsToInt(bitString.substr(pos, 8));
+    pos += 8;
+    tSearch.aspirationWindowInitialDelta = bitsToInt(bitString.substr(pos, 6));
+    pos += 6;
+    tSearch.useAspirationWindowDepth = bitsToInt(bitString.substr(pos, 3));
+    pos += 3;
+    tSearch.useLazyEvalFutility = bitsToInt(bitString.substr(pos, 1));
+    pos += 1;
+    tSearch.useLazyEvalNMR = bitsToInt(bitString.substr(pos, 1));
+    pos += 1;
+    tSearch.futilityMargin1 = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tSearch.futilityMargin2 = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tSearch.futilityMargin3 = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tSearch.deltaMargin = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tSearch.promotionMoveScore = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tSearch.killerMoveScore = bitsToInt(bitString.substr(pos, 10));
+    pos += 10;
+    tSearch.initalDepthLMR = bitsToInt(bitString.substr(pos, 3));
+    pos += 3;
+    tSearch.secondaryDepthLMR = bitsToInt(bitString.substr(pos, 4));
+    pos += 4;
+    tSearch.initialMoveCountLMR = bitsToInt(bitString.substr(pos, 3));
+    pos += 3;
+    tSearch.secondaryMoveCountLMR = bitsToInt(bitString.substr(pos, 4));
+    pos += 4;
+    return tSearch;
+}
+
+std::string convertSearchToChromosome(const TunableSearch& tSearch){
+    std::string bitString = "";
+    // Utility lambda to convert integer to Gray encoded binary string
+    auto intToGrayString = [](int value, int bits) -> std::string {
+        unsigned int grayValue = binaryToGray(static_cast<unsigned int>(value));
+        return std::bitset<16>(grayValue).to_string().substr(16-bits, bits);
+    };
+    bitString += intToGrayString(tSearch.aspirationWindow1, 8);
+    bitString += intToGrayString(tSearch.aspirationWindow2, 8);
+    bitString += intToGrayString(tSearch.aspirationWindowInitialDelta, 6);
+    bitString += intToGrayString(tSearch.useAspirationWindowDepth, 3);
+    bitString += intToGrayString(tSearch.useLazyEvalFutility, 1);
+    bitString += intToGrayString(tSearch.useLazyEvalNMR, 1);
+    bitString += intToGrayString(tSearch.futilityMargin1, 10);
+    bitString += intToGrayString(tSearch.futilityMargin2, 10);
+    bitString += intToGrayString(tSearch.futilityMargin3, 10);
+    bitString += intToGrayString(tSearch.deltaMargin, 10);
+    bitString += intToGrayString(tSearch.promotionMoveScore, 10);
+    bitString += intToGrayString(tSearch.killerMoveScore, 10);
+    bitString += intToGrayString(tSearch.initalDepthLMR, 3);
+    bitString += intToGrayString(tSearch.secondaryDepthLMR, 4);
+    bitString += intToGrayString(tSearch.initialMoveCountLMR, 3);
+    bitString += intToGrayString(tSearch.secondaryMoveCountLMR, 4);
+    
+    return bitString;
+
+}
+
+TunableSearch initializeRandomTunableSearch() {
+    TunableSearch rSearch;
+    rSearch.aspirationWindow1 = randomInt(8);
+    rSearch.aspirationWindow2 = randomInt(8);
+    rSearch.aspirationWindowInitialDelta = randomInt(6);
+    rSearch.useAspirationWindowDepth = randomInt(3);
+    rSearch.useLazyEvalNMR = randomInt(1); // techncally this is a boolean
+    rSearch.useLazyEvalNMR = randomInt(1);
+    rSearch.futilityMargin1 = randomInt(10);
+    rSearch.futilityMargin2 = randomInt(10);
+    rSearch.futilityMargin3 = randomInt(10);
+    rSearch.deltaMargin = randomInt(10);
+    rSearch.promotionMoveScore = randomInt(10);
+    rSearch.killerMoveScore = randomInt(10);
+    rSearch.initalDepthLMR = randomInt(3);
+    rSearch.secondaryDepthLMR = randomInt(4);
+    rSearch.initialMoveCountLMR = randomInt(3);
+    rSearch.secondaryMoveCountLMR = randomInt(4);
+
+    return rSearch;
+}
+
 
 // convert eval to chromosone for GA
 // divide piece values by ten
@@ -295,17 +393,9 @@ std::string convertEvalToChromosone(const TunableEval& tEval){
     return bitString;
 }
 
-std::random_device rd;  // Obtain a random number from hardware
-std::mt19937 gen(rd()); // Seed the generator
 
 
-// Function to generate a random integer within a given range
-// takes in the num of bits, and whether the number is signed or not    
-int randomInt(int bits) {
-    std::uniform_int_distribution<int> distrib(0, (1 << bits) - 1);
-    int randInt = distrib(gen);
-    return randInt;
-}
+
 
 // Function to initialize a TunableEval struct with random values
 // could potentially speed this up by not creating a struct but just making a random string with the 
@@ -347,6 +437,8 @@ TunableEval initializeRandomTunableEval() {
     return tEval;
 }
 
+
+
 // // so I can print out my king safety table
 template <typename S>
 std::ostream& operator<<(std::ostream& os,
@@ -360,6 +452,30 @@ std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
+
+void printTunableSearch(const TunableSearch& tSearch){
+    std::ostringstream logMsg;
+    logMsg << "TunableSearch resultX = {\n";
+    logMsg << tSearch.aspirationWindow1 << ", // Aspiration Window 1\n";
+    logMsg << tSearch.aspirationWindow2 << ", // Aspiration Window 2\n";
+    logMsg << tSearch.aspirationWindowInitialDelta << ", // Aspiration Window initial delta\n";
+    logMsg << tSearch.deltaMargin << ", // Delta Margin\n";
+    logMsg << tSearch.futilityMargin1<< ", // Futillity Margin 1\n";
+    logMsg << tSearch.futilityMargin2<< ", // Futillity Margin 2\n";
+    logMsg << tSearch.futilityMargin3<< ", // Futillity Margin 3\n";
+    logMsg << tSearch.initalDepthLMR<< ", // Initial LMR Depth\n";
+    logMsg << tSearch.initialMoveCountLMR<< ", // Initial Move Counter\n";
+    logMsg << tSearch.killerMoveScore<< ", // Killer Move Score\n";
+    logMsg << tSearch.promotionMoveScore<< ", // Promotion Move Score\n";
+    logMsg << tSearch.secondaryDepthLMR<< ", //Secondary Depth LMR\n";
+    logMsg << tSearch.secondaryMoveCountLMR<< ", // Secondary Move Counter\n";
+    logMsg << tSearch.useAspirationWindowDepth<< ", aspiration window depth\n";
+    logMsg << tSearch.useLazyEvalFutility<< ", //use lazy eval futility\n";
+    logMsg << tSearch.useLazyEvalNMR<< ", // use lazy eval nmr\n";
+    logMsg << "};\n";
+    Logger::getInstance().log(logMsg.str());
+    std::cout << logMsg.str();
+}
 
 void printTunableEval(const TunableEval& tEval) {
     std::ostringstream logMsg;
@@ -400,6 +516,7 @@ void printTunableEval(const TunableEval& tEval) {
     logMsg << "    GamePhaseValue(" << tEval.kingPressureScore.middleGame << ", " << tEval.kingPressureScore.endGame << "), // King Pressure Score\n";
     logMsg << "};\n";
     Logger::getInstance().log(logMsg.str());
+    std::cout << logMsg.str();
 }
 
 

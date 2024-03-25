@@ -129,7 +129,7 @@ private:
         int numCorrect = 0;
         for (const auto& eval : evalsSubset) {
             Board board = Board();
-            Searcher searcher = Searcher(board, baseSearch, params, 2 << 16); // useless size for a tt
+            Searcher searcher = Searcher(board, baseSearch, params); // useless size for a tt
             searcher.setMaxDepth(1);
             searcher.setVerbose(false);
             board.setFen(eval.fen);
@@ -240,7 +240,7 @@ private:
         std::vector<Chromosome> combined = archive;
         combined.insert(combined.end(), population.begin(), population.end());
         std::sort(combined.begin(), combined.end(), [](const Chromosome& a, const Chromosome& b) {
-            return a.fitness > b.fitness; // Assuming lower fitness values are better
+            return a.fitness < b.fitness; // Sort in ascending order
         });
 
         // Keep only the best 100 solutions in the archive
@@ -252,10 +252,15 @@ private:
     }
 
     // Function to reintroduce 1 solution from the archive to the new population
+// Returns the best solution
     void reintroduceFromArchive() {
-        if (archive.empty()) return;
+        if (archive.empty()) {
+            throw std::runtime_error("Archive is empty");
+        }
 
-        population.push_back(archive.front());
+        Chromosome bestSolution = archive.back();
+        archive.pop_back();
+        population.push_back(bestSolution);
     }
 };
 
