@@ -392,4 +392,4 @@ TunableEval ga1result10  {
     GamePhaseValue(4, 0), // King No Enemy Pawn Near
     GamePhaseValue(1, 4), // Queen Mobility
     GamePhaseValue(2, 0), // King Pressure Score
-}
+};
