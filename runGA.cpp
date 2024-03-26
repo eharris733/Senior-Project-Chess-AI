@@ -24,15 +24,15 @@ int main() {
 
 
 
-    double initialMutationRate = 0.03;
-    double decayRate = 0.05;
+    double initialMutationRate = 0.002;
+    double decayRate = 0.00;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
     size_t populationSize = 1000; 
-    int trainingSize = 2000;
+    int trainingSize = 1600;
     int eliteSize = 0;
-    int archiveSize = 2000;
-    int replacementCount = 100;
+    int archiveSize = 0;
+    int replacementCount = 0;
     std::string trainingDataPath = "dbs/stockfish11.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;

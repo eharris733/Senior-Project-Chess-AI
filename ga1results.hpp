@@ -349,6 +349,50 @@ TunableEval ga1result8 = {
     GamePhaseValue(2, 0), // King Pressure Score
 };
 
+// results from the larger data set
+// double initialMutationRate = 0.002;
+    // double decayRate = 0;
+    // double crossoverRate = 0.75;
+    // int totalGenerations = 300;
+    // size_t populationSize = 1000; 
+    // int trainingSize = 1600;
+    // int eliteSize = 0;
+    // int archiveSize = 0;
+    // int replacementCount = 0;
+    // std::string trainingDataPath = "dbs/stockfish11.csv";
+TunableEval ga1result9 = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 127), // Pawn
+    GamePhaseValue(367, 250), // Knight
+    GamePhaseValue(394, 293), // Bishop
+    GamePhaseValue(538, 586), // Rook
+    GamePhaseValue(1022, 1020), // Queen
+    GamePhaseValue(43, 51), // Passed Pawn
+    GamePhaseValue(9, 15), // Doubled Pawn
+    GamePhaseValue(12, 1), // Isolated Pawn
+    GamePhaseValue(1, 6), // Weak Pawn
+    GamePhaseValue(1, 11), // Central Pawn
+    GamePhaseValue(1, 2), // Weak Square
+    GamePhaseValue(60, 2), // Passed Pawn Enemy King Square
+    GamePhaseValue(15, 24), // Knight Outposts
+    GamePhaseValue(10, 21), // Knight Mobility
+    GamePhaseValue(2, 17), // Bishop Mobility
+    GamePhaseValue(58, 3), // Bishop Pair
+    GamePhaseValue(39, 10), // Rook Attack King File
+    GamePhaseValue(32, 14), // Rook Attack King Adjacent File
+    GamePhaseValue(32, 9), // Rook 7th Rank
+    GamePhaseValue(6, 61), // Rook Connected
+    GamePhaseValue(3, 0), // Rook Mobility
+    GamePhaseValue(9, 7), // Rook Behind Passed Pawn
+    GamePhaseValue(54, 22), // Rook Open File
+    GamePhaseValue(17, 33), // Rook Semi Open File
+    GamePhaseValue(36, 26), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(4, 0), // King Friendly Pawn
+    GamePhaseValue(1, 0), // King No Enemy Pawn Near
+    GamePhaseValue(7, 7), // Queen Mobility
+    GamePhaseValue(4, 0), // King Pressure Score
+};
+
 // results from full run
 // double initialMutationRate = 0.03;
     // double decayRate = 0.05;
