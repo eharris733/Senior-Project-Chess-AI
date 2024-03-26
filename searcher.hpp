@@ -61,7 +61,7 @@ public:
     
 
     SearchState state = SearchState();
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = ga1result8) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time

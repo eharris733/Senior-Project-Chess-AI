@@ -48,7 +48,7 @@ def evaluate_positions(positions, stockfish_path, csv_file_path):
                 board = chess.Board(fen)
                 info = engine.analyse(board, chess.engine.Limit(nodes=1))  # Set the analysis time limit to 0.1 seconds
                 evaluation = info['score'].white().score(mate_score=10000)
-                if abs(evaluation) < 500:  # exclude mate scores or extreme scores
+                if abs(evaluation) < 5000:  # exclude mate scores or extreme scores
                     if len(board.piece_map()) > 7:  # exclude endgames that are solved
                         writer.writerow([fen, evaluation])
             except Exception as e:
