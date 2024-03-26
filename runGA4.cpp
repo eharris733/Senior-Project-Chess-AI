@@ -12,7 +12,22 @@ int main() {
 
     // assert to see if they are the same
     assert(randomSearch.aspirationWindow1 == randomSearchClone.aspirationWindow1); 
+    assert(randomSearch.aspirationWindow2 == randomSearchClone.aspirationWindow2);
+    assert(randomSearch.aspirationWindowInitialDelta == randomSearchClone.aspirationWindowInitialDelta);
+    assert(randomSearch.useAspirationWindowDepth == randomSearchClone.useAspirationWindowDepth);
+    assert(randomSearch.deltaMargin == randomSearchClone.deltaMargin);
+    assert(randomSearch.futilityMargin1 == randomSearchClone.futilityMargin1);
+    assert(randomSearch.futilityMargin2 == randomSearchClone.futilityMargin2);
+    assert(randomSearch.futilityMargin3 == randomSearchClone.futilityMargin3);
+    assert(randomSearch.initalDepthLMR == randomSearchClone.initalDepthLMR);
+    assert(randomSearch.initialMoveCountLMR == randomSearchClone.initialMoveCountLMR);
+    assert(randomSearch.killerMoveScore == randomSearchClone.killerMoveScore);
+    assert(randomSearch.promotionMoveScore == randomSearchClone.promotionMoveScore);
+    assert(randomSearch.initialMoveCountLMR == randomSearchClone.initialMoveCountLMR);
+    assert(randomSearch.useLazyEvalFutility == randomSearchClone.useLazyEvalFutility);
+    assert(randomSearch.useLazyEvalNMR == randomSearchClone.useLazyEvalNMR);
     assert(randomSearch.secondaryDepthLMR == randomSearchClone.secondaryDepthLMR);
+    
 
     // values from 2008 paper
     // population size = 1000
@@ -29,11 +44,11 @@ int main() {
     double crossoverRate = 0.75;
     int totalGenerations = 50;
     size_t populationSize = 10; 
-    int trainingSize = 20;
+    int trainingSize = 1000;
     int eliteSize = 1;
     int archiveSize = 200;
     int replacementCount = 1;
-    std::string trainingDataPath = "dbs/epd_testsuites/test_suite.csv";
+    std::string trainingDataPath = "dbs/test_suite.csv";
 
     std::cout << "Running Genetic Algorithm" << std::endl;
     std::cout << "Population Size: " << populationSize << std::endl;

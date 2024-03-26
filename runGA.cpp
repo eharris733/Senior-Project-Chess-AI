@@ -28,8 +28,8 @@ int main() {
     double decayRate = 0.05;
     double crossoverRate = 0.75;
     int totalGenerations = 300;
-    size_t populationSize = 2000; 
-    int trainingSize = 1000;
+    size_t populationSize = 1000; 
+    int trainingSize = 2000;
     int eliteSize = 0;
     int archiveSize = 2000;
     int replacementCount = 100;

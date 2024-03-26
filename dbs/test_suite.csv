@@ -181,7 +181,6 @@ rn3rk1/pp1bppbp/1qp3p1/4P1N1/PP1PB3/2P1B3/4Q1PP/R4RK1 w - -,g5h7
 r2q3r/2pkb1p1/p2p1n2/4p1p1/Pp2P1P1/1QP5/1P1P2PP/RNB2RK1 b - -,h8h2
 2rq1rk1/pp1bnpbp/4p1p1/3pP1N1/3P2Q1/2PB4/P4PPP/R1B1R1K1 w - -,g5h7
 2rq1bk1/1br2p1p/p2p2p1/1p1P4/4Q3/PP3N2/1BP5/1K1R3R w - -,h1h7
-FEN,bestmoveUCI
 2q1r1k1/1ppb4/r2p1Pp1/p4n1p/2P1n3/5NPP/PP3Q1K/2BRRB2 w - -,f6f7
 7r/1p2k3/2bpp3/p3np2/P1PR4/2N2PP1/1P4K1/3B4 b - -,c6f3
 4k3/p1P3p1/2q1np1p/3N4/8/1Q3PP1/6KP/8 w - -,b3b5
@@ -952,7 +951,6 @@ rr4k1/5p1p/n2p1npQ/q1pP4/6P1/2N2P1N/PP1R3P/2K4R b - -,b8b2
 2K5/6p1/kp2P3/1p6/1P6/2P1P2p/8/1r6 w - -,e6e7
 2kr3r/1Rp1bpp1/p6q/Q3P3/2P5/3p1NP1/P3P2P/1R4K1 b - -,h6e3
 6k1/1R4pp/2p5/8/P1rNp3/6Pb/4PK2/8 w - -,a4a5
-FEN,bestmoveUCI
 R7/8/8/8/3K4/8/3kp3/8 w - -,a8a2
 3R4/8/8/8/8/8/4p1K1/4k3 w - -,d8e8
 3R4/8/8/8/8/6K1/4p3/4k3 w - -,d8e8

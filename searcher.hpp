@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <chrono> 
 #include <cstring>
-#include <atomic>
 
 using namespace chess;
 using namespace std;
@@ -56,17 +55,12 @@ static const std::map<PieceType, int> PieceValue = {
 
 
 
-
-// variable that is called when the engine is told to stop searching
-// will also be used for time control
-extern std::atomic<bool> stop;
-
 class Searcher {
 public:
 
     
 
-    SearchState state;
+    SearchState state = SearchState();
     Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
@@ -75,6 +69,8 @@ public:
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
+        state.nodes = 0;
+        state.aspirationWindow = AspirationWindow();
         std::memset(history, 0, sizeof(history)); 
 
     }
@@ -112,7 +108,7 @@ public:
         auto startTime = chrono::steady_clock::now();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (state.currentDepth <= MAX_DEPTH && !stop.load()) {
+        while (state.currentDepth <= MAX_DEPTH) {
             state.currentIterationBestMove = Move::NULL_MOVE;
             state.currentIterationBestScore = neg_infinity;
             
@@ -121,7 +117,6 @@ public:
             auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
 
             if (elapsed >= timeForThisMove) {
-                stop = true; // Signal to stop the search
                 break;
             }
 
@@ -137,7 +132,6 @@ public:
 
             // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
             // update the overall search state with results from the latest iteration
-            if (!stop){
                 
                 // make sure we never return a null move
                 if( state.currentIterationBestMove != Move::NULL_MOVE){
@@ -156,11 +150,6 @@ public:
                  }
                 state.currentDepth++; // Update the depth after each iteration
                 
-            }
-            //otherwise we abort the iterative deepening loop
-            else{
-                break;
-            }
             
         }
 
@@ -168,7 +157,11 @@ public:
         if(verbose){
             tt.debugSize();
         }
-        
+        if (state.bestMove == Move::NULL_MOVE) {
+            Movelist moves;
+            movegen::legalmoves<MoveGenType::ALL>(moves, board);
+            state.bestMove = moves[0]; // If no move is found, return the first legal move
+        }
         return state; // Return the best move found
     }
 
@@ -178,7 +171,7 @@ public:
 
 private:
     Board& board; // The board to search on
-    Evaluator evaluator; // our evaluation function
+    Evaluator evaluator = Evaluator(board, evalParams); // our evaluation function
     TranspositionTable tt; // Transposition table
     //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
@@ -196,7 +189,6 @@ private:
     
     // probably unnecesary but good practice
     void initSearch() {
-        stop = false;
         state.isOpening = true;
         state.bestMove = Move::NULL_MOVE;
         state.currentDepth = 1;
@@ -509,9 +501,6 @@ int aspirationSearch() {
 
 
         int quiescence(int alpha, int beta) {
-            // if(stop.load()){
-            //     return 0;
-            // }
             const int DELTA_MARGIN = searchParams.deltaMargin; // most positional advantages aren't worth more than a piece
             
             int stand_pat = evaluate(0);

@@ -7,14 +7,10 @@
 #include "baselines.hpp"
 #include "ga_util.hpp"
 #include "searcher.hpp"
-#include <atomic>
 #include <thread>
 #include <vector>
 #include <mutex>
 
-
-
-atomic<bool> stop(false); // so the searcher works will never be set to true
 
 class GeneticAlgorithm4 {
 public:
@@ -47,14 +43,14 @@ public:
 
             // sort the population by fitness
             std::sort(population.begin(), population.end(), [](const Chromosome& a, const Chromosome& b) {
-                return a.fitness < b.fitness;
+                return a.fitness > b.fitness;
             });
 
             // delete worst one and duplicate best one
             population.pop_back();
             population.push_back(population.front());
             
-            if(population.front().fitness < best.fitness) {
+            if(population.front().fitness > best.fitness) {
                 best = population.front();
             }
 
@@ -122,7 +118,7 @@ private:
     
 
     void readCSV(std::string trainingDataPath) {
-        Board board;
+        Board board = Board();
         std::ifstream file(trainingDataPath);
         std::string line;
         while (std::getline(file, line)) {
@@ -138,7 +134,6 @@ private:
                     std::cerr << "FEN: " << fen << std::endl;
                     std::cerr <<"line: " << line << std::endl;
                 }
-                
             }
         }
     }
@@ -169,47 +164,47 @@ double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const T
 // Modified calculateFitness function with multi-threading
 // obviously I did not write this, but damn is it nice. x5 speedup more or less
 double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch& params) {
-    return calculateFitnessSubset(pos, params);
-//     const size_t numThreads = 1; // Use as many threads as there are CPU cores - 1
-//     std::vector<std::thread> threads;
-//     std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
+    // return calculateFitnessSubset(pos, params);
+    const size_t numThreads = 10; // Use as many threads as there are CPU cores - 1
+    std::vector<std::thread> threads;
+    std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
 
-//     size_t posPerThread = pos.size() / numThreads;
+    size_t posPerThread = pos.size() / numThreads;
     
-//     // Lambda to process each subset of evaluations
-//    auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx) {
-//     try {
-//         std::vector<FenMovePair> posSubset(pos.begin() + startIdx, pos.begin() + endIdx);
-//         partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params);
-//     } catch (const std::exception& e) {
-//         std::cerr << "Exception in thread " << threadIdx << ": " << e.what() << std::endl;
-//         // Handle exception or set an error state
-//     }
-// };
+    // Lambda to process each subset of evaluations
+   auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx) {
+    try {
+        std::vector<FenMovePair> posSubset(pos.begin() + startIdx, pos.begin() + endIdx);
+        partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in thread " << threadIdx << ": " << e.what() << std::endl;
+        // Handle exception or set an error state
+    }
+};
 
 
-//     // Launch threads
-//     for (size_t i = 0; i < numThreads; ++i) {
-//         size_t startIdx = i * posPerThread;
-//         size_t endIdx = (i + 1) * posPerThread;
-//         if (i == numThreads - 1) {
-//             endIdx = pos.size(); // Make sure the last thread covers all remaining evaluations
-//         }
-//         threads.emplace_back(worker, startIdx, endIdx, i);
-//     }
+    // Launch threads
+    for (size_t i = 0; i < numThreads; ++i) {
+        size_t startIdx = i * posPerThread;
+        size_t endIdx = (i + 1) * posPerThread;
+        if (i == numThreads - 1) {
+            endIdx = pos.size(); // Make sure the last thread covers all remaining evaluations
+        }
+        threads.emplace_back(worker, startIdx, endIdx, i);
+    }
 
-//     // Wait for all threads to complete
-//     for (auto& t : threads) {
-//         t.join();
-//     }
+    // Wait for all threads to complete
+    for (auto& t : threads) {
+        t.join();
+    }
 
-//     // Aggregate the results
-//     double totalDifference = 0.0;
-//     for (const auto& diff : partialDifferences) {
-//         totalDifference += diff;
-//     }
+    // Aggregate the results
+    double totalDifference = 0.0;
+    for (const auto& diff : partialDifferences) {
+        totalDifference += diff;
+    }
 
-//     return totalDifference / pos.size(); // Return the average difference
+    return totalDifference; // Return the average difference
 }
 
     // looks good

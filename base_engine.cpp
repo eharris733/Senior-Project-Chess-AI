@@ -5,7 +5,6 @@
 #include <random>
 #include <thread> // For std::thread
 #include <mutex> // For std::mutex
-#include <atomic> // For std::atomic
 #include <memory> // For unique_ptr
 
 // from my code
@@ -19,7 +18,6 @@ chess::Board board;
 unique_ptr<Searcher> searcher; 
 mutex searchThreadMutex;
 unique_ptr<std::thread> searchThread;
-atomic<bool> stop(false);
 
 
 void setPosition(const std::string& uci, const std::vector<std::string>& tokens) {
@@ -50,7 +48,6 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
         if (searchThread && searchThread->joinable()) {
             searchThread->join(); // Ensure the previous search is finished
         }
-        stop = false; // Reset the stop signal
 
         // Create a new thread for the search operation
         // Capture time control parameters by value in the lambda
@@ -64,7 +61,6 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
 
 
 void stopSearch() {
-    stop = true; // Signal the search to stop
     lock_guard<mutex> guard(searchThreadMutex);
     if (searchThread && searchThread->joinable()) {
         searchThread->join(); // Wait for the search to finish
@@ -142,9 +138,6 @@ while (!quit) {
     // Start the search with time management
     startSearch(timeLeft, timeIncrement, movesToGo);
     }
-    else if (keyword == "stop") {
-        stop = true;
-    } 
     else if (keyword == "quit") {
         quit = true;
     }
