@@ -32,7 +32,9 @@ int main() {
     double decayRate = 0.02;
     double crossoverRate = 0.75;
     int totalGenerations = 200;
-    size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20
+    size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20. This corresponds to 19 X 20 = 380 games per generation
+    // 200 generations will be 76000 games, all at depth 8
+    // at pop size of 10, we have 9 X 10 = 90 games per generation, 18000 games total, or less than a fourth of the time
     int eliteSize = 2;
     int archiveSize = 400;
     int replacementCount = 2;

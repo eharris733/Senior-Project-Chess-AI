@@ -150,9 +150,9 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         SearchState searchResult;
 
         if (board.sideToMove() == Color::WHITE) {
-            searchResult = whiteSearcher.search(2000, 0, 1); //2000ms, 0ms increment, 1 move to go
+            searchResult = whiteSearcher.search(1000, 0, 1); //1000ms, 0ms increment, 1 move to go
         } else {
-            searchResult = blackSearcher.search(2000, 0, 1); // should reach max depth first, but just in case, call cutoff after two seconds in extreme circumstances
+            searchResult = blackSearcher.search(1000, 0, 1); // should reach max depth first, but just in case, call cutoff after one fourth of a second in bad circumstances
         }
         if (searchResult.bestScore < -500){
             if (board.sideToMove() == Color::WHITE){

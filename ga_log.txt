@@ -5498,3 +5498,24 @@ Total Generations: 200
 Elite Size: 2
 Archive Size: 400
 Replacement Count: 2
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.020000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 2
+Archive Size: 400
+Replacement Count: 2
+Running Genetic Algorithm
+Population Size: 20
+Initial Mutation Rate: 0.050000
+Mutation Decay Rate: 0.020000
+Crossover Rate: 0.750000
+Total Generations: 200
+Elite Size: 2
+Archive Size: 400
+Replacement Count: 2
+Generation: 1
+Mutation Rate: 0.049010
+Best Fitness: 16.000000, Average Fitness: 1.000000, Worst Fitness: -19.000000
