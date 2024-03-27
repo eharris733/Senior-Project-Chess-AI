@@ -44,7 +44,7 @@ int main() {
     double crossoverRate = 0.75;
     int totalGenerations = 50;
     size_t populationSize = 10; 
-    int trainingSize = 1000;
+    int trainingSize = 100;
     int eliteSize = 1;
     int archiveSize = 200;
     int replacementCount = 1;

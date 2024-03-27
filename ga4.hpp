@@ -59,7 +59,7 @@ public:
 
             
 
-            Chromosome best = population.front();
+            best = population.front();
             TunableSearch bestSearch = convertChromosomeToSearch(best.data);
             double bestFitness = best.fitness; // Assuming population is sorted
             for (const auto& individual : population) {
@@ -70,7 +70,7 @@ public:
             cout << "Mutation Rate: " << mutationRate << endl;
             std::cout << "Best Fitness: " << bestFitness << ", Average Fitness: " << averageFitness << std::endl;
 
-            if(currentGeneration % 20 == 0) {
+            if(currentGeneration % 5 == 0) {
                 std::cout << "Best Chromosome: "  << std::endl;
                 printTunableSearch(bestSearch);
             }
@@ -113,7 +113,7 @@ private:
     std::vector<FenMovePair> positions;
     std::random_device rd;
     std::mt19937 gen{rd()}; // random c++ magic stuff
-    std::string trainingDataPath = "dbs/quiet_evals_filtered";
+    std::string trainingDataPath = "";
 
     
 
@@ -146,11 +146,14 @@ private:
     // Helper function to calculate fitness for a subset of evaluations
 double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params) {
     double totalSuccesfulDepth = 0.0;
+    Board board = Board();
+    Searcher searcher = Searcher(board, params, baseEval); // useless size for a tt
+    searcher.setVerbose(false);
     for (const FenMovePair& move : posSubset) {
-        Board board = Board(move.fen);
-        Searcher searcher = Searcher(board, params, baseEval); // useless size for a tt
-        searcher.setVerbose(false);
-        SearchState result = searcher.search(100, 0, 1);
+        // start a timer
+        searcher.clear();
+        board.setFen(move.fen);
+        SearchState result = searcher.search(200, 0, 1);
         Move bestMove = result.bestMove;
         int depthReached = result.currentDepth;
         std::string uciMove = uci::moveToUci(bestMove);
@@ -165,8 +168,8 @@ double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const T
 // obviously I did not write this, but damn is it nice. x5 speedup more or less
 double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch& params) {
     // return calculateFitnessSubset(pos, params);
-    const size_t numThreads = 10; // Use as many threads as there are CPU cores - 1
-    std::vector<std::thread> threads;
+    const size_t numThreads = 5; // Use as many threads as there are CPU cores - 1
+    std::vector<std::thread> threads = std::vector<std::thread>(numThreads);
     std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
 
     size_t posPerThread = pos.size() / numThreads;
