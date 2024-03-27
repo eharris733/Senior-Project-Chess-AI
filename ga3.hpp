@@ -22,7 +22,7 @@ atomic<bool> stop(false); // so the searcher works
 class GA3 {
 public:
     GA3(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int eliteCount, int archiveSize, int reintroduceCount)
-        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("BalsaBook.bin") {
+        : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("Titans.bin") {
         initializePopulation();
         
     }
@@ -141,8 +141,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
     }
     
     
-    whiteSearcher.setMaxDepth(7); // Set the search depth for white
-    blackSearcher.setMaxDepth(7); // Set the search depth for black
+    whiteSearcher.setMaxDepth(8); // Set the search depth for white
+    blackSearcher.setMaxDepth(8); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
@@ -150,7 +150,7 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         SearchState searchResult;
 
         if (board.sideToMove() == Color::WHITE) {
-            searchResult = whiteSearcher.search(2000, 0, 1); //100ms, 0ms increment, 1 move to go
+            searchResult = whiteSearcher.search(2000, 0, 1); //2000ms, 0ms increment, 1 move to go
         } else {
             searchResult = blackSearcher.search(2000, 0, 1); // should reach max depth first, but just in case, call cutoff after two seconds in extreme circumstances
         }
@@ -176,8 +176,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
             board.makeMove(searchResult.bestMove); // Assume makeMove applies the move to the board
             moveCount++;
         
-        // if the game is 150 moves for each side, too long, abort
-        if (moveCount > 300) {
+        // if the game is 100 moves for each side, too long, draw
+        if (moveCount > 200) {
             result = 0;
             break;
         } 
@@ -270,43 +270,43 @@ double calculateFitness() {
         int multiplier = populationSize / 10;
         for(int i = 0; i < multiplier; i++) {
             chromosome d1;
-            d1.chromosome = convertEvalToChromosone(dad1);
+            d1.chromosome = convertEvalToChromosone(ga1result1);
             d1.fitness = 0;
             population.push_back(d1);  
             chromosome d2;
-            d2.chromosome = convertEvalToChromosone(dad2);
+            d2.chromosome = convertEvalToChromosone(ga1result2);
             d2.fitness = 0;
             population.push_back(d2);
             chromosome d3;
-            d3.chromosome = convertEvalToChromosone(dad3);
+            d3.chromosome = convertEvalToChromosone(ga1result3);
             d3.fitness = 0;
             population.push_back(d3);
             chromosome d4;
-            d4.chromosome = convertEvalToChromosone(dad4);
+            d4.chromosome = convertEvalToChromosone(ga1result4);
             d4.fitness = 0;
             population.push_back(d4);
             chromosome d5;
-            d5.chromosome = convertEvalToChromosone(dad5);
+            d5.chromosome = convertEvalToChromosone(ga1result5);
             d5.fitness = 0;
             population.push_back(d5);
             chromosome d6;
-            d6.chromosome = convertEvalToChromosone(dad6);
+            d6.chromosome = convertEvalToChromosone(ga1result6);
             d6.fitness = 0;
             population.push_back(d6);
             chromosome d7;
-            d7.chromosome = convertEvalToChromosone(dad7);
+            d7.chromosome = convertEvalToChromosone(ga1result7);
             d7.fitness = 0;
             population.push_back(d7);
             chromosome d8;
-            d8.chromosome = convertEvalToChromosone(dad8);
+            d8.chromosome = convertEvalToChromosone(ga1result8);
             d8.fitness = 0;
             population.push_back(d8);
             chromosome d9;
-            d9.chromosome = convertEvalToChromosone(dad9);
+            d9.chromosome = convertEvalToChromosone(ga1result9);
             d9.fitness = 0;
             population.push_back(d9);
             chromosome d10;
-            d10.chromosome = convertEvalToChromosone(dad10);
+            d10.chromosome = convertEvalToChromosone(ga1result10);
             d10.fitness = 0;  
         }
         

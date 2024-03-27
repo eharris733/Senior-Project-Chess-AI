@@ -29,13 +29,13 @@ int main() {
 
 
     double initialMutationRate = 0.05;
-    double decayRate = 0.025;
+    double decayRate = 0.02;
     double crossoverRate = 0.75;
     int totalGenerations = 200;
-    size_t populationSize = 40; // because we have twenty threads, we will almost always have a pop size of at least 20
-    int eliteSize = 4;
+    size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20
+    int eliteSize = 2;
     int archiveSize = 400;
-    int replacementCount = 4;
+    int replacementCount = 2;
 
     Logger::getInstance().log(  "Running Genetic Algorithm"  );
     Logger::getInstance().log(  "Population Size: " + std::to_string(populationSize)  );
