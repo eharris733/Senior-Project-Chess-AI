@@ -42,11 +42,11 @@ int main() {
     double initialMutationRate = 0.02;
     double decayRate = 0.05;
     double crossoverRate = 0.75;
-    int totalGenerations = 50;
-    size_t populationSize = 10; 
-    int trainingSize = 100;
+    int totalGenerations = 10;
+    size_t populationSize = 5; 
+    int trainingSize = 10;
     int eliteSize = 1;
-    int archiveSize = 200;
+    int archiveSize = 20;
     int replacementCount = 1;
     std::string trainingDataPath = "dbs/test_suite.csv";
 

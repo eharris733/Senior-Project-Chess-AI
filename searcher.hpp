@@ -58,15 +58,16 @@ static const std::map<PieceType, int> PieceValue = {
 class Searcher {
 public:
 
-    
+    // Stop signal
+    std::atomic<bool>& stopSignal;
 
     SearchState state = SearchState();
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval, std::atomic<bool>& stopSignal) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 16), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
-          searchParams(searchParams)
+          searchParams(searchParams), stopSignal(stopSignal)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
         state.nodes = 0;

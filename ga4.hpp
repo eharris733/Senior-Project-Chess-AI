@@ -10,6 +10,9 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <atomic>
+#include <iostream>
+#include <memory>
 
 
 class GeneticAlgorithm4 {
@@ -143,78 +146,76 @@ private:
         return initialRate * exp(-decayRate * generation);
     }
 
-    // Helper function to calculate fitness for a subset of evaluations
-double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params) {
-    double totalSuccesfulDepth = 0.0;
+
+double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params, std::atomic<bool>& stopSignal) {
+    double totalSuccessfulDepth = 0.0;
     Board board = Board();
-    Searcher searcher = Searcher(board, params, baseEval); // useless size for a tt
+    Searcher searcher = Searcher(board, params, baseEval, stopSignal); // Pass the stop signal here
     searcher.setVerbose(false);
     for (const FenMovePair& move : posSubset) {
-        // start a timer
+        if (stopSignal.load(std::memory_order_relaxed)) break; // Optionally check the stop signal before starting each search
         searcher.clear();
         board.setFen(move.fen);
         SearchState result = searcher.search(200, 0, 1);
         Move bestMove = result.bestMove;
         int depthReached = result.currentDepth;
         std::string uciMove = uci::moveToUci(bestMove);
-        if (move.move == uciMove){
-            totalSuccesfulDepth += depthReached;
+        if (move.move == uciMove) {
+            totalSuccessfulDepth += depthReached;
         }
     }
-    return totalSuccesfulDepth;
+    return totalSuccessfulDepth;
 }
 
-// Modified calculateFitness function with multi-threading
-// obviously I did not write this, but damn is it nice. x5 speedup more or less
 double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch& params) {
-    // return calculateFitnessSubset(pos, params);
-    const size_t numThreads = 5; // Use as many threads as there are CPU cores - 1
-    std::vector<std::thread> threads = std::vector<std::thread>(numThreads);
+    const size_t numThreads = std::min(5u, std::thread::hardware_concurrency()); // Safeguard and optimization
+    std::vector<std::thread> threads;
+    std::vector<std::shared_ptr<std::atomic<bool>>> stopSignals;
     std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
 
     size_t posPerThread = pos.size() / numThreads;
-    
-    // Lambda to process each subset of evaluations
-   auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx) {
+
+   auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx, std::shared_ptr<std::atomic<bool>> stopSignal) {
     try {
         std::vector<FenMovePair> posSubset(pos.begin() + startIdx, pos.begin() + endIdx);
-        partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params);
+        partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params, *stopSignal);
     } catch (const std::exception& e) {
         std::cerr << "Exception in thread " << threadIdx << ": " << e.what() << std::endl;
-        // Handle exception or set an error state
     }
 };
 
-
-    // Launch threads
     for (size_t i = 0; i < numThreads; ++i) {
         size_t startIdx = i * posPerThread;
         size_t endIdx = (i + 1) * posPerThread;
         if (i == numThreads - 1) {
-            endIdx = pos.size(); // Make sure the last thread covers all remaining evaluations
+            endIdx = pos.size(); // Ensure the last thread covers the remainder
         }
-        threads.emplace_back(worker, startIdx, endIdx, i);
+            // Create a new stop signal for each search
+        auto stopSignal = std::make_shared<std::atomic<bool>>(false);
+        stopSignals.push_back(stopSignal);
+        threads.emplace_back(std::thread(worker, startIdx, endIdx, i, stopSignals[i]));
     }
 
-    // Wait for all threads to complete
     for (auto& t : threads) {
-        t.join();
+        if (t.joinable()) {
+            t.join();
+        }
     }
 
-    // Aggregate the results
     double totalDifference = 0.0;
     for (const auto& diff : partialDifferences) {
         totalDifference += diff;
     }
 
-    return totalDifference; // Return the average difference
+    return totalDifference;
 }
+
 
     // looks good
     void initializePopulation() {
         for (size_t i = 0; i < populationSize; ++i) {
             TunableSearch randomSearch = initializeRandomTunableSearch();
-            population.push_back({convertSearchToChromosome(randomSearch), calculateFitness(positions, randomSearch)}); // 100000.0 is a placeholder for the fitness level
+            population.push_back({convertSearchToChromosome(randomSearch), 0}); // 100000.0 is a placeholder for the fitness level
         }
     }
 
