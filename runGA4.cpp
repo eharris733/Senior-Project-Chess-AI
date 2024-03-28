@@ -42,8 +42,8 @@ int main() {
     double initialMutationRate = 0.05;
     double decayRate = 0.02;
     double crossoverRate = 0.75;
-    int totalGenerations = 50;
-    size_t populationSize = 4; 
+    int totalGenerations = 10;
+    size_t populationSize = 10; 
     int trainingSize = 10;
     int eliteSize = 1;
     int archiveSize = 200;

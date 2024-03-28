@@ -159,13 +159,13 @@ double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const T
 
         // Timer to enforce search timeout
         std::thread timer([localStopSignal]() {
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             localStopSignal->store(true);
         });
 
         searcher.clear();
         board.setFen(move.fen);
-        SearchState result = searcher.search(1000, 0, 1);
+        SearchState result = searcher.search(100, 0, 1);
 
         //Cleanup
         if (timer.joinable()) {
@@ -175,7 +175,6 @@ double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const T
         Move bestMove = result.bestMove;
         int depthReached = result.currentDepth;
         std::string uciMove = uci::moveToUci(bestMove);
-        localStopSignal->store(false); // Reset the stop signal
 
         if (move.move == uciMove) {
             totalSuccessfulDepth += depthReached;

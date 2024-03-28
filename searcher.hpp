@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <chrono> 
 #include <cstring>
+#include <atomic>
+#include <memory>
 
 using namespace chess;
 using namespace std;

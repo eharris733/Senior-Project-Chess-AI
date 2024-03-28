@@ -6055,3 +6055,67 @@ Best Fitness: 6.000000, Average Fitness: -0.300000, Worst Fitness: -17.000000
 Generation: 89
 Mutation Rate: 0.008432
 Best Fitness: 9.000000, Average Fitness: 0.850000, Worst Fitness: -18.000000
+Generation: 90
+Mutation Rate: 0.008265
+Best Fitness: 12.000000, Average Fitness: 0.900000, Worst Fitness: -11.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1022, 1002), // Queen
+    GamePhaseValue(16, 36), // Passed Pawn
+    GamePhaseValue(6, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(30, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 3), // Bishop Mobility
+    GamePhaseValue(18, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(18, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 27), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 15), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 91
+Mutation Rate: 0.008101
+Best Fitness: 7.000000, Average Fitness: -0.850000, Worst Fitness: -8.000000
+Generation: 92
+Mutation Rate: 0.007941
+Best Fitness: 5.000000, Average Fitness: 0.000000, Worst Fitness: -5.000000
+Generation: 93
+Mutation Rate: 0.007784
+Best Fitness: 11.000000, Average Fitness: 1.200000, Worst Fitness: -5.000000
+Generation: 94
+Mutation Rate: 0.007630
+Best Fitness: 9.000000, Average Fitness: 0.500000, Worst Fitness: -19.000000
+Generation: 95
+Mutation Rate: 0.007478
+Best Fitness: 10.000000, Average Fitness: 1.100000, Worst Fitness: -18.000000
+Generation: 96
+Mutation Rate: 0.007330
+Best Fitness: 8.000000, Average Fitness: 0.400000, Worst Fitness: -8.000000
+Generation: 97
+Mutation Rate: 0.007185
+Best Fitness: 7.000000, Average Fitness: -0.050000, Worst Fitness: -17.000000
+Generation: 98
+Mutation Rate: 0.007043
+Best Fitness: 7.000000, Average Fitness: -0.650000, Worst Fitness: -13.000000
+Generation: 99
+Mutation Rate: 0.006903
+Best Fitness: 7.000000, Average Fitness: 0.350000, Worst Fitness: -7.000000
