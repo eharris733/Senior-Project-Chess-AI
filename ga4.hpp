@@ -153,13 +153,23 @@ double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const T
     Searcher searcher = Searcher(board, params, baseEval, stopSignal); // Pass the stop signal here
     searcher.setVerbose(false);
     for (const FenMovePair& move : posSubset) {
-        if (stopSignal.load(std::memory_order_relaxed)) break; // Optionally check the stop signal before starting each search
+
+        // Timer thread to set stopSignal after 1 second
+        std::thread timer([&stopSignal]() {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            stopSignal.store(true);
+        });
         searcher.clear();
         board.setFen(move.fen);
         SearchState result = searcher.search(200, 0, 1);
         Move bestMove = result.bestMove;
         int depthReached = result.currentDepth;
         std::string uciMove = uci::moveToUci(bestMove);
+        
+        if (timer.joinable()) {
+            timer.join(); // Ensure the timer thread finishes
+        }
+        stopSignal.store(false); // Reset the stop signal for potential future use
         if (move.move == uciMove) {
             totalSuccessfulDepth += depthReached;
         }

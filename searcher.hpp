@@ -191,6 +191,7 @@ private:
     
     // probably unnecesary but good practice
     void initSearch() {
+        stopSignal = false;
         state.isOpening = true;
         state.bestMove = Move::NULL_MOVE;
         state.currentDepth = 1;
@@ -281,7 +282,9 @@ int aspirationSearch() {
 
 
     int negamax(int depth, int alpha, int beta, int plyFromRoot) {
-        
+        if (stopSignal.load(std::memory_order_relaxed)){
+            return mateScore + 1; // Stop signal received, return the worst possible score so results are ignored from this search
+        }
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
         }

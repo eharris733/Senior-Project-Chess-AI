@@ -6046,3 +6046,12 @@ Best Fitness: 8.000000, Average Fitness: -1.050000, Worst Fitness: -31.000000
 Generation: 86
 Mutation Rate: 0.008953
 Best Fitness: 9.000000, Average Fitness: 0.000000, Worst Fitness: -37.000000
+Generation: 87
+Mutation Rate: 0.008776
+Best Fitness: 4.000000, Average Fitness: -0.200000, Worst Fitness: -8.000000
+Generation: 88
+Mutation Rate: 0.008602
+Best Fitness: 6.000000, Average Fitness: -0.300000, Worst Fitness: -17.000000
+Generation: 89
+Mutation Rate: 0.008432
+Best Fitness: 9.000000, Average Fitness: 0.850000, Worst Fitness: -18.000000
