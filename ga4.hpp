@@ -147,48 +147,59 @@ private:
     }
 
 
-double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params, std::atomic<bool>& stopSignal) {
+double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params) {
     double totalSuccessfulDepth = 0.0;
     Board board = Board();
-    Searcher searcher = Searcher(board, params, baseEval, stopSignal); // Pass the stop signal here
-    searcher.setVerbose(false);
-    for (const FenMovePair& move : posSubset) {
+    auto localStopSignal = std::make_shared<std::atomic<bool>>(false);
+    localStopSignal->store(false); // hopefully this helps?
+    Searcher searcher(board, *localStopSignal, params, baseEval); // Adjusted for shared_ptr
 
-        // Timer thread to set stopSignal after 1 second
-        std::thread timer([&stopSignal]() {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            stopSignal.store(true);
+    for (const FenMovePair& move : posSubset) {
+        searcher.setVerbose(false);
+
+        // Timer to enforce search timeout
+        std::thread timer([localStopSignal]() {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            localStopSignal->store(true);
         });
+
         searcher.clear();
         board.setFen(move.fen);
-        SearchState result = searcher.search(200, 0, 1);
+        SearchState result = searcher.search(1000, 0, 1);
+
+        //Cleanup
+        if (timer.joinable()) {
+            timer.join(); // Make sure timer finishes before moving on
+        }
+
         Move bestMove = result.bestMove;
         int depthReached = result.currentDepth;
         std::string uciMove = uci::moveToUci(bestMove);
-        
-        if (timer.joinable()) {
-            timer.join(); // Ensure the timer thread finishes
-        }
-        stopSignal.store(false); // Reset the stop signal for potential future use
+        localStopSignal->store(false); // Reset the stop signal
+
         if (move.move == uciMove) {
             totalSuccessfulDepth += depthReached;
         }
+
     }
+
     return totalSuccessfulDepth;
 }
+
+
 
 double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch& params) {
     const size_t numThreads = std::min(5u, std::thread::hardware_concurrency()); // Safeguard and optimization
     std::vector<std::thread> threads;
-    std::vector<std::shared_ptr<std::atomic<bool>>> stopSignals;
     std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
 
     size_t posPerThread = pos.size() / numThreads;
 
-   auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx, std::shared_ptr<std::atomic<bool>> stopSignal) {
+  auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx) {
+    // Removed stopSignal from the parameters as it's managed internally now
     try {
         std::vector<FenMovePair> posSubset(pos.begin() + startIdx, pos.begin() + endIdx);
-        partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params, *stopSignal);
+        partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params);
     } catch (const std::exception& e) {
         std::cerr << "Exception in thread " << threadIdx << ": " << e.what() << std::endl;
     }
@@ -200,10 +211,7 @@ double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch
         if (i == numThreads - 1) {
             endIdx = pos.size(); // Ensure the last thread covers the remainder
         }
-            // Create a new stop signal for each search
-        auto stopSignal = std::make_shared<std::atomic<bool>>(false);
-        stopSignals.push_back(stopSignal);
-        threads.emplace_back(std::thread(worker, startIdx, endIdx, i, stopSignals[i]));
+        threads.emplace_back(std::thread(worker, startIdx, endIdx, i));
     }
 
     for (auto& t : threads) {

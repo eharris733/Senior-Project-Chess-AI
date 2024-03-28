@@ -58,11 +58,8 @@ static const std::map<PieceType, int> PieceValue = {
 class Searcher {
 public:
 
-    // Stop signal
-    std::atomic<bool>& stopSignal;
-
-    SearchState state = SearchState();
-    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval, std::atomic<bool>& stopSignal) 
+    
+    Searcher(Board& initialBoard, std::atomic<bool>& stopSignal, TunableSearch searchParams = baseSearch, TunableEval evalParams = baseEval) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 16), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
@@ -103,7 +100,7 @@ public:
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
         // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
-        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 4;
+        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement);
 
         // // start the timer
         auto startTime = chrono::steady_clock::now();
@@ -174,6 +171,9 @@ public:
 private:
     Board& board; // The board to search on
     Evaluator evaluator = Evaluator(board, evalParams); // our evaluation function
+    SearchState state = SearchState();
+    // Stop signal
+    std::atomic<bool>& stopSignal;
     TranspositionTable tt; // Transposition table
     //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
