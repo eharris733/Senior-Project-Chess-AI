@@ -6119,3 +6119,714 @@ Best Fitness: 7.000000, Average Fitness: -0.650000, Worst Fitness: -13.000000
 Generation: 99
 Mutation Rate: 0.006903
 Best Fitness: 7.000000, Average Fitness: 0.350000, Worst Fitness: -7.000000
+Generation: 100
+Mutation Rate: 0.006767
+Best Fitness: 11.000000, Average Fitness: -0.400000, Worst Fitness: -9.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(602, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(14, 0), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 12), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(31, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(11, 8), // Bishop Mobility
+    GamePhaseValue(20, 25), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(48, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(15, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 101
+Mutation Rate: 0.006633
+Best Fitness: 8.000000, Average Fitness: -0.050000, Worst Fitness: -14.000000
+Generation: 102
+Mutation Rate: 0.006501
+Best Fitness: 11.000000, Average Fitness: -1.050000, Worst Fitness: -18.000000
+Generation: 103
+Mutation Rate: 0.006373
+Best Fitness: 9.000000, Average Fitness: -0.900000, Worst Fitness: -11.000000
+Generation: 104
+Mutation Rate: 0.006247
+Best Fitness: 8.000000, Average Fitness: -0.200000, Worst Fitness: -6.000000
+Generation: 105
+Mutation Rate: 0.006123
+Best Fitness: 3.000000, Average Fitness: -2.100000, Worst Fitness: -37.000000
+Generation: 106
+Mutation Rate: 0.006002
+Best Fitness: 5.000000, Average Fitness: 0.200000, Worst Fitness: -7.000000
+Generation: 107
+Mutation Rate: 0.005883
+Best Fitness: 5.000000, Average Fitness: -0.500000, Worst Fitness: -8.000000
+Generation: 108
+Mutation Rate: 0.005766
+Best Fitness: 7.000000, Average Fitness: -0.600000, Worst Fitness: -21.000000
+Generation: 109
+Mutation Rate: 0.005652
+Best Fitness: 8.000000, Average Fitness: 0.300000, Worst Fitness: -13.000000
+Generation: 110
+Mutation Rate: 0.005540
+Best Fitness: 7.000000, Average Fitness: 0.500000, Worst Fitness: -13.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 118), // Pawn
+    GamePhaseValue(400, 298), // Knight
+    GamePhaseValue(394, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1017, 1018), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(25, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(10, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 3), // Knight Mobility
+    GamePhaseValue(11, 8), // Bishop Mobility
+    GamePhaseValue(20, 25), // Bishop Pair
+    GamePhaseValue(8, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(16, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 12), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 25), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 111
+Mutation Rate: 0.005430
+Best Fitness: 7.000000, Average Fitness: -0.500000, Worst Fitness: -38.000000
+Generation: 112
+Mutation Rate: 0.005323
+Best Fitness: 6.000000, Average Fitness: -0.450000, Worst Fitness: -32.000000
+Generation: 113
+Mutation Rate: 0.005218
+Best Fitness: 5.000000, Average Fitness: -0.650000, Worst Fitness: -8.000000
+Generation: 114
+Mutation Rate: 0.005114
+Best Fitness: 8.000000, Average Fitness: 0.450000, Worst Fitness: -6.000000
+Generation: 115
+Mutation Rate: 0.005013
+Best Fitness: 5.000000, Average Fitness: 0.150000, Worst Fitness: -9.000000
+Generation: 116
+Mutation Rate: 0.004914
+Best Fitness: 6.000000, Average Fitness: 0.200000, Worst Fitness: -5.000000
+Generation: 117
+Mutation Rate: 0.004816
+Best Fitness: 7.000000, Average Fitness: -0.200000, Worst Fitness: -7.000000
+Generation: 118
+Mutation Rate: 0.004721
+Best Fitness: 8.000000, Average Fitness: 0.250000, Worst Fitness: -19.000000
+Generation: 119
+Mutation Rate: 0.004628
+Best Fitness: 6.000000, Average Fitness: -0.950000, Worst Fitness: -7.000000
+Generation: 120
+Mutation Rate: 0.004536
+Best Fitness: 5.000000, Average Fitness: 0.000000, Worst Fitness: -10.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(365, 301), // Knight
+    GamePhaseValue(377, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(15, 27), // Passed Pawn
+    GamePhaseValue(6, 28), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(14, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 25), // Passed Pawn Enemy King Square
+    GamePhaseValue(30, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 3), // Bishop Mobility
+    GamePhaseValue(18, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(18, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 27), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(1, 15), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(15, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 121
+Mutation Rate: 0.004446
+Best Fitness: 4.000000, Average Fitness: -1.950000, Worst Fitness: -19.000000
+Generation: 122
+Mutation Rate: 0.004358
+Best Fitness: 6.000000, Average Fitness: 0.300000, Worst Fitness: -18.000000
+Generation: 123
+Mutation Rate: 0.004272
+Best Fitness: 10.000000, Average Fitness: 0.700000, Worst Fitness: -22.000000
+Generation: 124
+Mutation Rate: 0.004187
+Best Fitness: 5.000000, Average Fitness: 0.300000, Worst Fitness: -6.000000
+Generation: 125
+Mutation Rate: 0.004104
+Best Fitness: 7.000000, Average Fitness: -0.700000, Worst Fitness: -15.000000
+Generation: 126
+Mutation Rate: 0.004023
+Best Fitness: 8.000000, Average Fitness: -1.750000, Worst Fitness: -36.000000
+Generation: 127
+Mutation Rate: 0.003943
+Best Fitness: 6.000000, Average Fitness: -1.500000, Worst Fitness: -7.000000
+Generation: 128
+Mutation Rate: 0.003865
+Best Fitness: 6.000000, Average Fitness: -1.700000, Worst Fitness: -8.000000
+Generation: 129
+Mutation Rate: 0.003789
+Best Fitness: 12.000000, Average Fitness: -0.950000, Worst Fitness: -11.000000
+Generation: 130
+Mutation Rate: 0.003714
+Best Fitness: 10.000000, Average Fitness: 0.300000, Worst Fitness: -5.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(6, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(33, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 3), // Bishop Mobility
+    GamePhaseValue(18, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(18, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 27), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 15), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 3), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 131
+Mutation Rate: 0.003640
+Best Fitness: 9.000000, Average Fitness: -0.600000, Worst Fitness: -6.000000
+Generation: 132
+Mutation Rate: 0.003568
+Best Fitness: 6.000000, Average Fitness: 0.550000, Worst Fitness: -5.000000
+Generation: 133
+Mutation Rate: 0.003497
+Best Fitness: 7.000000, Average Fitness: -1.500000, Worst Fitness: -38.000000
+Generation: 134
+Mutation Rate: 0.003428
+Best Fitness: 9.000000, Average Fitness: -0.500000, Worst Fitness: -13.000000
+Generation: 135
+Mutation Rate: 0.003360
+Best Fitness: 6.000000, Average Fitness: -0.100000, Worst Fitness: -4.000000
+Generation: 136
+Mutation Rate: 0.003294
+Best Fitness: 8.000000, Average Fitness: 0.350000, Worst Fitness: -4.000000
+Generation: 137
+Mutation Rate: 0.003229
+Best Fitness: 5.000000, Average Fitness: 0.600000, Worst Fitness: -5.000000
+Generation: 138
+Mutation Rate: 0.003165
+Best Fitness: 5.000000, Average Fitness: -0.350000, Worst Fitness: -4.000000
+Generation: 139
+Mutation Rate: 0.003102
+Best Fitness: 7.000000, Average Fitness: -0.750000, Worst Fitness: -7.000000
+Generation: 140
+Mutation Rate: 0.003041
+Best Fitness: 10.000000, Average Fitness: 0.800000, Worst Fitness: -5.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 298), // Knight
+    GamePhaseValue(394, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1017, 1017), // Queen
+    GamePhaseValue(15, 24), // Passed Pawn
+    GamePhaseValue(8, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(29, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 12), // Bishop Mobility
+    GamePhaseValue(20, 25), // Bishop Pair
+    GamePhaseValue(11, 5), // Rook Attack King File
+    GamePhaseValue(17, 21), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(49, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 3), // King Pressure Score
+};
+
+Generation: 141
+Mutation Rate: 0.002980
+Best Fitness: 10.000000, Average Fitness: 0.050000, Worst Fitness: -10.000000
+Generation: 142
+Mutation Rate: 0.002921
+Best Fitness: 6.000000, Average Fitness: -0.350000, Worst Fitness: -6.000000
+Generation: 143
+Mutation Rate: 0.002863
+Best Fitness: 5.000000, Average Fitness: 0.300000, Worst Fitness: -5.000000
+Generation: 144
+Mutation Rate: 0.002807
+Best Fitness: 6.000000, Average Fitness: 0.450000, Worst Fitness: -15.000000
+Generation: 145
+Mutation Rate: 0.002751
+Best Fitness: 9.000000, Average Fitness: 0.450000, Worst Fitness: -16.000000
+Generation: 146
+Mutation Rate: 0.002697
+Best Fitness: 8.000000, Average Fitness: -0.500000, Worst Fitness: -8.000000
+Generation: 147
+Mutation Rate: 0.002643
+Best Fitness: 8.000000, Average Fitness: -0.100000, Worst Fitness: -6.000000
+Generation: 148
+Mutation Rate: 0.002591
+Best Fitness: 8.000000, Average Fitness: -0.300000, Worst Fitness: -8.000000
+Generation: 149
+Mutation Rate: 0.002540
+Best Fitness: 6.000000, Average Fitness: 0.250000, Worst Fitness: -6.000000
+Generation: 150
+Mutation Rate: 0.002489
+Best Fitness: 6.000000, Average Fitness: -0.700000, Worst Fitness: -5.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 118), // Pawn
+    GamePhaseValue(400, 298), // Knight
+    GamePhaseValue(394, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1017, 1017), // Queen
+    GamePhaseValue(15, 24), // Passed Pawn
+    GamePhaseValue(8, 3), // Doubled Pawn
+    GamePhaseValue(9, 11), // Isolated Pawn
+    GamePhaseValue(9, 13), // Weak Pawn
+    GamePhaseValue(9, 12), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(31, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(11, 8), // Bishop Mobility
+    GamePhaseValue(20, 25), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(48, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(15, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 151
+Mutation Rate: 0.002440
+Best Fitness: 4.000000, Average Fitness: -1.150000, Worst Fitness: -8.000000
+Generation: 152
+Mutation Rate: 0.002392
+Best Fitness: 7.000000, Average Fitness: 0.550000, Worst Fitness: -6.000000
+Generation: 153
+Mutation Rate: 0.002344
+Best Fitness: 6.000000, Average Fitness: 0.950000, Worst Fitness: -10.000000
+Generation: 154
+Mutation Rate: 0.002298
+Best Fitness: 4.000000, Average Fitness: -0.150000, Worst Fitness: -6.000000
+Generation: 155
+Mutation Rate: 0.002252
+Best Fitness: 6.000000, Average Fitness: -0.100000, Worst Fitness: -8.000000
+Generation: 156
+Mutation Rate: 0.002208
+Best Fitness: 6.000000, Average Fitness: 1.400000, Worst Fitness: -8.000000
+Generation: 157
+Mutation Rate: 0.002164
+Best Fitness: 5.000000, Average Fitness: 0.400000, Worst Fitness: -5.000000
+Generation: 158
+Mutation Rate: 0.002121
+Best Fitness: 10.000000, Average Fitness: -0.150000, Worst Fitness: -6.000000
+Generation: 159
+Mutation Rate: 0.002079
+Best Fitness: 6.000000, Average Fitness: -0.050000, Worst Fitness: -6.000000
+Generation: 160
+Mutation Rate: 0.002038
+Best Fitness: 5.000000, Average Fitness: 0.100000, Worst Fitness: -11.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(602, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(6, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(30, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 3), // Bishop Mobility
+    GamePhaseValue(18, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(18, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 27), // Rook 7th Rank
+    GamePhaseValue(19, 18), // Rook Connected
+    GamePhaseValue(6, 15), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 161
+Mutation Rate: 0.001998
+Best Fitness: 3.000000, Average Fitness: -0.600000, Worst Fitness: -18.000000
+Generation: 162
+Mutation Rate: 0.001958
+Best Fitness: 6.000000, Average Fitness: -0.900000, Worst Fitness: -10.000000
+Generation: 163
+Mutation Rate: 0.001919
+Best Fitness: 4.000000, Average Fitness: -0.800000, Worst Fitness: -9.000000
+Generation: 164
+Mutation Rate: 0.001881
+Best Fitness: 5.000000, Average Fitness: -0.450000, Worst Fitness: -6.000000
+Generation: 165
+Mutation Rate: 0.001844
+Best Fitness: 7.000000, Average Fitness: 0.050000, Worst Fitness: -7.000000
+Generation: 166
+Mutation Rate: 0.001808
+Best Fitness: 9.000000, Average Fitness: -0.250000, Worst Fitness: -7.000000
+Generation: 167
+Mutation Rate: 0.001772
+Best Fitness: 8.000000, Average Fitness: 0.350000, Worst Fitness: -7.000000
+Generation: 168
+Mutation Rate: 0.001737
+Best Fitness: 9.000000, Average Fitness: 0.250000, Worst Fitness: -7.000000
+Generation: 169
+Mutation Rate: 0.001702
+Best Fitness: 6.000000, Average Fitness: 0.200000, Worst Fitness: -6.000000
+Generation: 170
+Mutation Rate: 0.001669
+Best Fitness: 7.000000, Average Fitness: -0.200000, Worst Fitness: -7.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(6, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(30, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 3), // Bishop Mobility
+    GamePhaseValue(18, 25), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(48, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 171
+Mutation Rate: 0.001636
+Best Fitness: 8.000000, Average Fitness: 0.600000, Worst Fitness: -7.000000
+Generation: 172
+Mutation Rate: 0.001603
+Best Fitness: 6.000000, Average Fitness: 0.550000, Worst Fitness: -7.000000
+Generation: 173
+Mutation Rate: 0.001571
+Best Fitness: 6.000000, Average Fitness: 0.350000, Worst Fitness: -9.000000
+Generation: 174
+Mutation Rate: 0.001540
+Best Fitness: 5.000000, Average Fitness: 0.000000, Worst Fitness: -5.000000
+Generation: 175
+Mutation Rate: 0.001510
+Best Fitness: 5.000000, Average Fitness: -0.400000, Worst Fitness: -7.000000
+Generation: 176
+Mutation Rate: 0.001480
+Best Fitness: 2.000000, Average Fitness: -1.250000, Worst Fitness: -7.000000
+Generation: 177
+Mutation Rate: 0.001451
+Best Fitness: 5.000000, Average Fitness: -0.800000, Worst Fitness: -15.000000
+Generation: 178
+Mutation Rate: 0.001422
+Best Fitness: 8.000000, Average Fitness: 1.550000, Worst Fitness: -7.000000
+Generation: 179
+Mutation Rate: 0.001394
+Best Fitness: 6.000000, Average Fitness: 0.150000, Worst Fitness: -14.000000
+Generation: 180
+Mutation Rate: 0.001366
+Best Fitness: 5.000000, Average Fitness: -0.300000, Worst Fitness: -8.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(6, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 13), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(12, 3), // Bishop Mobility
+    GamePhaseValue(18, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(48, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(15, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 181
+Mutation Rate: 0.001339
+Best Fitness: 6.000000, Average Fitness: 0.200000, Worst Fitness: -9.000000
+Generation: 182
+Mutation Rate: 0.001313
+Best Fitness: 6.000000, Average Fitness: -0.600000, Worst Fitness: -5.000000
+Generation: 183
+Mutation Rate: 0.001287
+Best Fitness: 6.000000, Average Fitness: -0.700000, Worst Fitness: -9.000000
+Generation: 184
+Mutation Rate: 0.001261
+Best Fitness: 7.000000, Average Fitness: 0.150000, Worst Fitness: -6.000000
+Generation: 185
+Mutation Rate: 0.001236
+Best Fitness: 3.000000, Average Fitness: -0.350000, Worst Fitness: -6.000000
+Generation: 186
+Mutation Rate: 0.001212
+Best Fitness: 6.000000, Average Fitness: 0.200000, Worst Fitness: -5.000000
+Generation: 187
+Mutation Rate: 0.001188
+Best Fitness: 6.000000, Average Fitness: -0.050000, Worst Fitness: -7.000000
+Generation: 188
+Mutation Rate: 0.001164
+Best Fitness: 7.000000, Average Fitness: 1.300000, Worst Fitness: -3.000000
+Generation: 189
+Mutation Rate: 0.001141
+Best Fitness: 8.000000, Average Fitness: -0.500000, Worst Fitness: -9.000000
+Generation: 190
+Mutation Rate: 0.001119
+Best Fitness: 6.000000, Average Fitness: -0.250000, Worst Fitness: -19.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 118), // Pawn
+    GamePhaseValue(400, 298), // Knight
+    GamePhaseValue(394, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1017, 1017), // Queen
+    GamePhaseValue(15, 24), // Passed Pawn
+    GamePhaseValue(8, 3), // Doubled Pawn
+    GamePhaseValue(9, 11), // Isolated Pawn
+    GamePhaseValue(9, 13), // Weak Pawn
+    GamePhaseValue(9, 12), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(31, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(12, 8), // Bishop Mobility
+    GamePhaseValue(21, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(18, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 27), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 15), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Generation: 191
+Mutation Rate: 0.001096
+Best Fitness: 5.000000, Average Fitness: -0.450000, Worst Fitness: -6.000000
+Generation: 192
+Mutation Rate: 0.001075
+Best Fitness: 6.000000, Average Fitness: -0.450000, Worst Fitness: -8.000000
+Generation: 193
+Mutation Rate: 0.001053
+Best Fitness: 4.000000, Average Fitness: -1.000000, Worst Fitness: -12.000000
+Generation: 194
+Mutation Rate: 0.001033
+Best Fitness: 6.000000, Average Fitness: -0.750000, Worst Fitness: -8.000000
+Generation: 195
+Mutation Rate: 0.001012
+Best Fitness: 7.000000, Average Fitness: 0.850000, Worst Fitness: -12.000000
+Generation: 196
+Mutation Rate: 0.000992
+Best Fitness: 6.000000, Average Fitness: 0.250000, Worst Fitness: -5.000000
+Generation: 197
+Mutation Rate: 0.000972
+Best Fitness: 8.000000, Average Fitness: 0.800000, Worst Fitness: -4.000000
+Generation: 198
+Mutation Rate: 0.000953
+Best Fitness: 4.000000, Average Fitness: -0.050000, Worst Fitness: -5.000000
+Generation: 199
+Mutation Rate: 0.000934
+Best Fitness: 6.000000, Average Fitness: -0.900000, Worst Fitness: -8.000000
+Generation: 200
+Mutation Rate: 0.000916
+Best Fitness: 6.000000, Average Fitness: -0.200000, Worst Fitness: -5.000000
+Best Chromosome: 
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 137), // Pawn
+    GamePhaseValue(367, 301), // Knight
+    GamePhaseValue(390, 327), // Bishop
+    GamePhaseValue(548, 510), // Rook
+    GamePhaseValue(1022, 997), // Queen
+    GamePhaseValue(16, 27), // Passed Pawn
+    GamePhaseValue(6, 3), // Doubled Pawn
+    GamePhaseValue(9, 10), // Isolated Pawn
+    GamePhaseValue(9, 9), // Weak Pawn
+    GamePhaseValue(9, 2), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(0, 26), // Passed Pawn Enemy King Square
+    GamePhaseValue(30, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(13, 3), // Bishop Mobility
+    GamePhaseValue(18, 30), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(18, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(21, 27), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 15), // Rook Mobility
+    GamePhaseValue(15, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(12, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+TunableEval baseEval = {
+    chess::constants::STARTPOS,
+    GamePhaseValue(100, 118), // Pawn
+    GamePhaseValue(400, 298), // Knight
+    GamePhaseValue(394, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1017, 1017), // Queen
+    GamePhaseValue(15, 24), // Passed Pawn
+    GamePhaseValue(8, 3), // Doubled Pawn
+    GamePhaseValue(9, 11), // Isolated Pawn
+    GamePhaseValue(9, 13), // Weak Pawn
+    GamePhaseValue(9, 12), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(31, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(11, 8), // Bishop Mobility
+    GamePhaseValue(20, 25), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(48, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(15, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+};
+
+Time taken: 108432 seconds

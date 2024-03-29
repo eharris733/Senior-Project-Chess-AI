@@ -6,7 +6,7 @@
 #include <thread> // For std::thread
 #include <mutex> // For std::mutex
 #include <memory> // For unique_ptr
-
+#include <atomic> // For std::atomic
 // from my code
 #include "chess.hpp"
 #include "searcher.hpp"
@@ -81,7 +81,8 @@ vector<string> splitstr(const std::string& str, const char delim) {
 }
 
 int main() {
-    searcher = make_unique<Searcher>(board, baseSearch, baseEval); // Use fully qualified name
+    auto localStopSignal = std::make_shared<std::atomic<bool>>(false);
+    searcher = make_unique<Searcher>(board, *localStopSignal, baseSearch, ga1result10); // Use fully qualified name
     string uci;
     bool quit = false;
     bool isWhiteTurn = board.sideToMove() == Color::WHITE;

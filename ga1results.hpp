@@ -470,3 +470,37 @@ TunableEval ga3result1 {
     GamePhaseValue(2, 2), // Queen Mobility
     GamePhaseValue(1, 0), // King Pressure Score
 };
+
+TunableEval ga3result2 = {
+      chess::constants::STARTPOS,
+    GamePhaseValue(100, 118), // Pawn
+    GamePhaseValue(400, 298), // Knight
+    GamePhaseValue(394, 327), // Bishop
+    GamePhaseValue(549, 510), // Rook
+    GamePhaseValue(1017, 1017), // Queen
+    GamePhaseValue(15, 24), // Passed Pawn
+    GamePhaseValue(8, 3), // Doubled Pawn
+    GamePhaseValue(9, 11), // Isolated Pawn
+    GamePhaseValue(9, 13), // Weak Pawn
+    GamePhaseValue(9, 12), // Central Pawn
+    GamePhaseValue(1, 7), // Weak Square
+    GamePhaseValue(31, 5), // Passed Pawn Enemy King Square
+    GamePhaseValue(1, 31), // Knight Outposts
+    GamePhaseValue(12, 4), // Knight Mobility
+    GamePhaseValue(11, 8), // Bishop Mobility
+    GamePhaseValue(20, 25), // Bishop Pair
+    GamePhaseValue(11, 26), // Rook Attack King File
+    GamePhaseValue(17, 42), // Rook Attack King Adjacent File
+    GamePhaseValue(42, 42), // Rook 7th Rank
+    GamePhaseValue(19, 29), // Rook Connected
+    GamePhaseValue(6, 0), // Rook Mobility
+    GamePhaseValue(48, 41), // Rook Behind Passed Pawn
+    GamePhaseValue(32, 21), // Rook Open File
+    GamePhaseValue(11, 15), // Rook Semi Open File
+    GamePhaseValue(4, 56), // Rook Attack Weak Pawn Open Column
+    GamePhaseValue(15, 22), // King Friendly Pawn
+    GamePhaseValue(9, 7), // King No Enemy Pawn Near
+    GamePhaseValue(2, 4), // Queen Mobility
+    GamePhaseValue(1, 0), // King Pressure Score
+
+};
