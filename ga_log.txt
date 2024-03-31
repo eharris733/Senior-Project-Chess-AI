@@ -7228,3 +7228,56 @@ Best Fitness: 4.000000, Average Fitness: -1.100000, Worst Fitness: -8.000000
 Generation: 73
 Mutation Rate: 0.011612
 Best Fitness: 6.000000, Average Fitness: -0.950000, Worst Fitness: -6.000000
+Generation: 74
+Mutation Rate: 0.011382
+Best Fitness: 8.000000, Average Fitness: 0.400000, Worst Fitness: -7.000000
+Generation: 75
+Mutation Rate: 0.011157
+Best Fitness: 5.000000, Average Fitness: -2.250000, Worst Fitness: -8.000000
+Generation: 76
+Mutation Rate: 0.010936
+Best Fitness: 6.000000, Average Fitness: -0.700000, Worst Fitness: -11.000000
+Generation: 77
+Mutation Rate: 0.010719
+Best Fitness: 8.000000, Average Fitness: 0.150000, Worst Fitness: -7.000000
+Generation: 78
+Mutation Rate: 0.010507
+Best Fitness: 7.000000, Average Fitness: 0.600000, Worst Fitness: -11.000000
+Generation: 79
+Mutation Rate: 0.010299
+Best Fitness: 6.000000, Average Fitness: -0.400000, Worst Fitness: -11.000000
+Generation: 80
+Mutation Rate: 0.010095
+Best Fitness: 5.000000, Average Fitness: 0.200000, Worst Fitness: -10.000000
+Best Chromosome: 
+TunableSearch resultX = {
+36, // Aspiration Window 1
+129, // Aspiration Window 2
+19, // Aspiration Window initial delta
+860, // Delta Margin
+85, // Futillity Margin 1
+681, // Futillity Margin 2
+272, // Futillity Margin 3
+5, // Initial LMR Depth
+7, // Initial Move Counter
+924, // Killer Move Score
+762, // Promotion Move Score
+2, //Secondary Depth LMR
+15, // Secondary Move Counter
+5, aspiration window depth
+0, //use lazy eval futility
+0, // use lazy eval nmr
+};
+
+Generation: 81
+Mutation Rate: 0.009895
+Best Fitness: 5.000000, Average Fitness: -2.300000, Worst Fitness: -11.000000
+Generation: 82
+Mutation Rate: 0.009699
+Best Fitness: 7.000000, Average Fitness: -1.300000, Worst Fitness: -7.000000
+Generation: 83
+Mutation Rate: 0.009507
+Best Fitness: 5.000000, Average Fitness: -0.600000, Worst Fitness: -8.000000
+Generation: 84
+Mutation Rate: 0.009319
+Best Fitness: 9.000000, Average Fitness: -0.650000, Worst Fitness: -35.000000

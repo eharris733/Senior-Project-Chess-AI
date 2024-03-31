@@ -64,7 +64,7 @@ public:
     Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = ga1result10) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
-          tt(1 << 12), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
+          tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
           searchParams(searchParams)
           {
