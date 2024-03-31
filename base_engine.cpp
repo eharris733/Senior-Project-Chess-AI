@@ -10,6 +10,7 @@
 // from my code
 #include "chess.hpp"
 #include "searcher.hpp"
+#include "ga3and5results.hpp"
 
 using namespace chess;
 using namespace std;
