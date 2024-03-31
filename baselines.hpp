@@ -51,31 +51,31 @@ struct TunableSearch{
     //tuneable search parameters
 
     // for aspiration window
-    int aspirationWindow1;
-    int aspirationWindow2;
-    int aspirationWindowInitialDelta;
-    int useAspirationWindowDepth;
+    int aspirationWindow1 = 0;
+    int aspirationWindow2 = 0;
+    int aspirationWindowInitialDelta = 0;
+    int useAspirationWindowDepth = 0;
 
     // for null move reductions
-    bool useLazyEvalNMR;
+    bool useLazyEvalNMR = 0;
 
     // for futility pruning
-    int futilityMargin1;
-    int futilityMargin2;
-    int futilityMargin3;
-    bool useLazyEvalFutility;
+    int futilityMargin1 =0;
+    int futilityMargin2 = 0;
+    int futilityMargin3 = 0;
+    bool useLazyEvalFutility = true;
     // for delta pruning in QS search
-    int deltaMargin;
+    int deltaMargin = 0;
 
     // for move ordering
-    int promotionMoveScore;
-    int killerMoveScore;
+    int promotionMoveScore = 0;
+    int killerMoveScore = 0;
 
     //for late move reductions
-    int initalDepthLMR;
-    int secondaryDepthLMR;
-    int initialMoveCountLMR;
-    int secondaryMoveCountLMR;
+    int initalDepthLMR = 0;
+    int secondaryDepthLMR = 0;
+    int initialMoveCountLMR = 0;
+    int secondaryMoveCountLMR = 0;
 };
 
 // Global instance

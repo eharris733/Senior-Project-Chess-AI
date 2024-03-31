@@ -10,7 +10,6 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-#include <atomic>
 #include <iostream>
 #include <memory>
 
@@ -22,8 +21,7 @@ public:
         readCSV(trainingDataPath); 
         selectNRandom(trainingSize); // Select 5,000 random evaluations
         initializePopulation();
-        
-        
+        calculateFitness();
     }
 
     void run() {
@@ -34,8 +32,11 @@ public:
         //try baseline
         std::cout << "Training Data Path" << trainingDataPath << std::endl;
 
-        double baseline = calculateFitness(positions, baseSearch);
-        std::cout << "Baseline Fitness: " << baseline << std::endl;
+        // double baseline = calculateFitness();
+        // std::cout << "Baseline Fitness: " << baseline << std::endl;
+        selectNRandom(trainingSize); // Select 5,000 random evaluations
+        assert(population.size() == populationSize);
+        assert(positions.size() == trainingSize);
 
         while(currentGeneration++ < totalGenerations) {
             mutationRate = calculateMutationRate(initialMutationRate, mutationDecayRate, currentGeneration);
@@ -43,26 +44,19 @@ public:
             selectNRandom(trainingSize); // Select x random evaluations
             crossover();
             mutation();
-
+            calculateFitness();
+            assert(population.size() == populationSize);
             // sort the population by fitness
             std::sort(population.begin(), population.end(), [](const Chromosome& a, const Chromosome& b) {
                 return a.fitness > b.fitness;
             });
-
-            // delete worst one and duplicate best one
-            population.pop_back();
-            population.push_back(population.front());
             
-            if(population.front().fitness > best.fitness) {
-                best = population.front();
-            }
+            // we only care about the best one in THIS generation
+            best = population.front();
 
             // Example: Tracking best and average fitness
             double totalFitness = 0.0;
-
-            
-
-            best = population.front();
+            // print out every generation to track learning
             TunableSearch bestSearch = convertChromosomeToSearch(best.data);
             double bestFitness = best.fitness; // Assuming population is sorted
             for (const auto& individual : population) {
@@ -73,10 +67,9 @@ public:
             cout << "Mutation Rate: " << mutationRate << endl;
             std::cout << "Best Fitness: " << bestFitness << ", Average Fitness: " << averageFitness << std::endl;
 
-            if(currentGeneration % 5 == 0) {
-                std::cout << "Best Chromosome: "  << std::endl;
-                printTunableSearch(bestSearch);
-            }
+            //print out every generation to track learning
+            std::cout << "Best Chromosome: "  << std::endl;
+            printTunableSearch(bestSearch);
         }
 
         std::cout << "Best Chromosome: "  << std::endl;
@@ -86,14 +79,15 @@ public:
 
 
 private:
+    
     struct FenMovePair {
-        std::string fen;
-        std::string move;
+        std::string fen = chess::constants::STARTPOS;
+        std::string move = "";
     };
 
     struct Chromosome {
-        std::string data; // This would represent your chromosome data structure
-        double fitness;
+        std::string data = ""; // This would represent your chromosome data structure
+        double fitness = 0.0;
     };
 
     // the parameters for the genetic algorithm, some set to default just in case
@@ -111,9 +105,9 @@ private:
     size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
 
 
-    std::vector<Chromosome> population; // a vector of pairs of chromosomes and their fitness levels
-    std::vector<FenMovePair> allTrainingData;
-    std::vector<FenMovePair> positions;
+    std::vector<Chromosome> population = vector<Chromosome>(); // a vector of pairs of chromosomes and their fitness levels
+    std::vector<FenMovePair> allTrainingData = vector<FenMovePair>();
+    std::vector<FenMovePair> positions = vector<FenMovePair>();
     std::random_device rd;
     std::mt19937 gen{rd()}; // random c++ magic stuff
     std::string trainingDataPath = "";
@@ -147,91 +141,72 @@ private:
     }
 
 
-double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params) {
-    double totalSuccessfulDepth = 0.0;
-    Board board = Board();
-    auto localStopSignal = std::make_shared<std::atomic<bool>>(false);
-    localStopSignal->store(false); // hopefully this helps?
-    Searcher searcher(board, *localStopSignal, params, baseEval); // Adjusted for shared_ptr
+    double calculateFitnessSubset(const std::vector<FenMovePair>& posSubset, const TunableSearch& params) {
+        double totalSuccessfulDepth = 0.0;
+        thread_local Board board;
+        thread_local Searcher searcher = Searcher(board, params, ga1result10); // Use fully qualified name 
 
-    for (const FenMovePair& move : posSubset) {
-        searcher.setVerbose(false);
-
-        // Timer to enforce search timeout
-        std::thread timer([localStopSignal]() {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            localStopSignal->store(true);
-        });
-
-        searcher.clear();
-        board.setFen(move.fen);
-        SearchState result = searcher.search(100, 0, 1);
-
-        //Cleanup
-        if (timer.joinable()) {
-            timer.join(); // Make sure timer finishes before moving on
+        for (const FenMovePair& move : posSubset) {
+            board.setFen(move.fen);
+            searcher.clear();
+            searcher.setVerbose(false);
+            SearchState result = searcher.search(60, 0, 1); // since we have the ten second overhead
+            Move bestMove = result.bestMove;
+            int depthReached = result.currentDepth;
+            std::string uciMove = uci::moveToUci(bestMove);
+            if (move.move == uciMove) {
+                totalSuccessfulDepth += 1;
+            }
         }
 
-        Move bestMove = result.bestMove;
-        int depthReached = result.currentDepth;
-        std::string uciMove = uci::moveToUci(bestMove);
-
-        if (move.move == uciMove) {
-            totalSuccessfulDepth += depthReached;
-        }
-
+        return totalSuccessfulDepth;
     }
 
-    return totalSuccessfulDepth;
-}
 
 
-
-double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch& params) {
-    const size_t numThreads = std::min(5u, std::thread::hardware_concurrency()); // Safeguard and optimization
+double calculateFitness() {
+    std::mutex updateMutex;
     std::vector<std::thread> threads;
-    std::vector<double> partialDifferences(numThreads, 0.0); // To store the results from each thread
+    std::vector<double> fitnessScores(populationSize, 0.0); // Prepare a vector to store fitness scores
 
-    size_t posPerThread = pos.size() / numThreads;
+    // Iterate over each chromosome in the population to create a thread for each
+    for (size_t i = 0; i < populationSize; ++i) {
+        threads.emplace_back([&, i]() {
+            // Convert the chromosome to TunableSearch parameters for this thread's chromosome
+            TunableSearch params = convertChromosomeToSearch(population[i].data);
 
-  auto worker = [&](size_t startIdx, size_t endIdx, size_t threadIdx) {
-    // Removed stopSignal from the parameters as it's managed internally now
-    try {
-        std::vector<FenMovePair> posSubset(pos.begin() + startIdx, pos.begin() + endIdx);
-        partialDifferences[threadIdx] = calculateFitnessSubset(posSubset, params);
-    } catch (const std::exception& e) {
-        std::cerr << "Exception in thread " << threadIdx << ": " << e.what() << std::endl;
-    }
-};
+            // Calculate fitness over the entire subset of positions for this chromosome
+            double fitness = calculateFitnessSubset(positions, params);
 
-    for (size_t i = 0; i < numThreads; ++i) {
-        size_t startIdx = i * posPerThread;
-        size_t endIdx = (i + 1) * posPerThread;
-        if (i == numThreads - 1) {
-            endIdx = pos.size(); // Ensure the last thread covers the remainder
-        }
-        threads.emplace_back(std::thread(worker, startIdx, endIdx, i));
+            // Safely update the fitness score for this chromosome
+            std::lock_guard<std::mutex> guard(updateMutex);
+            fitnessScores[i] = fitness;
+        });
     }
 
-    for (auto& t : threads) {
-        if (t.joinable()) {
-            t.join();
+    // Wait for all threads to complete their execution
+    for (auto& thread : threads) {
+        if (thread.joinable()) {
+            thread.join();
         }
     }
 
-    double totalDifference = 0.0;
-    for (const auto& diff : partialDifferences) {
-        totalDifference += diff;
+    // Update the population with the new fitness scores
+    for (size_t i = 0; i < populationSize; ++i) {
+        population[i].fitness = fitnessScores[i];
     }
 
-    return totalDifference;
+    // Optionally, calculate and return the average fitness for logging or other purposes
+    double totalFitness = std::accumulate(fitnessScores.begin(), fitnessScores.end(), 0.0);
+    return totalFitness / static_cast<double>(populationSize);
 }
+
 
 
     // looks good
     void initializePopulation() {
         for (size_t i = 0; i < populationSize; ++i) {
-            TunableSearch randomSearch = initializeRandomTunableSearch();
+            thread_local TunableSearch randomSearch = initializeRandomTunableSearch();
             population.push_back({convertSearchToChromosome(randomSearch), 0}); // 100000.0 is a placeholder for the fitness level
         }
     }
@@ -275,39 +250,30 @@ double calculateFitness(const std::vector<FenMovePair>& pos, const TunableSearch
     }
 
 
-// alternative approach to selection based on the research paper
 Chromosome rouletteWheelSelectionWithScaling(const std::vector<Chromosome>& parents) {
-    // Find the maximum fitness in the population to scale fitness values
-    double maxFitness = std::numeric_limits<double>::lowest();
+    // Calculate the total fitness of the population
+    double totalFitness = 0.0;
     for (const auto& individual : parents) {
-        if (individual.fitness > maxFitness) {
-            maxFitness = individual.fitness;
-        }
-    }
-    double scalingFactor = maxFitness + 1; // Add 1 or a small value to ensure even the best individual has a positive scaled fitness
-
-    // Calculate the total scaled fitness of the population
-    double totalScaledFitness = 0.0;
-    for (const auto& individual : parents) {
-        totalScaledFitness += (individual.fitness); // Invert the fitness
+        totalFitness += individual.fitness;
     }
 
-    // Generate a random number between 0 and the total scaled fitness
-    std::uniform_real_distribution<> dist(0.0, totalScaledFitness);
+    // Generate a random number between 0 and the total fitness
+    std::uniform_real_distribution<> dist(0.0, totalFitness);
     double randomFitness = dist(gen);
 
-    // Find and return the first individual for which the sum of scaled fitnesses up to that point exceeds the random number
+    // Accumulate fitness and select the first individual whose accumulated fitness exceeds the random number
     double currentSum = 0.0;
     for (const auto& individual : parents) {
-        currentSum += (scalingFactor - individual.fitness); // Use scaled fitness
+        currentSum += individual.fitness;
         if (currentSum >= randomFitness) {
             return individual;
         }
     }
 
-    // This point should theoretically never be reached, but return the last individual as a fallback
-    return population.back();
+    // Ideally, the loop should always return an individual. This line is a safety net.
+    return parents.back();
 }
+
 
 // random single point crossover
 void crossover() {
@@ -317,7 +283,7 @@ void crossover() {
     std::uniform_int_distribution<> parentDist(0, population.size() - 1); // Distribution for selecting parents
 
     while (newPopulation.size() < populationSize) {
-        // select two parents based on the tournament selection
+        // select two parents based on the proportional selection
         const Chromosome& parent1 = rouletteWheelSelectionWithScaling(population);
         const Chromosome& parent2 = rouletteWheelSelectionWithScaling(population);
 
@@ -327,9 +293,9 @@ void crossover() {
             auto [child1, child2] = singlePointCrossover(parent1.data, parent2.data);
 
             // Calculate fitness for the new children and add them to the new population
-            newPopulation.push_back({child1, calculateFitness(positions, convertChromosomeToSearch(child1))});
+            newPopulation.push_back({child1, 0});
             if (newPopulation.size() < populationSize) { // Check to avoid exceeding population size
-                newPopulation.push_back({child2, calculateFitness(positions, convertChromosomeToSearch(child2))});
+                newPopulation.push_back({child2, 0});
             }
         } else {
             // If crossover does not occur, copy parents to the new population, checking not to exceed the population size
@@ -394,27 +360,23 @@ void crossover() {
     // Before filling the rest of the new population, reintroduce solutions from the archive
     reintroduceFromArchive(newPopulation);
 
-    // Calculate the total inverted fitness of the non-elite population
-    double totalInvertedFitness = 0.0;
+    // Directly use fitness for calculating selection probabilities
+    double totalFitness = 0.0;
     for (size_t i = eliteCount; i < population.size(); ++i) {
-        double invertedFitness = population[i].fitness;
-        totalInvertedFitness += invertedFitness;
+        totalFitness += population[i].fitness;
     }
 
-    // Calculate the selection probability for each non-elite individual
     std::vector<double> selectionProbabilities;
     for (size_t i = eliteCount; i < population.size(); ++i) {
-        double invertedFitness = population[i].fitness;
-        double selectionProbability = invertedFitness / totalInvertedFitness;
+        double selectionProbability = population[i].fitness / totalFitness;
         selectionProbabilities.push_back(selectionProbability);
     }
 
-    // Adjust the selection process for non-elites
     std::discrete_distribution<size_t> distribution(selectionProbabilities.begin(), selectionProbabilities.end());
 
-    // Fill the remaining slots in the new population based on selection probabilities
+    // Now, simply fill the new population slots based on the computed probabilities
     while (newPopulation.size() < populationSize) {
-        size_t selectedIndex = distribution(gen) + eliteCount; // Adjust index to skip elites
+        size_t selectedIndex = distribution(gen) + eliteCount;
         newPopulation.push_back(population[selectedIndex]);
     }
 
@@ -440,7 +402,7 @@ void crossover() {
             }
         }
         // recalculate the fitness level
-        c.fitness = calculateFitness(positions, convertChromosomeToSearch(c.data));
+        c.fitness = 0;
         }
 
     };

@@ -81,8 +81,7 @@ vector<string> splitstr(const std::string& str, const char delim) {
 }
 
 int main() {
-    auto localStopSignal = std::make_shared<std::atomic<bool>>(false);
-    searcher = make_unique<Searcher>(board, *localStopSignal, baseSearch, ga1result10); // Use fully qualified name
+    searcher = make_unique<Searcher>(board, baseSearch, ga1result10); // Use fully qualified name
     string uci;
     bool quit = false;
     bool isWhiteTurn = board.sideToMove() == Color::WHITE;

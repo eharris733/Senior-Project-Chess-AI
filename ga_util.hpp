@@ -219,19 +219,19 @@ TunableSearch convertChromosomeToSearch(const std::string& bitString){
     pos += 10;
     tSearch.futilityMargin3 = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
-    tSearch.deltaMargin = bitsToInt(bitString.substr(pos, 10)) + 1;
+    tSearch.deltaMargin = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
     tSearch.promotionMoveScore = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
     tSearch.killerMoveScore = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
-    tSearch.initalDepthLMR = bitsToInt(bitString.substr(pos, 3)) + 1;
+    tSearch.initalDepthLMR = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
-    tSearch.secondaryDepthLMR = bitsToInt(bitString.substr(pos, 4)) + 1;
+    tSearch.secondaryDepthLMR = bitsToInt(bitString.substr(pos, 4));
     pos += 4;
-    tSearch.initialMoveCountLMR = bitsToInt(bitString.substr(pos, 3)) + 1;
+    tSearch.initialMoveCountLMR = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
-    tSearch.secondaryMoveCountLMR = bitsToInt(bitString.substr(pos, 4)) + 1;
+    tSearch.secondaryMoveCountLMR = bitsToInt(bitString.substr(pos, 4));
     pos += 4;
     return tSearch;
 }
@@ -252,13 +252,13 @@ std::string convertSearchToChromosome(const TunableSearch& tSearch){
     bitString += intToGrayString(tSearch.futilityMargin1, 10);
     bitString += intToGrayString(tSearch.futilityMargin2, 10);
     bitString += intToGrayString(tSearch.futilityMargin3, 10);
-    bitString += intToGrayString(tSearch.deltaMargin - 1, 10);
+    bitString += intToGrayString(tSearch.deltaMargin, 10);
     bitString += intToGrayString(tSearch.promotionMoveScore, 10);
     bitString += intToGrayString(tSearch.killerMoveScore, 10);
-    bitString += intToGrayString(tSearch.initalDepthLMR - 1, 3);
-    bitString += intToGrayString(tSearch.secondaryDepthLMR - 1, 4);
-    bitString += intToGrayString(tSearch.initialMoveCountLMR - 1, 3);
-    bitString += intToGrayString(tSearch.secondaryMoveCountLMR - 1, 4);
+    bitString += intToGrayString(tSearch.initalDepthLMR, 3);
+    bitString += intToGrayString(tSearch.secondaryDepthLMR, 4);
+    bitString += intToGrayString(tSearch.initialMoveCountLMR, 3);
+    bitString += intToGrayString(tSearch.secondaryMoveCountLMR, 4);
     
     return bitString;
 
@@ -275,13 +275,13 @@ TunableSearch initializeRandomTunableSearch() {
     rSearch.futilityMargin1 = randomInt(10);
     rSearch.futilityMargin2 = randomInt(10);
     rSearch.futilityMargin3 = randomInt(10);
-    rSearch.deltaMargin = randomInt(10) + 1;
+    rSearch.deltaMargin = randomInt(10);
     rSearch.promotionMoveScore = randomInt(10);
     rSearch.killerMoveScore = randomInt(10);
-    rSearch.initalDepthLMR = randomInt(3) + 1; 
-    rSearch.secondaryDepthLMR = randomInt(4) + 1;
-    rSearch.initialMoveCountLMR = randomInt(3) + 1;
-    rSearch.secondaryMoveCountLMR = randomInt(4) + 1;
+    rSearch.initalDepthLMR = randomInt(3); 
+    rSearch.secondaryDepthLMR = randomInt(4);
+    rSearch.initialMoveCountLMR = randomInt(3);
+    rSearch.secondaryMoveCountLMR = randomInt(4);
 
     return rSearch;
 }

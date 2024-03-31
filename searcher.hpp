@@ -24,24 +24,24 @@ using namespace std;
 
 // this is experimental as of right now
 struct AspirationWindow {
-    int alpha;
-    int beta;
-    int delta;
-    int failHigh;
-    int failLow;
+    int alpha = 0;
+    int beta = 0;
+    int delta = 0;
+    int failHigh = 0;
+    int failLow = 0;
 };
 
 // Struct to hold the state of a search
 struct SearchState {
-    Move bestMove;
-    int bestScore;
-    Move currentIterationBestMove;
-    int currentIterationBestScore;
+    Move bestMove = Move::NULL_MOVE;
+    int bestScore = 0;
+    Move currentIterationBestMove = Move::NULL_MOVE;
+    int currentIterationBestScore = 0;
     Move killerMoves[2]; // store two killer moves
-    int currentDepth;
-    long nodes;
-    AspirationWindow aspirationWindow;
-    bool isOpening;
+    int currentDepth = 1;
+    long nodes = 0;
+    AspirationWindow aspirationWindow = AspirationWindow();
+    bool isOpening = true;
 };
 
 // for simple pruning techniques
@@ -61,12 +61,12 @@ class Searcher {
 public:
 
     
-    Searcher(Board& initialBoard, std::atomic<bool>& stopSignal, TunableSearch searchParams = baseSearch, TunableEval evalParams = ga1result10) 
+    Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = ga1result10) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
-          tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
+          tt(1 << 12), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
           //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
-          searchParams(searchParams), stopSignal(stopSignal)
+          searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
         state.nodes = 0;
@@ -91,7 +91,7 @@ public:
 
     SearchState search(int timeRemaining, int timeIncrement, int movesToGo) {
         initSearch();
-        
+        int eval = 0;
         // disabling this for now while I'm training the GA
         // // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
         // // perfect, but not really a factor of performance
@@ -101,31 +101,39 @@ public:
         // }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
-        // we divide by 4 because the last depth is probably going to be 4 times as long as the rest in a bad case
-        int timeForThisMove = (timeRemaining / movesToGo + timeIncrement) / 4;
+        // we subtract 10 for overhead
+        timeForThisMove = (timeRemaining / movesToGo + timeIncrement) - 10;
 
         // // start the timer
-        auto startTime = chrono::steady_clock::now();
+        start_t = std::chrono::high_resolution_clock::now();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
-        while (state.currentDepth <= MAX_DEPTH) {
+        while (state.currentDepth <= MAX_DEPTH && !stopSearching) {
             state.currentIterationBestMove = Move::NULL_MOVE;
             state.currentIterationBestScore = neg_infinity;
-            
-            // check to see if we have reached the desired think time
-            auto currentTime = chrono::steady_clock::now();
-            auto elapsed = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime).count();
-
-            if (elapsed >= timeForThisMove) {
-                break;
-            }
 
             if(state.currentDepth < searchParams.useAspirationWindowDepth){
-                state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
+
+                eval = negamax(state.currentDepth, neg_infinity, infinity, 0);
+                if (!stopSearching){
+                    state.bestScore = eval;
+                }
+                else{
+                    break;
+                
+                }
             }
-            // at depth 5 we use aspiration windows
+            // at depth x we use aspiration windows
             else{
-                state.bestScore = aspirationSearch();
+                int eval = aspirationSearch();
+                // only update if we haven't been told to stop
+                if (!stopSearching){
+                    state.bestScore = eval;
+                }
+                else{
+                    break;
+                }
+                
             }
             
             //state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
@@ -134,7 +142,7 @@ public:
             // update the overall search state with results from the latest iteration
                 
                 // make sure we never return a null move
-                if( state.currentIterationBestMove != Move::NULL_MOVE){
+                if( state.currentIterationBestMove != Move::NULL_MOVE && !stopSearching){
                     state.bestScore = state.currentIterationBestScore;
                     state.bestMove = state.currentIterationBestMove; // Update result only once,
                 }
@@ -174,8 +182,6 @@ private:
     Board& board; // The board to search on
     Evaluator evaluator = Evaluator(board, evalParams); // our evaluation function
     SearchState state = SearchState();
-    // Stop signal
-    std::atomic<bool>& stopSignal;
     TranspositionTable tt; // Transposition table
     //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
@@ -183,6 +189,9 @@ private:
     int history[2][6][64]; // history heuristic table
     int MAX_DEPTH = 100;
     bool verbose = true;
+    std::chrono::system_clock::time_point start_t;  // search start time
+    int timeForThisMove = 0;
+    bool stopSearching = false;
     
     // define my own versions of infinity and negative infinity (stolen again from Sebastian Lague's chess engine tutorial)
     const int infinity = 9999999;
@@ -193,7 +202,7 @@ private:
     
     // probably unnecesary but good practice
     void initSearch() {
-        stopSignal = false;
+        stopSearching = false;
         state.isOpening = true;
         state.bestMove = Move::NULL_MOVE;
         state.currentDepth = 1;
@@ -203,6 +212,19 @@ private:
         state.killerMoves[0] = Move::NULL_MOVE; // maybe don't reset them?
         state.killerMoves[1] = Move::NULL_MOVE;
         std::memset(history, 0, sizeof(history)); // set everything back to 0
+        start_t = std::chrono::system_clock::now();
+    }
+
+    bool isTimeOver() {
+        // otherwise, check timeover every 2048 nodes
+        if (!(state.nodes & 2047)) {
+            auto now = std::chrono::high_resolution_clock::now();
+            auto dtime = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_t).count();
+            if (dtime >= timeForThisMove){
+                stopSearching = true;
+            }
+        }
+        return stopSearching;
     }
 
 
@@ -284,8 +306,8 @@ int aspirationSearch() {
 
 
     int negamax(int depth, int alpha, int beta, int plyFromRoot) {
-        if (stopSignal.load(std::memory_order_relaxed)){
-            return mateScore + 1; // Stop signal received, return the worst possible score so results are ignored from this search
+        if (isTimeOver() || stopSearching){
+            return 0; // Stop signal received, return the worst possible score so results are ignored from this search
         }
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
             return 0; // Draw score
@@ -371,7 +393,7 @@ int aspirationSearch() {
                 // also can't prune only legal move
                 if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3
                     && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
-                    float evaluation = evaluate(1, searchParams.useLazyEvalFutility); // lazy eval to avoid expensive evals
+                    float evaluation = evaluate(depth, searchParams.useLazyEvalFutility); // lazy eval to avoid expensive evals
                     if (depth == 1 && evaluation + searchParams.futilityMargin1 <= alpha) {
                         // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
                         continue;
@@ -464,6 +486,11 @@ int aspirationSearch() {
                 // it is now false
                 isPvs = false;
 
+                // make sure we don't update anything if we are told to stop
+                if (stopSearching){
+                    return 0;
+                }
+
                 if (eval >= beta) {
                     tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move);
                     // store history and killer moves if move is quiet here
@@ -508,6 +535,11 @@ int aspirationSearch() {
 
 
         int quiescence(int alpha, int beta) {
+
+            if (isTimeOver() || stopSearching){
+                return 0; // Stop signal received, return the worst possible score so results are ignored from this search
+            }
+
             const int DELTA_MARGIN = searchParams.deltaMargin; // most positional advantages aren't worth more than a piece
             
             int stand_pat = evaluate(0);
@@ -534,6 +566,10 @@ int aspirationSearch() {
                 state.nodes++; // ive changed to only updating node counts after we change board state
                 int score = -quiescence(-beta, -alpha);
                 board.unmakeMove(move);
+
+                if (stopSearching){
+                    return 0;
+                }
                 if (score >= beta) {
                     return beta;
                 }

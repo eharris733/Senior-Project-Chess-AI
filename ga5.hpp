@@ -17,9 +17,9 @@
 
 
 
-class GA3 {
+class GA5 {
 public:
-    GA3(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int eliteCount, int archiveSize, int reintroduceCount)
+    GA5(size_t populationSize, double initialMutationRate, double mutationDecayRate, double crossoverRate, int totalGenerations, int eliteCount, int archiveSize, int reintroduceCount)
         : populationSize(populationSize), initialMutationRate(initialMutationRate), mutationDecayRate(mutationDecayRate),  crossoverRate(crossoverRate),totalGenerations(totalGenerations), eliteCount(eliteCount), archiveSize(archiveSize), reintroduceCount(reintroduceCount), book("Titans.bin") {
         initializePopulation();
         
@@ -61,7 +61,7 @@ public:
 
             chromosome best = population.front();
             chromosome worst = population.back();
-            TunableEval bestEval = convertChromosoneToEval(best.chromosome);
+            TunableSearch bestSearch = convertChromosomeToSearch(best.chromosome);
             double bestFitness = best.fitness; // Assuming population is sorted
             double worstFitness = worst.fitness; // Assuming population is sorted
             for (const auto& individual : population) {
@@ -74,14 +74,14 @@ public:
 
             if(currentGeneration % 10 == 0) {
                 Logger::getInstance().log("Best Chromosome: "); 
-                printTunableEval(bestEval);
+                printTunableSearch(bestSearch);
             }
             
             
         }
 
         std::cout << "Best Chromosome from archive: "  << std::endl;
-        printTunableEval(convertChromosoneToEval(archive.front().chromosome));
+        printTunableSearch(convertChromosomeToSearch(archive.front().chromosome));
 
     }
 
@@ -137,10 +137,6 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         moveCount++;
         openingMove = book.pickRandomMove(board);
     }
-    
-    
-    whiteSearcher.setMaxDepth(8); // Set the search depth for white
-    blackSearcher.setMaxDepth(8); // Set the search depth for black
     whiteSearcher.setVerbose(false); // Disable verbose output for white
     blackSearcher.setVerbose(false); // Disable verbose output for black
     // cap games at 100 moves for time
@@ -148,9 +144,9 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         SearchState searchResult;
 
         if (board.sideToMove() == Color::WHITE) {
-            searchResult = whiteSearcher.search(50, 0, 1); //1000ms, 0ms increment, 1 move to go
+            searchResult = whiteSearcher.search(60, 0, 1); //1000ms, 0ms increment, 1 move to go
         } else {
-            searchResult = blackSearcher.search(50, 0, 1); // should reach max depth first, but just in case, call cutoff after one fourth of a second in bad circumstances
+            searchResult = blackSearcher.search(60, 0, 1); // should reach max depth first, but just in case, call cutoff after one fourth of a second in bad circumstances
         }
         if (searchResult.bestScore < -500){
             if (board.sideToMove() == Color::WHITE){
@@ -194,13 +190,13 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 }
 
     // Example of TunableEval to Searcher conversion not shown, assuming direct use
-double calculateFitnessSingleGame(const TunableEval& params, const TunableEval& opponent) {
+double calculateFitnessSingleGame(const TunableSearch& params, const TunableSearch& opponent) {
     double totalPoints = 0.0;
     Board board = Board();
-    Searcher white = Searcher(board, baseSearch, params); 
+    Searcher white = Searcher(board, params, ga1result10); 
 
     
-        Searcher black = Searcher(board, baseSearch, opponent);
+        Searcher black = Searcher(board, opponent, ga1result10);
         return simulateGame(white, black, board);
 }
 
@@ -222,9 +218,9 @@ double calculateFitness() {
             // Iterate through all opponents
             for (int j = 0; j < populationSize; j++) {
                 if (j != playerIndex) { // Skip playing against oneself
-                    TunableEval opponentEval = convertChromosoneToEval(population[j].chromosome);
+                    TunableSearch opponentSearch = convertChromosomeToSearch(population[j].chromosome);
                     // Assuming calculateFitnessForSingleMatch handles a match between two players
-                    double matchResult = calculateFitnessSingleGame(convertChromosoneToEval(population[playerIndex].chromosome), opponentEval);
+                    double matchResult = calculateFitnessSingleGame(convertChromosomeToSearch(population[playerIndex].chromosome), opponentSearch);
 
                     std::lock_guard<std::mutex> guard(updateMutex);
                     playerScore += matchResult; // Update player's score
@@ -265,47 +261,9 @@ double calculateFitness() {
 
     // uses the ten dad values, reproduced population / 10 times
     void initializePopulation() {
-        int multiplier = populationSize / 10;
-        for(int i = 0; i < multiplier; i++) {
-            chromosome d1;
-            d1.chromosome = convertEvalToChromosone(ga1result1);
-            d1.fitness = 0;
-            population.push_back(d1);  
-            chromosome d2;
-            d2.chromosome = convertEvalToChromosone(ga1result2);
-            d2.fitness = 0;
-            population.push_back(d2);
-            chromosome d3;
-            d3.chromosome = convertEvalToChromosone(ga1result3);
-            d3.fitness = 0;
-            population.push_back(d3);
-            chromosome d4;
-            d4.chromosome = convertEvalToChromosone(ga1result4);
-            d4.fitness = 0;
-            population.push_back(d4);
-            chromosome d5;
-            d5.chromosome = convertEvalToChromosone(ga1result5);
-            d5.fitness = 0;
-            population.push_back(d5);
-            chromosome d6;
-            d6.chromosome = convertEvalToChromosone(ga1result6);
-            d6.fitness = 0;
-            population.push_back(d6);
-            chromosome d7;
-            d7.chromosome = convertEvalToChromosone(ga1result7);
-            d7.fitness = 0;
-            population.push_back(d7);
-            chromosome d8;
-            d8.chromosome = convertEvalToChromosone(ga1result8);
-            d8.fitness = 0;
-            population.push_back(d8);
-            chromosome d9;
-            d9.chromosome = convertEvalToChromosone(ga1result9);
-            d9.fitness = 0;
-            population.push_back(d9);
-            chromosome d10;
-            d10.chromosome = convertEvalToChromosone(ga1result10);
-            d10.fitness = 0;  
+        for (size_t i = 0; i < populationSize; ++i) {
+            std::string chromosome = convertSearchToChromosome(initializeRandomTunableSearch());
+            population.push_back({chromosome, 0});
         }
         
     }
