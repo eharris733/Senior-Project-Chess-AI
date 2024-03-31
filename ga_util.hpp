@@ -459,23 +459,24 @@ void printTunableSearch(const TunableSearch& tSearch){
     logMsg << tSearch.aspirationWindow1 << ", // Aspiration Window 1\n";
     logMsg << tSearch.aspirationWindow2 << ", // Aspiration Window 2\n";
     logMsg << tSearch.aspirationWindowInitialDelta << ", // Aspiration Window initial delta\n";
+    logMsg << tSearch.useAspirationWindowDepth << ", // Use Aspiration Window Depth\n";
+    logMsg << tSearch.useLazyEvalNMR << ", // Use Lazy Eval NMR\n";
+    logMsg << tSearch.futilityMargin1 << ", // Futility Margin 1\n";
+    logMsg << tSearch.futilityMargin2 << ", // Futility Margin 2\n";
+    logMsg << tSearch.futilityMargin3 << ", // Futility Margin 3\n";
+    logMsg << tSearch.useLazyEvalFutility << ", // Use Lazy Eval Futility\n";
     logMsg << tSearch.deltaMargin << ", // Delta Margin\n";
-    logMsg << tSearch.futilityMargin1<< ", // Futillity Margin 1\n";
-    logMsg << tSearch.futilityMargin2<< ", // Futillity Margin 2\n";
-    logMsg << tSearch.futilityMargin3<< ", // Futillity Margin 3\n";
-    logMsg << tSearch.initalDepthLMR<< ", // Initial LMR Depth\n";
-    logMsg << tSearch.initialMoveCountLMR<< ", // Initial Move Counter\n";
-    logMsg << tSearch.killerMoveScore<< ", // Killer Move Score\n";
-    logMsg << tSearch.promotionMoveScore<< ", // Promotion Move Score\n";
-    logMsg << tSearch.secondaryDepthLMR<< ", //Secondary Depth LMR\n";
-    logMsg << tSearch.secondaryMoveCountLMR<< ", // Secondary Move Counter\n";
-    logMsg << tSearch.useAspirationWindowDepth<< ", aspiration window depth\n";
-    logMsg << tSearch.useLazyEvalFutility<< ", //use lazy eval futility\n";
-    logMsg << tSearch.useLazyEvalNMR<< ", // use lazy eval nmr\n";
+    logMsg << tSearch.promotionMoveScore << ", // Promotion Move Score\n";
+    logMsg << tSearch.killerMoveScore << ", // Killer Move Score\n";
+    logMsg << tSearch.initalDepthLMR << ", // Initial LMR Depth\n"; // Remember, there's a typo here in the original struct definition: "inital" should be "initial"
+    logMsg << tSearch.secondaryDepthLMR << ", // Secondary Depth LMR\n";
+    logMsg << tSearch.initialMoveCountLMR << ", // Initial Move Counter\n";
+    logMsg << tSearch.secondaryMoveCountLMR << ", // Secondary Move Counter\n";
     logMsg << "};\n";
     Logger::getInstance().log(logMsg.str());
     std::cout << logMsg.str();
 }
+
 
 void printTunableEval(const TunableEval& tEval) {
     std::ostringstream logMsg = std::ostringstream();
