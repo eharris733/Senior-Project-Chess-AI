@@ -67,7 +67,7 @@ public:
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
-          book("Titans.bin"), // this one has been the most reliable for me
+          //book("Titans.bin"), // this one has been the most reliable for me
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
@@ -97,11 +97,11 @@ public:
         // disabling this for now while I'm training the GA
         // // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
         // perfect, but not really a factor of performance
-        Move openingMove = book.pickRandomMove(board);
-        if (openingMove != Move::NULL_MOVE) {
-            state.bestMove = openingMove;
-            return state;
-        }
+        // Move openingMove = book.pickRandomMove(board);
+        // if (openingMove != Move::NULL_MOVE) {
+        //     state.bestMove = openingMove;
+        //     return state;
+        // }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
         // we subtract 50 for overhead
@@ -201,13 +201,13 @@ private:
     Evaluator evaluator = Evaluator(board, evalParams); // our evaluation function
     SearchState state = SearchState();
     TranspositionTable tt; // Transposition table
-    PolyglotBook book; // Opening book (commenting out for traiing purposes)
+    //PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
     TunableEval evalParams; // Evaluation parameters
     int history[2][6][64]; // history heuristic table
     int MAX_DEPTH = 100;
     bool verbose = true;
-    std::chrono::steady_clock::time_point start_t;  // search start time
+    std::chrono::high_resolution_clock::time_point start_t;  // search start time
     int timeForThisMove = 0;
     bool stopSearching = false;
     
@@ -230,7 +230,7 @@ private:
         state.killerMoves[0] = Move::NULL_MOVE; // maybe don't reset them?
         state.killerMoves[1] = Move::NULL_MOVE;
         std::memset(history, 0, sizeof(history)); // set everything back to 0
-        start_t = std::chrono::steady_clock::now();
+        start_t = std::chrono::high_resolution_clock::now();
     }
 
     bool isTimeOver() {
