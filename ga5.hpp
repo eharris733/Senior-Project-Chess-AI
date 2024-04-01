@@ -14,6 +14,7 @@
 #include <iostream>
 #include <cassert>
 #include "logger.hpp"
+#include "ga3and5results.hpp"
 
 
 
@@ -89,8 +90,9 @@ public:
 private:
 
     struct chromosome {
-        std::string chromosome;
-        double fitness;
+        std::string chromosome = "";
+        double fitness = -10.0;
+        int generation = 0;
     };
 
     // the parameters for the genetic algorithm, some set to default just in case
@@ -106,6 +108,7 @@ private:
     size_t archiveSize; // N: Maximum size of the archive
     size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
     PolyglotBook book;
+    TunableSearch opponent = resultKingHill1; // initialize to a value much better than base search
 
     std::vector<chromosome> population; // a vector of pairs of chromosomes and their fitness levels
     std::random_device rd;
@@ -148,7 +151,8 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         } else {
             searchResult = blackSearcher.search(60, 0, 1); // should reach max depth first, but just in case, call cutoff after one fourth of a second in bad circumstances
         }
-        if (searchResult.bestScore < -500){
+        // very aggresive early end to games for the sake of time
+        if (searchResult.bestScore < -350){
             if (board.sideToMove() == Color::WHITE){
                 result = -1;
             }
@@ -190,14 +194,20 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 }
 
     // Example of TunableEval to Searcher conversion not shown, assuming direct use
-double calculateFitnessSingleGame(const TunableSearch& params, const TunableSearch& opponent) {
+double calculateFitnessSingleGame(const TunableSearch& params) {
     double totalPoints = 0.0;
     Board board = Board();
+// Generate a random true or false (50/50)
+bool randomBool = rand() % 2 == 0;
+// Use an if-else statement based on the random boolean
+if (randomBool) {
     Searcher white = Searcher(board, params, ga1result10); 
-
-    
-        Searcher black = Searcher(board, opponent, ga1result10);
-        return simulateGame(white, black, board);
+    Searcher black = Searcher(board, opponent, ga1result10);
+   return simulateGame(white, black, board);
+} 
+    Searcher white = Searcher(board, opponent, ga1result10); 
+    Searcher black = Searcher(board, params, ga1result10);
+    return simulateGame(white, black, board) == 1 ? -1 : 1;
 }
 
 
@@ -205,36 +215,24 @@ double calculateFitnessSingleGame(const TunableSearch& params, const TunableSear
 
 
 
-double calculateFitness() {
+void calculateFitness() {
     std::vector<std::thread> threads;
     std::vector<double> fitnessScores(populationSize, 0.0); // Initial fitness scores
     std::mutex updateMutex;
 
     // Launch a thread for each player in the population
     for (int i = 0; i < populationSize; i++) {
-        threads.emplace_back([&](int playerIndex) {
+        threads.emplace_back([&, i] {
             double playerScore = 0.0; // Player's total score
 
-            // Iterate through all opponents
-            for (int j = 0; j < populationSize; j++) {
-                if (j != playerIndex) { // Skip playing against oneself
-                    TunableSearch opponentSearch = convertChromosomeToSearch(population[j].chromosome);
-                    // Assuming calculateFitnessForSingleMatch handles a match between two players
-                    double matchResult = calculateFitnessSingleGame(convertChromosomeToSearch(population[playerIndex].chromosome), opponentSearch);
-
-                    std::lock_guard<std::mutex> guard(updateMutex);
-                    playerScore += matchResult; // Update player's score
-                    // Update opponent's score based on game result, consider draw and loss
-                    fitnessScores[j] += (matchResult * -1); 
-                }
-            }
-
-            // After all matches for this player are done, update their total fitness score
-            {
+            // Iterate 10 games
+            for (int j = 0; j < 10; j++) {
+                // Assuming calculateFitnessForSingleMatch handles a match between two players
+                double matchResult = calculateFitnessSingleGame(convertChromosomeToSearch(population[i].chromosome));
                 std::lock_guard<std::mutex> guard(updateMutex);
-                fitnessScores[playerIndex] = playerScore;
+                fitnessScores[i] += (matchResult); 
             }
-        }, i); // Pass the current player index to the thread
+        }); // Pass the current player index to the thread
     }
 
     // Wait for all threads to complete
@@ -246,11 +244,14 @@ double calculateFitness() {
 
     for (size_t i = 0; i < populationSize; ++i) {
         population[i].fitness = fitnessScores[i];
+        population[i].generation = currentGeneration;
+        if (population[i].fitness >= 9) { // 9 out of 10 means definitely better
+            opponent = convertChromosomeToSearch(population[i].chromosome);
+            std::cout << "Opponent updated" << std::endl;
+            std::cout << "new opponent: " << std::endl;
+            printTunableSearch(opponent);
+        }
     }
-
-    // Optionally, aggregate or further process fitnessScores as needed
-    double totalFitness = std::accumulate(fitnessScores.begin(), fitnessScores.end(), 0.0);
-    return totalFitness / static_cast<double>(populationSize); // Average fitness, adjust as needed
 }
 
 
@@ -263,20 +264,19 @@ double calculateFitness() {
     void initializePopulation() {
         for (size_t i = 0; i < populationSize; ++i) {
             std::string chromosome = convertSearchToChromosome(initializeRandomTunableSearch());
-            population.push_back({chromosome, 0});
+            population.push_back({chromosome, 0, 0});
         }
         
     }
 
     // looks good
-    // add history mechanism at some point
+    // don't mutate the elites
     void mutation() {
-        for (auto& individual : population) {
-            // find a random point in the chromosome to mutate
-            // flip the bit at that point
-            mutate(individual); // first is the chromosome
-        }
+    for (size_t i = eliteCount; i < population.size(); ++i) { // Skip elites
+        mutate(population[i]);
     }
+}
+
 
     // Function to perform single-point crossover between two chromosomes
     std::pair<std::string, std::string> singlePointCrossover(const std::string& parent1, const std::string& parent2) {
@@ -338,6 +338,15 @@ void crossover() {
 
     std::uniform_int_distribution<> parentDist(0, population.size() - 1); // Distribution for selecting parents
 
+    // sort
+    std::sort(population.begin(), population.end(), [](const chromosome& a, const chromosome& b) {
+        return a.fitness > b.fitness;
+    });
+
+    for (int i = 0; i < eliteCount; ++i) {
+        newPopulation.push_back(population[i]); // Copy the elites directly to the new population
+    }
+
     while (newPopulation.size() < populationSize) {
         // select two parents based on the tournament selection
         const chromosome& parent1 = rouletteWheelSelectionWithScaling(population);
@@ -370,20 +379,37 @@ void crossover() {
 
 // Function to update the archive with solutions from the current generation
     void updateArchive(const std::vector<chromosome>& currentGeneration) {
-        // Combine current generation and archive, then sort
-        std::vector<chromosome> combined = archive;
-        combined.insert(combined.end(), currentGeneration.begin(), currentGeneration.end());
-        std::sort(combined.begin(), combined.end(), [](const chromosome& a, const chromosome& b) {
-            return a.fitness > b.fitness; // Assuming lower fitness values are better
-        });
+    std::vector<chromosome> combined = archive;
+    combined.insert(combined.end(), currentGeneration.begin(), currentGeneration.end());
 
-        // Keep only the best N solutions in the archive
-        if (combined.size() > archiveSize) {
-            combined.resize(archiveSize);
+    // Adjusted sorting: If fitness is 8 or better, prioritize by recency; otherwise, by fitness
+    std::sort(combined.begin(), combined.end(), [](const chromosome& a, const chromosome& b) {
+        // For both chromosomes scoring 8 or better, prioritize newer generation
+        if (a.fitness >= 8 && b.fitness >= 8) {
+            if (a.generation == b.generation) {
+                return a.fitness > b.fitness; // If generations are equal, higher fitness wins
+            }
+            return a.generation > b.generation; // Otherwise, newer generation wins
         }
+        
+        // If one scores 8 or better and the other does not, the one that does is better
+        if ((a.fitness >= 8) != (b.fitness >= 8)) {
+            return a.fitness >= 8; // True (1) if a.fitness >= 8, making 'a' come first
+        }
+        
+        // For chromosomes scoring below 8, prioritize by fitness
+        if (a.fitness == b.fitness) {
+            return a.generation > b.generation; // In case of equal fitness, newer is better
+        }
+        return a.fitness > b.fitness; // Higher fitness values are better
+    });
 
-        archive = combined;
+    if (combined.size() > archiveSize) {
+        combined.resize(archiveSize);
     }
+
+    archive = combined;
+}
 
     // Function to reintroduce X solutions from the archive to the new population
     void reintroduceFromArchive(std::vector<chromosome>& newPopulation) {
@@ -396,7 +422,7 @@ void crossover() {
         newPopulation.insert(newPopulation.end(), archive.begin(), archive.begin() + count);
 
         // Optionally, remove reintroduced solutions from the archive
-        // archive.erase(archive.begin(), archive.begin() + count);
+        archive.erase(archive.begin(), archive.begin() + count);
     }
 
 void selection() {

@@ -42,6 +42,7 @@ struct SearchState {
     long nodes = 0;
     AspirationWindow aspirationWindow = AspirationWindow();
     bool isOpening = true;
+    int numMovesOutofBook = 0;
 };
 
 // for simple pruning techniques
@@ -65,7 +66,7 @@ public:
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
           tt(1 << 22), // this value is arbitrary, but it should be a power of 2, setting it to rly small for time
-          //book("openingbook/Cerebellum_Light_3Merge_200916/Cerebellum3Merge.bin"),
+          book("Titans.bin"), // this one has been the most reliable for me
           searchParams(searchParams)
           {
         state.bestScore = 0; // only at the beginning of the game do we assume an eval of 0
@@ -94,21 +95,36 @@ public:
         int eval = 0;
         // disabling this for now while I'm training the GA
         // // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
-        // // perfect, but not really a factor of performance
-        // Move openingMove = book.pickRandomMove(board);
-        // if (openingMove != Move::NULL_MOVE) {
-        //     state.bestMove = openingMove;
-        // }
+        // perfect, but not really a factor of performance
+        Move openingMove = book.pickRandomMove(board);
+        if (openingMove != Move::NULL_MOVE) {
+            state.bestMove = openingMove;
+            return state;
+        }
        
         // add an offset to our timeForThisMove if we are just out of the opening possible?
-        // we subtract 10 for overhead
-        timeForThisMove = (timeRemaining / movesToGo + timeIncrement) - 10;
+        // we subtract 50 for overhead
+        // from chess programming wiki
+
+        int timeRemainingWithOverhead = timeRemaining - 55;
+        int nMoves = min(state.numMovesOutofBook, 10);
+        int factor = 2 - nMoves / 10;
+        int target = timeRemainingWithOverhead / movesToGo;
+        timeForThisMove = factor * target; // offset by 50 just in case
+        
+        if (timeForThisMove < 50) {
+            timeForThisMove =  50; // minimum time
+        }
+
 
         // // start the timer
         start_t = std::chrono::high_resolution_clock::now();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
         while (state.currentDepth <= MAX_DEPTH && !stopSearching) {
+            if (stopOnThisDepth()){
+                break;
+            }
             state.currentIterationBestMove = Move::NULL_MOVE;
             state.currentIterationBestScore = neg_infinity;
 
@@ -125,7 +141,7 @@ public:
             }
             // at depth x we use aspiration windows
             else{
-                int eval = aspirationSearch();
+                eval = aspirationSearch();
                 // only update if we haven't been told to stop
                 if (!stopSearching){
                     state.bestScore = eval;
@@ -170,6 +186,7 @@ public:
             movegen::legalmoves<MoveGenType::ALL>(moves, board);
             state.bestMove = moves[0]; // If no move is found, return the first legal move
         }
+        state.numMovesOutofBook ++;
         return state; // Return the best move found
     }
 
@@ -183,7 +200,7 @@ private:
     Evaluator evaluator = Evaluator(board, evalParams); // our evaluation function
     SearchState state = SearchState();
     TranspositionTable tt; // Transposition table
-    //PolyglotBook book; // Opening book (commenting out for traiing purposes)
+    PolyglotBook book; // Opening book (commenting out for traiing purposes)
     TunableSearch searchParams; // Search parameters  
     TunableEval evalParams; // Evaluation parameters
     int history[2][6][64]; // history heuristic table
@@ -227,13 +244,23 @@ private:
         return stopSearching;
     }
 
+    bool stopOnThisDepth() {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto dtime = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_t).count();
+        auto timeLeft = timeForThisMove - dtime;
+        if (timeLeft * 4 <= timeForThisMove){ // essnetially we have no hope of finishing in time, and the results will be thrown away, so better to save time for later searches
+            return true;
+        }
+        return false;
+    }
+
 
     // Aspiration window search
 int aspirationSearch() {
     // 
     bool isOpenWindow = false;
 
-    int eval;
+    int eval = 0;
     // Reset or initialize aspiration window parameters
     state.aspirationWindow.delta = 20;
     state.aspirationWindow.alpha = state.bestScore - state.aspirationWindow.delta;
@@ -378,7 +405,7 @@ int aspirationSearch() {
             
             sortMoves(moves, board); // Pre-sort moves based on heuristics
 
-            isPvs = true; // hash move will always be the first one searched
+            // isPvs = true; // hash move will always be the first one searched
 
             for (const Move& move : moves) {
 
@@ -387,21 +414,23 @@ int aspirationSearch() {
                 bool isCheck = board.inCheck();
                 int depthExtension = 0;
 
-                // Reverse Futility Pruning at depth 1-3, with increasing margins
+                // Extended Futility Pruning at depth 1-3, with increasing margins
                 //completely winning position
                 // Constraints: Not root node, not in check, not a capture, not a mate search, and depth is 1
                 // also can't prune only legal move
-                if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3
-                    && !(abs(alpha) > mateScore - MAX_DEPTH || abs(beta) < mateScore + MAX_DEPTH)) { // Assuming abs() checks are what's intended
-                    float evaluation = evaluate(depth, searchParams.useLazyEvalFutility); // lazy eval to avoid expensive evals
-                    if (depth == 1 && evaluation + searchParams.futilityMargin1 <= alpha) {
+                if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3 &&
+    (abs(alpha) < (mateScore - MAX_DEPTH)) && (abs(beta) < (mateScore + MAX_DEPTH))) {
+
+ // Assuming abs() checks are what's intended
+                    int futilityEval = evaluate(depth, searchParams.useLazyEvalFutility); // lazy eval to avoid expensive evals
+                    if (depth == 1 && (futilityEval + searchParams.futilityMargin1 <= alpha)) {
                         // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
                         continue;
                     }
-                    else if (depth == 2 && evaluation + searchParams.futilityMargin2 <= alpha){
+                    else if (depth == 2 && (futilityEval + searchParams.futilityMargin2 <= alpha)){
                         continue;
                     }
-                    else if(depth == 3 && evaluation + searchParams.futilityMargin3 <= alpha){
+                    else if(depth == 3 && (futilityEval + searchParams.futilityMargin3 <= alpha)){
                         continue;
                     }
                     
@@ -466,7 +495,7 @@ int aspirationSearch() {
                 
 
                 //Principal Variation Search
-                int eval;
+                int eval = 0;
                 // we have a pvs after one search
                 if (isPvs) {
                     eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
