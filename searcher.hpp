@@ -15,6 +15,7 @@
 #include <cstring>
 #include <atomic>
 #include <memory>
+#include <chrono>
 
 using namespace chess;
 using namespace std;
@@ -206,7 +207,7 @@ private:
     int history[2][6][64]; // history heuristic table
     int MAX_DEPTH = 100;
     bool verbose = true;
-    std::chrono::system_clock::time_point start_t;  // search start time
+    std::chrono::steady_clock::time_point start_t;  // search start time
     int timeForThisMove = 0;
     bool stopSearching = false;
     
@@ -229,7 +230,7 @@ private:
         state.killerMoves[0] = Move::NULL_MOVE; // maybe don't reset them?
         state.killerMoves[1] = Move::NULL_MOVE;
         std::memset(history, 0, sizeof(history)); // set everything back to 0
-        start_t = std::chrono::system_clock::now();
+        start_t = std::chrono::steady_clock::now();
     }
 
     bool isTimeOver() {
