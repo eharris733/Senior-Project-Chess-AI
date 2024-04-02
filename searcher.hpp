@@ -263,7 +263,7 @@ int aspirationSearch() {
 
     int eval = 0;
     // Reset or initialize aspiration window parameters
-    state.aspirationWindow.delta = 20;
+    state.aspirationWindow.delta = searchParams.aspirationWindowInitialDelta;
     state.aspirationWindow.alpha = state.bestScore - state.aspirationWindow.delta;
     state.aspirationWindow.beta = state.bestScore + state.aspirationWindow.delta;
     state.aspirationWindow.failLow = 0;
@@ -324,9 +324,6 @@ int aspirationSearch() {
             // Score is within the window, search is successful
             return eval;
         }
-
-        // Optional: Add a mechanism to prevent the loop from running indefinitely
-        // For example, a maximum number of iterations or a condition to widen the window to a maximum allowed range
     }
     return negamax(state.currentDepth, neg_infinity, infinity, 0);
 }
@@ -334,11 +331,16 @@ int aspirationSearch() {
 
 
     int negamax(int depth, int alpha, int beta, int plyFromRoot) {
+
+        if (depth <= 0) {
+                return quiescence(alpha, beta); // Leaf node evaluation
+            }
+
         if (isTimeOver() || stopSearching){
-            return 0; // Stop signal received, return the worst possible score so results are ignored from this search
+            return 0; // search will be thrown away
         }
         if (board.isRepetition() || board.isInsufficientMaterial() || board.isHalfMoveDraw()) {
-            return 0; // Draw score
+            return 0; // Draw score (can add contempt later)
         }
 
        
@@ -347,6 +349,12 @@ int aspirationSearch() {
         bool isPvs = (beta - alpha) > 1;
         bool isCheck = board.inCheck();
         bool isRoot = plyFromRoot == 0;
+        int depthExtension = 0;
+
+        // check extension
+        if (isCheck) {
+            depthExtension = 1; // Extend search depth if in check
+        }
 
         uint64_t zobristKey = board.zobrist();
         auto ttEntry = tt.retrieve(zobristKey);
@@ -359,18 +367,39 @@ int aspirationSearch() {
                         state.currentIterationBestMove = ttEntry->bestMove;
                         state.currentIterationBestScore = ttEntry->score;
                     }
-                    return ttEntry->score; // Use the score from the transposition table.
+                    else{
+                        return ttEntry->score; // Use the score from the transposition table.
+                    }
+                    
                 }
         }
 
-
+            
             //null move reduction, 
             // based on https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=751ea2e28e427d6119be46de14be5140f7eb471e
             // might wantn to disable for pv search, or if we are doing lmr
-            bool nullMoveReduction = depth >= 3 && !isCheck && !isRoot && !isPvs;
-            if (nullMoveReduction) {
-                int staticEval = evaluate(depth, searchParams.useLazyEvalNMR); // lazy eval to avoid expensive evals
-                if (staticEval >= beta){
+            bool canPrune = !isCheck && !isRoot && !isPvs;
+            if (canPrune) {
+                int staticEval = evaluate(depth); // lazy eval to avoid expensive evals
+                // extended futility pruning
+                if (depth <= 3 &&
+                    (abs(alpha) < (mateScore - MAX_DEPTH)) && (abs(beta) < (mateScore + MAX_DEPTH))) {
+                    if (depth == 1 && (staticEval - searchParams.futilityMargin1 >= beta)) {
+                        // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
+                        return staticEval - searchParams.futilityMargin1;
+                    }
+                    else if (depth == 2 && (staticEval - searchParams.futilityMargin2 >= beta)){
+                        return staticEval - searchParams.futilityMargin2;
+                    }
+                    else if(depth == 3 && (staticEval - searchParams.futilityMargin3 >= beta)){
+                        return staticEval - searchParams.futilityMargin3;
+                    }
+    
+                }
+                
+                
+                
+                if (depth >= 3 && staticEval >= beta){ // we add a small margin for tempo
                     board.makeNullMove();
                     int r = depth > 6 ? 4 : 3;
                     int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
@@ -386,6 +415,8 @@ int aspirationSearch() {
                 
             }
 
+            // probcut and razoring would go here theoretically
+
             // var to keep track of how many moves we've looked at from the current node, 
             // used for late move reductions
             int moveCount = 0;
@@ -400,42 +431,16 @@ int aspirationSearch() {
                 return isCheck ? (-mateScore + plyFromRoot) : 0;
             }
 
-            if (depth == 0) {
-                return quiescence(alpha, beta); // Leaf node evaluation, add quiescence search here
-            }
+            
             
             sortMoves(moves, board); // Pre-sort moves based on heuristics
-
-            // isPvs = true; // hash move will always be the first one searched
 
             for (const Move& move : moves) {
 
                 //we should already know this from our sort moves
                 bool isCapture = board.isCapture(move);
                 bool isCheck = board.inCheck();
-                int depthExtension = 0;
-
-                // Extended Futility Pruning at depth 1-3, with increasing margins
-                //completely winning position
-                // Constraints: Not root node, not in check, not a capture, not a mate search, and depth is 1
-                // also can't prune only legal move
-                if (!isRoot && !isCheck && !isPvs && !isCapture && moves.size() > 1 && depth <= 3 &&
-    (abs(alpha) < (mateScore - MAX_DEPTH)) && (abs(beta) < (mateScore + MAX_DEPTH))) {
-
- // Assuming abs() checks are what's intended
-                    int futilityEval = evaluate(depth, searchParams.useLazyEvalFutility); // lazy eval to avoid expensive evals
-                    if (depth == 1 && (futilityEval + searchParams.futilityMargin1 <= alpha)) {
-                        // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
-                        continue;
-                    }
-                    else if (depth == 2 && (futilityEval + searchParams.futilityMargin2 <= alpha)){
-                        continue;
-                    }
-                    else if(depth == 3 && (futilityEval + searchParams.futilityMargin3 <= alpha)){
-                        continue;
-                    }
-                    
-                }
+                
 
                 board.makeMove(move);
                 state.nodes++;
@@ -443,47 +448,23 @@ int aspirationSearch() {
                 isCheck = board.inCheck();
                 PieceType pieceType = board.at<PieceType>(move.to());
                 
+                auto sqrank = chess::utils::squareRank(move.to());
+                auto piece = board.at(move.to());
                 //check extension in the right place now
-                if (isCheck) {
-                    depthExtension = 1;
+                if(!isCheck){ // we don;t want to extend twice for seventh rank and check
+                     if ((sqrank==chess::Rank::RANK_2 && piece==chess::Piece::BLACKPAWN) ||
+                        (sqrank==chess::Rank::RANK_7 && piece==chess::Piece::WHITEPAWN)){
+                            depthExtension = 1;
+                        }
                 }
-
-                // extend if a passed pawn reaches the seventh rank
-                // only if in pvs
-                if(isPvs && board.at<PieceType>(move.to()) == PieceType::PAWN) {
-                    if(board.sideToMove() == Color::WHITE && rank_of(move.to()) == 6){
-                        depthExtension = 1;
-                    }
-                    else if(board.sideToMove() == Color::BLACK && rank_of(move.to()) == 1){
-                        depthExtension = 1;
-                    }
-                }
+                    
 
                 //note that any extension will only set the depth extension to 1, so we can't have multiple extensions
 
-                // LMR condition
-                // common conditions for LMR from chessprogramming wiki
-                /*
-                Most programs do not reduce these types of moves:
-
-                Tactical Moves (captures and promotions)
-                Moves while in check
-                Moves which give check
-                Moves that cause a search extension
-                Anytime in a PV-Node in a PVS search
-                Depth < 3 (sometimes depth < 2)*/
-
-                //possible other conditions to consider
-                // passed pawn moves (might even want to make them an extension
-
-                // right now we only reduce by 1 move, but it is likely that with better move sorting
-                // we can reduce by more the more moves we look at
-                // also only going to look at depth 3 and on
+                // LMR conditions
+                
                 bool doLMR = depth >= searchParams.initalDepthLMR && moveCount > searchParams.initialMoveCountLMR && !isRoot && !isCapture && !isCheck && !isPvs && depthExtension == 0;
-                // if (doLMR) {
-                //     int reduction = max(1.0, log(depth) * log(moveCount) / 2);
-                //     depth -= reduction; // Apply dynamic reduction based on depth and move count
-                // }
+
                 if (doLMR) {
                     // another layer of reduction later in the search and late in the move order
                     // ideally would be percentage based
@@ -513,7 +494,7 @@ int aspirationSearch() {
                 }
                 board.unmakeMove(move);
 
-                // it is now false
+                // it is now false, since we played the principal variation move
                 isPvs = false;
 
                 // make sure we don't update anything if we are told to stop
@@ -617,6 +598,7 @@ int aspirationSearch() {
             // move ordering needs to be tuned
             int MVV_LVA_Score(const Move& move, const Board& board) {
                 if (move == Move::NULL_MOVE) {
+                    std::cout << "NULL MOVE IN MVV_LVA" << std::endl;
                     return 0;
                 }
                 if (move == state.bestMove) {

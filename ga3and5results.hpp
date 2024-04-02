@@ -84,6 +84,26 @@ TunableSearch resultKingHill1 = {
 };
 
 
+TunableSearch resultsKingHillModified = {
+122, // Aspiration Window 1
+247, // Aspiration Window 2
+18, // Aspiration Window initial delta
+4, // Use Aspiration Window Depth
+0, // Use Lazy Eval NMR
+124, // Futility Margin 1
+585, // Futility Margin 2
+711, // Futility Margin 3
+1, // Use Lazy Eval Futility
+223, // Delta Margin
+591, // Promotion Move Score
+488, // Killer Move Score
+6, // Initial LMR Depth
+15, // Secondary Depth LMR
+7, // Initial Move Counter
+8, // Secondary Move Counter
+};
+
+
 
 
 

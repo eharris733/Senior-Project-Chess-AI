@@ -15,6 +15,7 @@
 #include <cassert>
 #include "logger.hpp"
 #include "ga3and5results.hpp"
+#include "baselines.hpp"
 
 
 
@@ -245,7 +246,7 @@ void calculateFitness() {
     for (size_t i = 0; i < populationSize; ++i) {
         population[i].fitness = fitnessScores[i];
         population[i].generation = currentGeneration;
-        if (population[i].fitness >= 9) { // 9 out of 10 means definitely better
+        if (population[i].fitness >= 7) { // 7 out of 10 means probably better, since only allows for one loss or three draws, or at least equal
             opponent = convertChromosomeToSearch(population[i].chromosome);
             std::cout << "Opponent updated" << std::endl;
             std::cout << "new opponent: " << std::endl;

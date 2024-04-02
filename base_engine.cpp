@@ -11,6 +11,7 @@
 #include "chess.hpp"
 #include "searcher.hpp"
 #include "ga3and5results.hpp"
+#include "baselines.hpp"
 
 using namespace chess;
 using namespace std;
@@ -82,7 +83,7 @@ vector<string> splitstr(const std::string& str, const char delim) {
 }
 
 int main() {
-    searcher = make_unique<Searcher>(board, resultKingHill1, ga1result10); // Use fully qualified name
+    searcher = make_unique<Searcher>(board, baseSearch, ga1result10); // Use fully qualified name
     string uci;
     bool quit = false;
     bool isWhiteTurn = board.sideToMove() == Color::WHITE;
@@ -132,8 +133,6 @@ while (!quit) {
             timeLeft = std::stoi(tokens[i + 1]);
             movesToGo = 1;
         }
-        // Debug output
-        std::cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << std::endl;
     }
 
     // Start the search with time management
