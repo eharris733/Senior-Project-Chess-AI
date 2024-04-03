@@ -57,12 +57,9 @@ static const std::map<PieceType, int> PieceValue = {
         {PieceType::KING, 20000}
     };
 
-
-
 class Searcher {
 public:
 
-    
     Searcher(Board& initialBoard, TunableSearch searchParams = baseSearch, TunableEval evalParams = ga1result10) 
         : board(initialBoard), 
           evaluator(initialBoard, evalParams), 
@@ -95,8 +92,7 @@ public:
         initSearch();
         int eval = 0;
         // disabling this for now while I'm training the GA
-        // // play an opening move if we can, this adds one lookup at the beginning of the search, so not 
-        // perfect, but not really a factor of performance
+        // play a random opening move from our book if we can
         // Move openingMove = book.pickRandomMove(board);
         // if (openingMove != Move::NULL_MOVE) {
         //     state.bestMove = openingMove;
@@ -117,8 +113,7 @@ public:
             timeForThisMove =  50; // minimum time
         }
 
-
-        // // start the timer
+        // start the timer
         start_t = std::chrono::high_resolution_clock::now();
 
         // while we haven't been told to stop, and we haven't reached the desired think time
@@ -152,8 +147,6 @@ public:
                 }
                 
             }
-            
-            //state.bestScore = negamax(state.currentDepth, neg_infinity, infinity, 0);
 
             // if we don't want to stop, keep going, otherwise, the search at that depth is thrown away
             // update the overall search state with results from the latest iteration
@@ -173,9 +166,7 @@ public:
                  if(state.currentIterationBestScore > mateScore - MAX_DEPTH){
                      break;
                  }
-                state.currentDepth++; // Update the depth after each iteration
-                
-            
+                state.currentDepth++; // Update the depth after each iteration 
         }
 
         // debug function
@@ -257,77 +248,70 @@ private:
 
 
     // Aspiration window search
-int aspirationSearch() {
-    // 
-    bool isOpenWindow = false;
+    int aspirationSearch() {
+        bool isOpenWindow = false;
 
-    int eval = 0;
-    // Reset or initialize aspiration window parameters
-    state.aspirationWindow.delta = searchParams.aspirationWindowInitialDelta;
-    state.aspirationWindow.alpha = state.bestScore - state.aspirationWindow.delta;
-    state.aspirationWindow.beta = state.bestScore + state.aspirationWindow.delta;
-    state.aspirationWindow.failLow = 0;
-    state.aspirationWindow.failHigh = 0;
+        int eval = 0;
+        // Reset or initialize aspiration window parameters
+        state.aspirationWindow.delta = searchParams.aspirationWindowInitialDelta;
+        state.aspirationWindow.alpha = state.bestScore - state.aspirationWindow.delta;
+        state.aspirationWindow.beta = state.bestScore + state.aspirationWindow.delta;
+        state.aspirationWindow.failLow = 0;
+        state.aspirationWindow.failHigh = 0;
 
-    // Ensure initial values for alpha, beta, and delta are set before entering this function.
+        // Ensure initial values for alpha, beta, and delta are set before entering this function.
 
-    while (!isOpenWindow){
-        eval = negamax(state.currentDepth, state.aspirationWindow.alpha, state.aspirationWindow.beta, 0);
-        
-        // if we found a mate score, we can stop
-        // deleting this since we are not neccesarily searching all the moves, so we can def find a false mate
-        // if(eval > mateScore - MAX_DEPTH || eval < -mateScore + MAX_DEPTH){
-        //     return eval;
-        // }
-        // Update our aspiration windows based on the evaluation
-        if (eval <= state.aspirationWindow.alpha) {
-            // Fail low, widen the window downwards
+        while (!isOpenWindow){
+            eval = negamax(state.currentDepth, state.aspirationWindow.alpha, state.aspirationWindow.beta, 0);
             
-            state.aspirationWindow.beta = state.aspirationWindow.alpha; // Adjust beta to the current alpha
-            
-            if(state.aspirationWindow.failLow < 2){
-                if (state.aspirationWindow.failLow == 0){
-                    state.aspirationWindow.delta += searchParams.aspirationWindow1;
+            // Update our aspiration windows based on the evaluation
+            if (eval <= state.aspirationWindow.alpha) {
+                // Fail low, widen the window downwards
+                
+                state.aspirationWindow.beta = state.aspirationWindow.alpha; // Adjust beta to the current alpha
+                
+                if(state.aspirationWindow.failLow < 2){
+                    if (state.aspirationWindow.failLow == 0){
+                        state.aspirationWindow.delta += searchParams.aspirationWindow1;
+                    }
+                    else{
+                        state.aspirationWindow.delta += searchParams.aspirationWindow2;
+                    }
+                    
+                    state.aspirationWindow.alpha -= state.aspirationWindow.delta; // Decrease alpha
                 }
                 else{
-                    state.aspirationWindow.delta += searchParams.aspirationWindow2;
+                    isOpenWindow = true;
                 }
                 
-                state.aspirationWindow.alpha -= state.aspirationWindow.delta; // Decrease alpha
-            }
-            else{
-                isOpenWindow = true;
-            }
-            
-        state.aspirationWindow.failLow++;
-            
-        } else if (eval >= state.aspirationWindow.beta) {
-            // Fail high, widen the window upwards
-            
-            state.aspirationWindow.alpha = state.aspirationWindow.beta; // Adjust alpha to the current beta
-            
-            if(state.aspirationWindow.failHigh < 2){
-                if (state.aspirationWindow.failHigh == 0){
-                    state.aspirationWindow.delta += searchParams.aspirationWindow1; 
+            state.aspirationWindow.failLow++;
+                
+            } else if (eval >= state.aspirationWindow.beta) {
+                // Fail high, widen the window upwards
+                
+                state.aspirationWindow.alpha = state.aspirationWindow.beta; // Adjust alpha to the current beta
+                
+                if(state.aspirationWindow.failHigh < 2){
+                    if (state.aspirationWindow.failHigh == 0){
+                        state.aspirationWindow.delta += searchParams.aspirationWindow1; 
+                    }
+                    else{
+                        state.aspirationWindow.delta += searchParams.aspirationWindow2;
+                    }
+                    
+                    state.aspirationWindow.beta += state.aspirationWindow.delta; // Increase beta
                 }
                 else{
-                    state.aspirationWindow.delta += searchParams.aspirationWindow2;
+                    isOpenWindow = true;
                 }
-                
-                state.aspirationWindow.beta += state.aspirationWindow.delta; // Increase beta
+                state.aspirationWindow.failHigh++;
+            } else {
+                // Score is within the window, search is successful
+                return eval;
             }
-            else{
-                isOpenWindow = true;
-            }
-            state.aspirationWindow.failHigh++;
-        } else {
-            // Score is within the window, search is successful
-            return eval;
         }
+        return negamax(state.currentDepth, neg_infinity, infinity, 0);
     }
-    return negamax(state.currentDepth, neg_infinity, infinity, 0);
-}
-
 
 
     int negamax(int depth, int alpha, int beta, int plyFromRoot) {
@@ -358,6 +342,14 @@ int aspirationSearch() {
 
         uint64_t zobristKey = board.zobrist();
         auto ttEntry = tt.retrieve(zobristKey);
+        Move ttMove = Move::NULL_MOVE;
+        int ttScore = 0;
+
+
+        if (ttEntry.has_value()) {
+            ttMove = ttEntry->bestMove;
+            ttScore = ttEntry->score;
+        } // store the tt move if it exists
 
         if (ttEntry.has_value() && ttEntry->depth >= depth) {
             if ((ttEntry->nodeType == NodeType::EXACT) ||
@@ -372,20 +364,17 @@ int aspirationSearch() {
                     }
                     
                 }
-        }
+            }
 
             
-            //null move reduction, 
-            // based on https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=751ea2e28e427d6119be46de14be5140f7eb471e
-            // might wantn to disable for pv search, or if we are doing lmr
+            //null move pruning and reverse futility pruniing
             bool canPrune = !isCheck && !isRoot && !isPvs;
             if (canPrune) {
-                int staticEval = evaluate(depth); // lazy eval to avoid expensive evals
-                // extended futility pruning
+                int staticEval = ttMove != Move::NO_MOVE? ttScore: evaluate(depth); // lazy eval to avoid expensive evals
+                // reverse futility pruning
                 if (depth <= 3 &&
                     (abs(alpha) < (mateScore - MAX_DEPTH)) && (abs(beta) < (mateScore + MAX_DEPTH))) {
                     if (depth == 1 && (staticEval - searchParams.futilityMargin1 >= beta)) {
-                        // Consider returning alpha to indicate this branch doesn't improve upon the current best known score
                         return staticEval - searchParams.futilityMargin1;
                     }
                     else if (depth == 2 && (staticEval - searchParams.futilityMargin2 >= beta)){
@@ -394,22 +383,16 @@ int aspirationSearch() {
                     else if(depth == 3 && (staticEval - searchParams.futilityMargin3 >= beta)){
                         return staticEval - searchParams.futilityMargin3;
                     }
-    
                 }
-                
-                
-                
-                if (depth >= 3 && staticEval >= beta){ // we add a small margin for tempo
+
+                // null move pruning
+                if (depth >= 3 && evaluator.getGamePhase() > .1 && staticEval >= beta){ 
                     board.makeNullMove();
-                    int r = depth > 6 ? 4 : 3;
+                    int r = 3; // reduction amount (can probably be tuned, but currently going to leave it at this
                     int nullMoveScore = -negamax(depth - r, -beta, -beta + 1, plyFromRoot + 1);
                     board.unmakeNullMove();
                     if (nullMoveScore >= beta) {
-                        // reduction in depth
-                        depth -= 4;
-                        if (depth <= 0) {
-                            return staticEval;
-                        }
+                        return beta; // Null move cutoff
                     }
                 }
                 
@@ -431,9 +414,7 @@ int aspirationSearch() {
                 return isCheck ? (-mateScore + plyFromRoot) : 0;
             }
 
-            
-            
-            sortMoves(moves, board); // Pre-sort moves based on heuristics
+            sortMoves(moves, board, ttMove); // Pre-sort moves based on heuristics
 
             for (const Move& move : moves) {
 
@@ -443,55 +424,49 @@ int aspirationSearch() {
                 
 
                 board.makeMove(move);
+                moveCount++;
                 state.nodes++;
                 // recheck our pruning conditions
                 isCheck = board.inCheck();
-                PieceType pieceType = board.at<PieceType>(move.to());
-                
-                auto sqrank = chess::utils::squareRank(move.to());
-                auto piece = board.at(move.to());
-                //check extension in the right place now
-                if(!isCheck){ // we don;t want to extend twice for seventh rank and check
-                     if ((sqrank==chess::Rank::RANK_2 && piece==chess::Piece::BLACKPAWN) ||
-                        (sqrank==chess::Rank::RANK_7 && piece==chess::Piece::WHITEPAWN)){
-                            depthExtension = 1;
-                        }
-                }
                     
-
                 //note that any extension will only set the depth extension to 1, so we can't have multiple extensions
 
                 // LMR conditions
                 
-                bool doLMR = depth >= searchParams.initalDepthLMR && moveCount > searchParams.initialMoveCountLMR && !isRoot && !isCapture && !isCheck && !isPvs && depthExtension == 0;
+                    bool doLMR = depth >= searchParams.initalDepthLMR && 
+                moveCount > searchParams.initialMoveCountLMR && 
+                !isRoot  && !isCheck  && 
+                depthExtension == 0;
+
+                int eval = 0;
+                bool doReSearch = false;
 
                 if (doLMR) {
-                    // another layer of reduction later in the search and late in the move order
-                    // ideally would be percentage based
-                    if(moveCount > searchParams.secondaryMoveCountLMR && depth >= searchParams.secondaryDepthLMR){
-                        depthExtension -= 1; // Apply dynamic reduction based on depth and move count
-                    }
-                    depthExtension -= 1; // Apply dynamic reduction based on depth and move count
+                    int  LMR_REDUCTION = 2; // Reduce depth by 1 for late move reductions
+                    LMR_REDUCTION -= isPvs; // Adjust -1 or 0
+                    LMR_REDUCTION -= isCapture; // Adjust -1 or 0
+                    LMR_REDUCTION += (log(moveCount) + log(depth)) / 2.0; // logarithmic reduction, 1.75 stolen from small brain
+                    int reducedDepth = depth - LMR_REDUCTION; // Adjust -1 or in
+                    eval = -negamax(reducedDepth, -alpha - 1, -alpha, plyFromRoot + 1);
+                    // Check if the reduced-depth search beats alpha, signaling a re-search is needed
+                    doReSearch = eval > alpha;
+                } else {
+                    // No LMR; indicate a full-depth search is required
+                    doReSearch = true;
                 }
 
-                
-
-                //Principal Variation Search
-                int eval = 0;
-                // we have a pvs after one search
-                if (isPvs) {
-                    eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
-                }
-                // zero window search, to try and prune a bunch
-                else {
-                    eval = -negamax(depth - 1 + depthExtension, -alpha - 1, -alpha, plyFromRoot + 1);
-
-                    // move is better than expected, so we do a full research
-                    if (eval > alpha && eval < beta) {
-                        // The move is better than expected, re-search with a full window
-                        eval = -negamax(depth - 1 + depthExtension, -beta, -alpha, plyFromRoot + 1);
+                // Re-search with full depth if the move seems promising or if LMR wasn't applied
+                if (doReSearch) {
+                    // If it was an LMR move that triggered the re-search, search with the original depth
+                    // Otherwise, this block is executed for non-LMR moves or moves that naturally need a full-depth search
+                    eval = -negamax(depth - 1, -alpha - 1, -alpha, plyFromRoot + 1);
+                    
+                    // After re-search, if the move is still promising, consider a full-window search for PV nodes
+                    if (eval > alpha && eval < beta){
+                        eval = -negamax(depth - 1, -beta, -alpha, plyFromRoot + 1);
                     }
                 }
+
                 board.unmakeMove(move);
 
                 // it is now false, since we played the principal variation move
@@ -515,9 +490,7 @@ int aspirationSearch() {
                         // update history
                         history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())] += depth * depth;
                         
-                    }
-
-                    
+                    }          
 
                     return beta; // Alpha-beta cutoff.
                 }
@@ -531,24 +504,20 @@ int aspirationSearch() {
                         state.currentIterationBestScore = alpha;
                     }
                 }
-                moveCount++;
             }
 
             // Update the transposition table with the new best score and move found at this depth.
-            // right now only the exact node type works
 
             tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
-
-
 
             return alpha;
         }
 
-
+        // Quiescence search
         int quiescence(int alpha, int beta) {
 
             if (isTimeOver() || stopSearching){
-                return 0; // Stop signal received, return the worst possible score so results are ignored from this search
+                return 0; // Stop signal received, move will be thrown away
             }
 
             const int DELTA_MARGIN = searchParams.deltaMargin; // most positional advantages aren't worth more than a piece
@@ -574,7 +543,7 @@ int aspirationSearch() {
                 }
 
                 board.makeMove(move);
-                state.nodes++; // ive changed to only updating node counts after we change board state
+                state.nodes++; // Ive changed to only updating node counts after we change board state
                 int score = -quiescence(-beta, -alpha);
                 board.unmakeMove(move);
 
@@ -590,19 +559,18 @@ int aspirationSearch() {
             }
             return alpha;
         }
-            // these utility functions could go in their own file tbh
-            constexpr int rank_of(Square sq) {
-                return static_cast<int>(sq) / 8; // Divide the square index by 8 to get the rank
-            }
 
             // move ordering needs to be tuned
-            int MVV_LVA_Score(const Move& move, const Board& board) {
+            int MVV_LVA_Score(const Move& move, const Board& board, Move ttMove = Move::NULL_MOVE) {
                 if (move == Move::NULL_MOVE) {
                     std::cout << "NULL MOVE IN MVV_LVA" << std::endl;
                     return 0;
                 }
-                if (move == state.bestMove) {
+                if (move == state.bestMove ) {
                     return infinity; // PV move
+                }
+                if (move == ttMove) {
+                    return infinity - 1;
                 }
 
                 PieceType victim = board.at<PieceType>(move.to()); // piece being captured
@@ -628,16 +596,15 @@ int aspirationSearch() {
             }
 
         // Sorting moves based on MVV-LVA score and PV and Killer moves
-        void sortMoves(Movelist& moves, const Board& board) {
-            std::sort(moves.begin(), moves.end(), [this, &board](const Move& a, const Move& b) {
-                return this->MVV_LVA_Score(a, board) > this->MVV_LVA_Score(b, board);
+        void sortMoves(Movelist& moves, const Board& board, Move ttMove = Move::NULL_MOVE) {
+            std::sort(moves.begin(), moves.end(), [this, &board, &ttMove](const Move& a, const Move& b) {
+                return this->MVV_LVA_Score(a, board, ttMove) > this->MVV_LVA_Score(b, board, ttMove);
             });
         }
 
-        //trying out lazy evaluation
+        //lazy evaluation just means we only evaluate material score
         int evaluate(int depth, bool isLazy = false) {
             int rawScore = evaluator.evaluate(depth, isLazy); // Positive for White's advantage, negative for Black's
             return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
         }
-
-    };
+};

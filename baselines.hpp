@@ -57,13 +57,12 @@ struct TunableSearch{
     int useAspirationWindowDepth = 0;
 
     // for null move reductions
-    bool useLazyEvalNMR = 0;
+    bool useLazyEvalStatic = 0;
 
     // for futility pruning
     int futilityMargin1 =0;
     int futilityMargin2 = 0;
     int futilityMargin3 = 0;
-    bool useLazyEvalFutility = true;
     // for delta pruning in QS search
     int deltaMargin = 0;
 
@@ -73,9 +72,7 @@ struct TunableSearch{
 
     //for late move reductions
     int initalDepthLMR = 0;
-    int secondaryDepthLMR = 0;
     int initialMoveCountLMR = 0;
-    int secondaryMoveCountLMR = 0;
 };
 
 // Global instance
@@ -124,18 +121,15 @@ TunableSearch baseSearch = {
         100, //aspiration window progression 2
         5, //aspiration window initial delta
         5, // use aspiration window depth (temporarily set to 10 so GA doesn't use it)
-        true, // use lazy eval for null move reductions
+        true, // use lazy eval for static eval pruning methods
         300, 
         900, 
         1300, // futility pruning margin
-        true, // use futility pruning lazy eval
         300, // delta pruning in QS search
         200, // promotion score
         100, // killer move score
         3, // initial depth for late move reductions
-        6, // secondary depth for late move reductions
         3, // initial move count for late move reductions
-        4, // secondary move count for late move reductions
     };
 
 TunableEval zeroEval = {

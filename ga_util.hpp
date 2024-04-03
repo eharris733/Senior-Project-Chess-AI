@@ -209,9 +209,7 @@ TunableSearch convertChromosomeToSearch(const std::string& bitString){
     pos += 6;
     tSearch.useAspirationWindowDepth = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
-    tSearch.useLazyEvalFutility = bitsToInt(bitString.substr(pos, 1));
-    pos += 1;
-    tSearch.useLazyEvalNMR = bitsToInt(bitString.substr(pos, 1));
+    tSearch.useLazyEvalStatic = bitsToInt(bitString.substr(pos, 1));
     pos += 1;
     tSearch.futilityMargin1 = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
@@ -227,12 +225,8 @@ TunableSearch convertChromosomeToSearch(const std::string& bitString){
     pos += 10;
     tSearch.initalDepthLMR = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
-    tSearch.secondaryDepthLMR = bitsToInt(bitString.substr(pos, 4));
-    pos += 4;
     tSearch.initialMoveCountLMR = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
-    tSearch.secondaryMoveCountLMR = bitsToInt(bitString.substr(pos, 4));
-    pos += 4;
     return tSearch;
 }
 
@@ -247,8 +241,7 @@ std::string convertSearchToChromosome(const TunableSearch& tSearch){
     bitString += intToGrayString(tSearch.aspirationWindow2, 8);
     bitString += intToGrayString(tSearch.aspirationWindowInitialDelta, 6);
     bitString += intToGrayString(tSearch.useAspirationWindowDepth, 3);
-    bitString += intToGrayString(tSearch.useLazyEvalFutility, 1);
-    bitString += intToGrayString(tSearch.useLazyEvalNMR, 1);
+    bitString += intToGrayString(tSearch.useLazyEvalStatic, 1);
     bitString += intToGrayString(tSearch.futilityMargin1, 10);
     bitString += intToGrayString(tSearch.futilityMargin2, 10);
     bitString += intToGrayString(tSearch.futilityMargin3, 10);
@@ -256,9 +249,7 @@ std::string convertSearchToChromosome(const TunableSearch& tSearch){
     bitString += intToGrayString(tSearch.promotionMoveScore, 10);
     bitString += intToGrayString(tSearch.killerMoveScore, 10);
     bitString += intToGrayString(tSearch.initalDepthLMR, 3);
-    bitString += intToGrayString(tSearch.secondaryDepthLMR, 4);
     bitString += intToGrayString(tSearch.initialMoveCountLMR, 3);
-    bitString += intToGrayString(tSearch.secondaryMoveCountLMR, 4);
     
     return bitString;
 
@@ -270,8 +261,7 @@ TunableSearch initializeRandomTunableSearch() {
     rSearch.aspirationWindow2 = randomInt(8);
     rSearch.aspirationWindowInitialDelta = randomInt(6);
     rSearch.useAspirationWindowDepth = randomInt(3);
-    rSearch.useLazyEvalNMR = randomInt(1); // techncally this is a boolean
-    rSearch.useLazyEvalNMR = randomInt(1);
+    rSearch.useLazyEvalStatic = randomInt(1); // techncally this is a boolean
     rSearch.futilityMargin1 = randomInt(10);
     rSearch.futilityMargin2 = randomInt(10);
     rSearch.futilityMargin3 = randomInt(10);
@@ -279,10 +269,7 @@ TunableSearch initializeRandomTunableSearch() {
     rSearch.promotionMoveScore = randomInt(10);
     rSearch.killerMoveScore = randomInt(10);
     rSearch.initalDepthLMR = randomInt(3); 
-    rSearch.secondaryDepthLMR = randomInt(4);
     rSearch.initialMoveCountLMR = randomInt(3);
-    rSearch.secondaryMoveCountLMR = randomInt(4);
-
     return rSearch;
 }
 
@@ -460,18 +447,15 @@ void printTunableSearch(const TunableSearch& tSearch){
     logMsg << tSearch.aspirationWindow2 << ", // Aspiration Window 2\n";
     logMsg << tSearch.aspirationWindowInitialDelta << ", // Aspiration Window initial delta\n";
     logMsg << tSearch.useAspirationWindowDepth << ", // Use Aspiration Window Depth\n";
-    logMsg << tSearch.useLazyEvalNMR << ", // Use Lazy Eval NMR\n";
+    logMsg << tSearch.useLazyEvalStatic << ", // Use Lazy Eval Static\n";
     logMsg << tSearch.futilityMargin1 << ", // Futility Margin 1\n";
     logMsg << tSearch.futilityMargin2 << ", // Futility Margin 2\n";
     logMsg << tSearch.futilityMargin3 << ", // Futility Margin 3\n";
-    logMsg << tSearch.useLazyEvalFutility << ", // Use Lazy Eval Futility\n";
     logMsg << tSearch.deltaMargin << ", // Delta Margin\n";
     logMsg << tSearch.promotionMoveScore << ", // Promotion Move Score\n";
     logMsg << tSearch.killerMoveScore << ", // Killer Move Score\n";
     logMsg << tSearch.initalDepthLMR << ", // Initial LMR Depth\n"; // Remember, there's a typo here in the original struct definition: "inital" should be "initial"
-    logMsg << tSearch.secondaryDepthLMR << ", // Secondary Depth LMR\n";
     logMsg << tSearch.initialMoveCountLMR << ", // Initial Move Counter\n";
-    logMsg << tSearch.secondaryMoveCountLMR << ", // Secondary Move Counter\n";
     logMsg << "};\n";
     Logger::getInstance().log(logMsg.str());
     std::cout << logMsg.str();

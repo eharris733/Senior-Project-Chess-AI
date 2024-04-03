@@ -109,7 +109,7 @@ private:
     size_t archiveSize; // N: Maximum size of the archive
     size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
     PolyglotBook book;
-    TunableSearch opponent = resultKingHill1; // initialize to a value much better than base search
+    TunableSearch opponent = baseSearch; // initialize to a value much better than base search
 
     std::vector<chromosome> population; // a vector of pairs of chromosomes and their fitness levels
     std::random_device rd;
@@ -246,7 +246,7 @@ void calculateFitness() {
     for (size_t i = 0; i < populationSize; ++i) {
         population[i].fitness = fitnessScores[i];
         population[i].generation = currentGeneration;
-        if (population[i].fitness >= 7) { // 7 out of 10 means probably better, since only allows for one loss or three draws, or at least equal
+        if (population[i].fitness >= 8) { // 8 out of 10 means definitely better, since only allows for two draws or one loss
             opponent = convertChromosomeToSearch(population[i].chromosome);
             std::cout << "Opponent updated" << std::endl;
             std::cout << "new opponent: " << std::endl;
