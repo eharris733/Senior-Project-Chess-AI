@@ -24,9 +24,8 @@ int main() {
     assert(randomSearch.killerMoveScore == randomSearchClone.killerMoveScore);
     assert(randomSearch.promotionMoveScore == randomSearchClone.promotionMoveScore);
     assert(randomSearch.initialMoveCountLMR == randomSearchClone.initialMoveCountLMR);
-    assert(randomSearch.useLazyEvalFutility == randomSearchClone.useLazyEvalFutility);
-    assert(randomSearch.useLazyEvalNMR == randomSearchClone.useLazyEvalNMR);
-    assert(randomSearch.secondaryDepthLMR == randomSearchClone.secondaryDepthLMR);
+    assert(randomSearch.useLazyEvalStatic == randomSearchClone.useLazyEvalStatic);
+
     
 
     // values from 2008 paper
@@ -40,11 +39,11 @@ int main() {
 
 
     double initialMutationRate = 0.05;
-    double decayRate = 0.01;
+    double decayRate = 0.015; // results in a final mutation of .000125
     double crossoverRate = 0.75;
     int totalGenerations = 200;
     size_t populationSize = 20; // always going to be 20
-    int trainingSize = 100; // every single position
+    int trainingSize = 952; // every single position
     int eliteSize = 1;
     int archiveSize = 400;
     int replacementCount = 1;

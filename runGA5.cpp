@@ -21,16 +21,14 @@ int main() {
 
 
 
-    double initialMutationRate = 0.05;
+    double initialMutationRate = 0.02;
     double decayRate = 0;
     double crossoverRate = 0.75;
     int totalGenerations = 200;
-    size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20. This corresponds to 19 X 20 = 380 games per generation
-    // 200 generations will be 76000 games, all at depth 8
-    // at pop size of 10, we have 9 X 10 = 90 games per generation, 18000 games total, or less than a fourth of the time
+    size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20. This corresponds to each thread playing 100 games per generation (still a lot less than 19X20 )
     int eliteSize = 0;
     int archiveSize = 400;
-    int replacementCount = 5; // we can be more aggresive since we are deleting stuff after
+    int replacementCount = 4; // we can be more aggresive since we are deleting stuff after
 
     Logger::getInstance().log(  "Running Genetic Algorithm"  );
     Logger::getInstance().log(  "Population Size: " + std::to_string(populationSize)  );

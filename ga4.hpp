@@ -150,7 +150,7 @@ private:
             board.setFen(move.fen);
             searcher.clear();
             searcher.setVerbose(false);
-            SearchState result = searcher.search(60, 0, 1); // since we have the ten second overhead
+            SearchState result = searcher.search(1010, 0, 1); // since we have the ten millisecond overhead
             Move bestMove = result.bestMove;
             int depthReached = result.currentDepth;
             std::string uciMove = uci::moveToUci(bestMove);
@@ -211,13 +211,9 @@ double calculateFitness() {
         }
     }
 
+    // temp changing this to be all the training data
     void selectNRandom(size_t n) {
-        positions.clear();
-        std::uniform_int_distribution<> dist(0, allTrainingData.size() - 1);
-        while (positions.size() < n) {
-            positions.push_back(allTrainingData[dist(gen)]);
-        }
-        
+        positions = allTrainingData;
     }
 
     // looks good

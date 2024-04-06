@@ -93,7 +93,7 @@ private:
     struct chromosome {
         std::string chromosome = "";
         double fitness = -10.0;
-        int generation = 0;
+        int opponent = 0;
     };
 
     // the parameters for the genetic algorithm, some set to default just in case
@@ -110,7 +110,7 @@ private:
     size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
     PolyglotBook book;
     TunableSearch opponent = baseSearch; // initialize to a value much better than base search
-
+    int opponentCount = 0;
     std::vector<chromosome> population; // a vector of pairs of chromosomes and their fitness levels
     std::random_device rd;
     std::mt19937 gen{rd()}; // random c++ magic stuff
@@ -226,8 +226,8 @@ void calculateFitness() {
         threads.emplace_back([&, i] {
             double playerScore = 0.0; // Player's total score
 
-            // Iterate 10 games
-            for (int j = 0; j < 10; j++) {
+            // Iterate 100 games
+            for (int j = 0; j < 100; j++) {
                 // Assuming calculateFitnessForSingleMatch handles a match between two players
                 double matchResult = calculateFitnessSingleGame(convertChromosomeToSearch(population[i].chromosome));
                 std::lock_guard<std::mutex> guard(updateMutex);
@@ -242,16 +242,18 @@ void calculateFitness() {
             thread.join();
         }
     }
-
+    int maxFitness = population.front().fitness;
     for (size_t i = 0; i < populationSize; ++i) {
         population[i].fitness = fitnessScores[i];
-        population[i].generation = currentGeneration;
-        if (population[i].fitness >= 8) { // 8 out of 10 means definitely better, since only allows for two draws or one loss
-            opponent = convertChromosomeToSearch(population[i].chromosome);
+        if (population[i].fitness >= 15 && population[i].fitness > maxFitness) {  // if we are net +15, we're probably better than the current opponent
+            maxFitness = population[i].fitness;
+            opponentCount ++;
+            opponent = convertChromosomeToSearch(population[i].chromosome);     
             std::cout << "Opponent updated" << std::endl;
             std::cout << "new opponent: " << std::endl;
             printTunableSearch(opponent);
         }
+        population[i].opponent = opponentCount;
     }
 }
 
@@ -385,24 +387,12 @@ void crossover() {
 
     // Adjusted sorting: If fitness is 8 or better, prioritize by recency; otherwise, by fitness
     std::sort(combined.begin(), combined.end(), [](const chromosome& a, const chromosome& b) {
-        // For both chromosomes scoring 8 or better, prioritize newer generation
-        if (a.fitness >= 8 && b.fitness >= 8) {
-            if (a.generation == b.generation) {
-                return a.fitness > b.fitness; // If generations are equal, higher fitness wins
-            }
-            return a.generation > b.generation; // Otherwise, newer generation wins
+        if(a.opponent == b.opponent){
+            return a.fitness > b.fitness;
         }
-        
-        // If one scores 8 or better and the other does not, the one that does is better
-        if ((a.fitness >= 8) != (b.fitness >= 8)) {
-            return a.fitness >= 8; // True (1) if a.fitness >= 8, making 'a' come first
+        else{
+            return a.opponent > b.opponent;
         }
-        
-        // For chromosomes scoring below 8, prioritize by fitness
-        if (a.fitness == b.fitness) {
-            return a.generation > b.generation; // In case of equal fitness, newer is better
-        }
-        return a.fitness > b.fitness; // Higher fitness values are better
     });
 
     if (combined.size() > archiveSize) {
@@ -422,8 +412,6 @@ void crossover() {
         // Add the top X solutions from the archive to the new population
         newPopulation.insert(newPopulation.end(), archive.begin(), archive.begin() + count);
 
-        // Optionally, remove reintroduced solutions from the archive
-        archive.erase(archive.begin(), archive.begin() + count);
     }
 
 void selection() {
