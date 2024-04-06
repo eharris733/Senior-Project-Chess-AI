@@ -604,7 +604,7 @@ private:
 
         //lazy evaluation just means we only evaluate material score
         int evaluate(int depth, bool isLazy = false) {
-            int rawScore = evaluator.evaluate(depth, isLazy); // Positive for White's advantage, negative for Black's
+            int rawScore = evaluator.evaluate(isLazy); // Positive for White's advantage, negative for Black's
             return board.sideToMove() == Color::WHITE ? rawScore : -rawScore;
         }
 };

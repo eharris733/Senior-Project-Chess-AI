@@ -51,7 +51,7 @@ class Evaluator {
         // we should never call this on a position that is a game over state
 
         //heavily influenced by the Raphael engine's implementation
-        float evaluate(int depth, bool lazy = false){
+        float evaluate(bool lazy = false){
 
         //bitboards we need
 

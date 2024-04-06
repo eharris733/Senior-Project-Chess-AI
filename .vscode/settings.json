@@ -85,7 +85,8 @@
         "list": "cpp",
         "set": "cpp",
         "cinttypes": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "future": "cpp"
     },
     
         "files.exclude": {

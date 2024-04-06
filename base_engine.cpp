@@ -9,7 +9,8 @@
 #include <atomic> // For std::atomic
 // from my code
 #include "chess.hpp"
-#include "searcher.hpp"
+//#include "searcher.hpp"
+#include "searcher2.hpp"
 #include "ga3and5results.hpp"
 #include "baselines.hpp"
 
@@ -17,7 +18,7 @@ using namespace chess;
 using namespace std;
 
 chess::Board board;
-unique_ptr<Searcher> searcher; 
+unique_ptr<Searcher2> searcher; 
 mutex searchThreadMutex;
 unique_ptr<std::thread> searchThread;
 
@@ -29,7 +30,7 @@ void setPosition(const std::string& uci, const std::vector<std::string>& tokens)
     if (tokens[1] == "startpos"){
         board.setFen(constants::STARTPOS);
         // reset the tt
-        searcher->clear();
+        //searcher->clear();
     }
     else if (tokens[1] == "fen")
         board.setFen(uci.substr(13));   // get text after "fen"
@@ -55,7 +56,7 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
         // Capture time control parameters by value in the lambda
         searchThread = make_unique<thread>([=]() {
             cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << endl;
-            SearchState result = searcher->search(timeLeft, timeIncrement, movesToGo); 
+            SearchState result = searcher->iterativeDeepening(timeLeft, timeIncrement, movesToGo); 
             cout << "bestmove " << uci::moveToUci(result.bestMove) << endl;
         });
     }
@@ -83,7 +84,7 @@ vector<string> splitstr(const std::string& str, const char delim) {
 }
 
 int main() {
-    searcher = make_unique<Searcher>(board, baseSearch, ga1result10); // Use fully qualified name
+    searcher = make_unique<Searcher2>(board, baseSearch, baseEval); // Use fully qualified name
     string uci;
     bool quit = false;
     bool isWhiteTurn = board.sideToMove() == Color::WHITE;
