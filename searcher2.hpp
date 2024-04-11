@@ -21,9 +21,9 @@ const int MAXDEPTH = 100;
 
 // Struct to hold the searchState of a search
 struct SearchState {
-    Move bestMove = Move::NULL_MOVE;
+    Move bestMove = Move::NO_MOVE;
     int bestScore = 0;
-    Move currentIterationBestMove = Move::NULL_MOVE;
+    Move currentIterationBestMove = Move::NO_MOVE;
     int currentIterationBestScore = 0;
     Move killerMoves[2][MAXDEPTH + 1]{}; // store two killer moves
     int currentDepth = 1;
@@ -46,10 +46,10 @@ class Searcher2 {
         stopSearching = false;
 
         //searchState.isOpening = true;
-        searchState.bestMove = Move::NULL_MOVE;
+        searchState.bestMove = Move::NO_MOVE;
         searchState.currentDepth = 1;
         searchState.nodes = 0;
-        searchState.currentIterationBestMove = Move::NULL_MOVE;
+        searchState.currentIterationBestMove = Move::NO_MOVE;
         searchState.currentIterationBestScore = neg_infinity;
         std::memset(history, 0, sizeof(history)); // set everything back to 0
         start_t = std::chrono::high_resolution_clock::now();
@@ -120,7 +120,7 @@ class Searcher2 {
             std::cout << "info depth " << depth << " score cp " << searchState.bestScore << " nodes " << searchState.nodes   << " nps " << signed((searchState.nodes / (dtime + 1)) * 1000) << " time " << dtime << " pv " << uci::moveToUci(searchState.bestMove) << std::endl;
             
         }
-        if (searchState.bestMove == Move::NULL_MOVE) {
+        if (searchState.bestMove == Move::NO_MOVE) {
             Movelist moves;
             movegen::legalmoves<MoveGenType::ALL>(moves, board);
             searchState.bestMove = moves[0];
@@ -296,9 +296,10 @@ class Searcher2 {
         uint64_t zobristKey = board.zobrist();
         optional<TTEntry> ttEntry = tt.retrieve(zobristKey);
         NodeType nodeType = NodeType::UPPERBOUND;
-        Move localBestMove = Move::NULL_MOVE;
+        Move localBestMove = Move::NO_MOVE;
+        int best = neg_infinity;
         bool useTT = false;
-        Move ttMove = Move::NULL_MOVE;
+        Move ttMove = Move::NO_MOVE;
         int ttScore = 0;
 
         if (ttEntry.has_value() && ttEntry->depth >= depth && !isRoot && !isPvs) {
@@ -370,7 +371,7 @@ class Searcher2 {
                 return isInCheck ? (-MATE_SCORE + ply) : 0;
             }
 
-        scoreMoves(moves, ply);
+        scoreMoves(moves, ply, ttMove);
         sortMoves(moves);
 
         for (const Move& move : moves) {
@@ -380,6 +381,12 @@ class Searcher2 {
             searchState.nodes++;
             moveCount++;
             board.makeMove(move);
+
+            // late move pruning (probably need to expose to tuner)
+            if (!isCapture && !isPromotion && !board.inCheck() && !isPvs && !isInCheck && depth <= 1 && moveCount > 10){
+                board.unmakeMove(move);
+                continue;
+            }
 
             int score = neg_infinity;
             
@@ -418,10 +425,8 @@ class Searcher2 {
             }
 
              
-
-            // we found a move that scores higher than the current best move for us
-            if (score > alpha) {
-                alpha = score;
+            if (score > best){
+                best = score;
                 localBestMove = move;
                 nodeType = NodeType::EXACT;
                 
@@ -431,26 +436,38 @@ class Searcher2 {
                     searchState.currentIterationBestScore = score;
                 }
                 
-                if (score >= beta) {
-                    // update tt
-                    tt.save(zobristKey, depth, beta, NodeType::LOWERBOUND, move);
-                    // update killer bc beta cutoff
-                    if (!isCapture && move != searchState.killerMoves[0][ply]){
-                        searchState.killerMoves[1][ply] = searchState.killerMoves[0][ply];
-                        searchState.killerMoves[0][ply] = move;  
-                    }
-                    if (!isCapture){
-                    // update history bc cutoff
-                    history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())] += depth;
-                }
+            
+                // we found a move that scores higher than the current best move for us
+                if (score > alpha) {
+                    alpha = score;
                     
-                    return beta;
+                    if (score >= beta) {
+                        nodeType = NodeType::LOWERBOUND;
+                        // update killer bc beta cutoff
+                        if (!isCapture && move != searchState.killerMoves[0][ply]){
+                            searchState.killerMoves[1][ply] = searchState.killerMoves[0][ply];
+                            searchState.killerMoves[0][ply] = move;   
+                        }
+                        if (!isCapture){
+                            // update history bc cutoff
+                            history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())] += depth;
+                        }
+                        
+                        break;
+                    }
                 }
             }
         }
 
-        tt.save(zobristKey, depth, alpha, nodeType, localBestMove);
-        return alpha;
+        nodeType = best >= beta ? NodeType::LOWERBOUND : (isPvs && localBestMove != Move::NO_MOVE ? NodeType::EXACT : NodeType::UPPERBOUND);
+
+        // make sure we don't store a mate score, or a in the tt
+        if ((best < MATE_SCORE - MAXDEPTH) && !stopSearching){
+            tt.save(zobristKey, depth, best, nodeType, localBestMove);
+        }
+
+        
+        return best;
     }
     
 
@@ -462,12 +479,15 @@ class Searcher2 {
     }
 
     // score the move based on MVV/LVA
-    void scoreMove(Move& move, int ply) {
+    void scoreMove(Move& move, int ply, Move ttMove = Move::NO_MOVE) {
         if (move == searchState.bestMove){
             move.setScore(INT16_MAX);
         }
-        else if (move.typeOf() == move.PROMOTION){
+        else if (move == ttMove){
             move.setScore(INT16_MAX - 1);
+        }
+        else if (move.typeOf() == move.PROMOTION){
+            move.setScore(INT16_MAX - 2);
         }
         else if (board.at<PieceType>(move.to()) != PieceType::NONE){
             move.setScore(mvv_lva(move));
@@ -487,9 +507,9 @@ class Searcher2 {
         }
     }
 
-    void scoreMoves(Movelist& moves, int ply){
+    void scoreMoves(Movelist& moves, int ply, Move ttMove = Move::NO_MOVE){
         for (Move& move : moves){
-            scoreMove(move, ply);
+            scoreMove(move, ply, ttMove);
         }
     }
 
@@ -512,14 +532,9 @@ class Searcher2 {
         int victim = static_cast<int>(board.at<PieceType>(move.to())); // piece being captured
         int aggressor = static_cast<int>(board.at<PieceType>(move.from())); // piece capturing
 
-
-        // std::cout << "victim: " << victim << " aggressor: " << aggressor << std::endl;
-        // std::cout << "victim piece type " << pieceTypeToChar(board.at<PieceType>(move.to())) << " aggressor piece type " << pieceTypeToChar(board.at<PieceType>(move.from())) << std::endl;
-
         // the multiplier is to make it more significant than the other scores
         int score = table[victim][aggressor] * 100;
 
-        // std::cout << "score: " << score << std::endl;
         return score;
         
     }
