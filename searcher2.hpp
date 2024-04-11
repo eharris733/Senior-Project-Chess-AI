@@ -208,7 +208,7 @@ class Searcher2 {
         }
         
         if (stand_pat >= beta) {
-            return beta;
+            return stand_pat;
         }
 
         if (stand_pat > alpha) {
@@ -251,15 +251,20 @@ class Searcher2 {
                 return 0;
             }
 
-            if (score >= beta) {
-                return beta;
-            }
+            if(score > stand_pat){
+                stand_pat = score;
+                if (score > alpha) {
+                    alpha = score;
 
-            if (score > alpha) {
-                alpha = score;
+                    if (score >= beta) {
+                        return score;
+                    }
+
+                }
+            
             }
         }
-        return alpha;
+        return stand_pat;
     }
 
 
