@@ -51,8 +51,6 @@ struct TunableSearch{
     //tuneable search parameters
 
     // for aspiration window
-    int aspirationWindow1 = 0;
-    int aspirationWindow2 = 0;
     int aspirationWindowInitialDelta = 0;
     int useAspirationWindowDepth = 0;
 
@@ -60,14 +58,15 @@ struct TunableSearch{
     bool useLazyEvalStatic = 0;
 
     // for futility pruning
-    int futilityMargin1 =0;
-    int futilityMargin2 = 0;
-    int futilityMargin3 = 0;
+    int futilityMargin = 0;
+
+    // for razoring margin
+    int razoringMargin = 0;
+
     // for delta pruning in QS search
     int deltaMargin = 0;
 
     // for move ordering
-    int promotionMoveScore = 0;
     int killerMoveScore = 0;
 
     //for late move reductions
@@ -117,16 +116,12 @@ TunableEval baseEval = {
 // by Sebastian Lague's chess engine tutorial
 TunableSearch baseSearch = {
         //tuneable search parameters
-        20, // aspiration window progression1
-        100, //aspiration window progression 2
-        5, //aspiration window initial delta
+        25, //aspiration window initial delta
         5, // use aspiration window depth (temporarily set to 10 so GA doesn't use it)
         true, // use lazy eval for static eval pruning methods
-        300, 
-        900, 
-        1300, // futility pruning margin
+        100, // futility margin
+        150, // razoring margin
         300, // delta pruning in QS search
-        200, // promotion score
         100, // killer move score
         3, // initial depth for late move reductions
         3, // initial move count for late move reductions

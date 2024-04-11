@@ -57,7 +57,7 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
         searchThread = make_unique<thread>([=]() {
             cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << endl;
             SearchState result = searcher->iterativeDeepening(timeLeft, timeIncrement, movesToGo); 
-            cout << "bestmove " << uci::moveToUci(result.bestMove) << endl;
+            cout << " bestmove " << uci::moveToUci(result.bestMove) << endl;
         });
     }
 }
@@ -115,7 +115,7 @@ while (!quit) {
     else if (keyword == "go") {
     int timeLeft = 0;
     int timeIncrement = 0;
-    int movesToGo = 30; // Default value
+    int movesToGo = 30; // Default value, assuming a sudden death time control
 
     for (size_t i = 1; i < tokens.size(); ++i) {
         std::cout << "Parsing token: " << tokens[i] << std::endl; // Debug print
@@ -129,7 +129,11 @@ while (!quit) {
         } else if (tokens[i] == "binc" && !isWhiteTurn) {
             timeIncrement = std::stoi(tokens[i + 1]);
         } else if (tokens[i] == "movestogo") {
-            movesToGo = std::stoi(tokens[i + 1]);
+            if (tokens[i + 1] == "infinite") {
+                movesToGo = 30; // Default value
+            } else{
+                movesToGo = std::stoi(tokens[i + 1]);
+            }
         } else if (tokens[i] == "movetime") {
             timeLeft = std::stoi(tokens[i + 1]);
             movesToGo = 1;

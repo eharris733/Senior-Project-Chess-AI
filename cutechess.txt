@@ -1,0 +1,3 @@
+cutechess-cli -engine conf="current_try" -engine conf="previous_best" -each     tc=inf/10+0.1     book="Titans.bin"     bookdepth=4 -games 2 -rounds 2500 -repeat 2 -maxmoves 200 -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05 -concurrency 15 -ratinginterval 10 -pgnout "gamelogs/searcher2.pgn"
+
+make sure you run it from the root dir. 

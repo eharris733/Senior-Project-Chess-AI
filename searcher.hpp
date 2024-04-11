@@ -433,7 +433,7 @@ private:
 
                 // LMR conditions
                 
-                    bool doLMR = depth >= searchParams.initalDepthLMR && 
+                bool doLMR = depth >= searchParams.initalDepthLMR && 
                 moveCount > searchParams.initialMoveCountLMR && 
                 !isRoot  && !isCheck  && 
                 depthExtension == 0;
