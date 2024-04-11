@@ -424,10 +424,7 @@ class Searcher2 {
                 alpha = score;
                 localBestMove = move;
                 nodeType = NodeType::EXACT;
-                if (!isCapture){
-                    // update history bc cutoff
-                    history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())] += depth;
-                }
+                
 
                 if (isRoot) {
                     searchState.currentIterationBestMove = move;
@@ -442,6 +439,10 @@ class Searcher2 {
                         searchState.killerMoves[1][ply] = searchState.killerMoves[0][ply];
                         searchState.killerMoves[0][ply] = move;  
                     }
+                    if (!isCapture){
+                    // update history bc cutoff
+                    history[board.sideToMove() == Color::WHITE? 1: 0][static_cast<int>(board.at<PieceType>(move.from()))][static_cast<int>(move.to())] += depth;
+                }
                     
                     return beta;
                 }
