@@ -18,17 +18,34 @@ int main() {
     // vars to time the algorithm
     Logger::getInstance().openLogFile("ga_log.txt");
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    
+    TunableSearch randomSearch = initializeRandomTunableSearch();
+    std::string randomChromosone = convertSearchToChromosome(randomSearch);
+    TunableSearch randomSearchClone = convertChromosomeToSearch(randomChromosone);
 
+    // assert to see if they are the same
+    assert(randomSearch.aspirationWindowInitialDelta == randomSearchClone.aspirationWindowInitialDelta);
+    assert(randomSearch.useAspirationWindowDepth == randomSearchClone.useAspirationWindowDepth);
+    assert(randomSearch.deltaMargin == randomSearchClone.deltaMargin);
+    assert(randomSearch.futilityMargin == randomSearchClone.futilityMargin);
+    assert(randomSearch.razoringMargin == randomSearchClone.razoringMargin);
+    assert(randomSearch.initalDepthLMR == randomSearchClone.initalDepthLMR);
+    assert(randomSearch.initialMoveCountLMR == randomSearchClone.initialMoveCountLMR);
+    assert(randomSearch.killerMoveScore == randomSearchClone.killerMoveScore);
+    assert(randomSearch.initialMoveCountLMR == randomSearchClone.initialMoveCountLMR);
+    assert(randomSearch.useLazyEvalStatic == randomSearchClone.useLazyEvalStatic);
+    assert(randomSearch.lmpMoveCount == randomSearchClone.lmpMoveCount);
+    assert(randomSearch.nullMovePruningInitialReduction == randomSearchClone.nullMovePruningInitialReduction);
+    assert(randomSearch.nullMovePruningDepthFactor == randomSearchClone.nullMovePruningDepthFactor);
 
-
-    double initialMutationRate = 0.02;
+    double initialMutationRate = 0.05;
     double decayRate = 0;
     double crossoverRate = 0.75;
     int totalGenerations = 200;
     size_t populationSize = 20; // because we have twenty threads, we will almost always have a pop size of at least 20. This corresponds to each thread playing 100 games per generation (still a lot less than 19X20 )
-    int eliteSize = 0;
-    int archiveSize = 400;
-    int replacementCount = 4; // we can be more aggresive since we are deleting stuff after
+    int eliteSize = 2;
+    int archiveSize = 0;
+    int replacementCount = 0; // we can be more aggresive since we are deleting stuff after
 
     Logger::getInstance().log(  "Running Genetic Algorithm"  );
     Logger::getInstance().log(  "Population Size: " + std::to_string(populationSize)  );

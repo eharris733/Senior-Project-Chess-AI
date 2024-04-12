@@ -201,25 +201,17 @@ TunableEval convertChromosoneToEval(const std::string& bitString){
 TunableSearch convertChromosomeToSearch(const std::string& bitString){
     TunableSearch tSearch;
     int pos = 0;
-    tSearch.aspirationWindow1 = bitsToInt(bitString.substr(pos, 8));
-    pos += 8;
-    tSearch.aspirationWindow2 = bitsToInt(bitString.substr(pos, 8));
-    pos += 8;
     tSearch.aspirationWindowInitialDelta = bitsToInt(bitString.substr(pos, 6));
     pos += 6;
     tSearch.useAspirationWindowDepth = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
     tSearch.useLazyEvalStatic = bitsToInt(bitString.substr(pos, 1));
     pos += 1;
-    tSearch.futilityMargin1 = bitsToInt(bitString.substr(pos, 10));
-    pos += 10;
-    tSearch.futilityMargin2 = bitsToInt(bitString.substr(pos, 10));
-    pos += 10;
-    tSearch.futilityMargin3 = bitsToInt(bitString.substr(pos, 10));
-    pos += 10;
+    tSearch.futilityMargin = bitsToInt(bitString.substr(pos, 8));
+    pos += 8;
+    tSearch.razoringMargin = bitsToInt(bitString.substr(pos, 8));
+    pos += 8;
     tSearch.deltaMargin = bitsToInt(bitString.substr(pos, 10));
-    pos += 10;
-    tSearch.promotionMoveScore = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
     tSearch.killerMoveScore = bitsToInt(bitString.substr(pos, 10));
     pos += 10;
@@ -227,6 +219,13 @@ TunableSearch convertChromosomeToSearch(const std::string& bitString){
     pos += 3;
     tSearch.initialMoveCountLMR = bitsToInt(bitString.substr(pos, 3));
     pos += 3;
+    tSearch.lmpMoveCount = bitsToInt(bitString.substr(pos, 4));
+    pos += 4;
+    tSearch.nullMovePruningInitialReduction = bitsToInt(bitString.substr(pos, 3));
+    pos += 3;
+    tSearch.nullMovePruningDepthFactor = bitsToInt(bitString.substr(pos, 5));
+    pos += 5;
+
     return tSearch;
 }
 
@@ -237,19 +236,18 @@ std::string convertSearchToChromosome(const TunableSearch& tSearch){
         unsigned int grayValue = binaryToGray(static_cast<unsigned int>(value));
         return std::bitset<16>(grayValue).to_string().substr(16-bits, bits);
     };
-    bitString += intToGrayString(tSearch.aspirationWindow1, 8);
-    bitString += intToGrayString(tSearch.aspirationWindow2, 8);
     bitString += intToGrayString(tSearch.aspirationWindowInitialDelta, 6);
     bitString += intToGrayString(tSearch.useAspirationWindowDepth, 3);
     bitString += intToGrayString(tSearch.useLazyEvalStatic, 1);
-    bitString += intToGrayString(tSearch.futilityMargin1, 10);
-    bitString += intToGrayString(tSearch.futilityMargin2, 10);
-    bitString += intToGrayString(tSearch.futilityMargin3, 10);
+    bitString += intToGrayString(tSearch.futilityMargin, 8);
+    bitString += intToGrayString(tSearch.razoringMargin, 8);
     bitString += intToGrayString(tSearch.deltaMargin, 10);
-    bitString += intToGrayString(tSearch.promotionMoveScore, 10);
     bitString += intToGrayString(tSearch.killerMoveScore, 10);
     bitString += intToGrayString(tSearch.initalDepthLMR, 3);
     bitString += intToGrayString(tSearch.initialMoveCountLMR, 3);
+    bitString += intToGrayString(tSearch.lmpMoveCount, 4);
+    bitString += intToGrayString(tSearch.nullMovePruningInitialReduction, 3);
+    bitString += intToGrayString(tSearch.nullMovePruningDepthFactor, 5);
     
     return bitString;
 
@@ -257,19 +255,18 @@ std::string convertSearchToChromosome(const TunableSearch& tSearch){
 
 TunableSearch initializeRandomTunableSearch() {
     TunableSearch rSearch = baseSearch;
-    rSearch.aspirationWindow1 = randomInt(8);
-    rSearch.aspirationWindow2 = randomInt(8);
     rSearch.aspirationWindowInitialDelta = randomInt(6);
     rSearch.useAspirationWindowDepth = randomInt(3);
     rSearch.useLazyEvalStatic = randomInt(1); // techncally this is a boolean
-    rSearch.futilityMargin1 = randomInt(10);
-    rSearch.futilityMargin2 = randomInt(10);
-    rSearch.futilityMargin3 = randomInt(10);
+    rSearch.futilityMargin = randomInt(8);
+    rSearch.razoringMargin = randomInt(8);
     rSearch.deltaMargin = randomInt(10);
-    rSearch.promotionMoveScore = randomInt(10);
     rSearch.killerMoveScore = randomInt(10);
     rSearch.initalDepthLMR = randomInt(3); 
     rSearch.initialMoveCountLMR = randomInt(3);
+    rSearch.lmpMoveCount = randomInt(4);
+    rSearch.nullMovePruningInitialReduction = randomInt(3);
+    rSearch.nullMovePruningDepthFactor = randomInt(5);
     return rSearch;
 }
 
@@ -443,19 +440,18 @@ std::ostream& operator<<(std::ostream& os,
 void printTunableSearch(const TunableSearch& tSearch){
     std::ostringstream logMsg = std::ostringstream();
     logMsg << "TunableSearch resultX = {\n";
-    logMsg << tSearch.aspirationWindow1 << ", // Aspiration Window 1\n";
-    logMsg << tSearch.aspirationWindow2 << ", // Aspiration Window 2\n";
     logMsg << tSearch.aspirationWindowInitialDelta << ", // Aspiration Window initial delta\n";
     logMsg << tSearch.useAspirationWindowDepth << ", // Use Aspiration Window Depth\n";
     logMsg << tSearch.useLazyEvalStatic << ", // Use Lazy Eval Static\n";
-    logMsg << tSearch.futilityMargin1 << ", // Futility Margin 1\n";
-    logMsg << tSearch.futilityMargin2 << ", // Futility Margin 2\n";
-    logMsg << tSearch.futilityMargin3 << ", // Futility Margin 3\n";
+    logMsg << tSearch.futilityMargin << ", // Futility Margin \n";
+    logMsg << tSearch.razoringMargin << ", // Razoring Margin \n";
     logMsg << tSearch.deltaMargin << ", // Delta Margin\n";
-    logMsg << tSearch.promotionMoveScore << ", // Promotion Move Score\n";
     logMsg << tSearch.killerMoveScore << ", // Killer Move Score\n";
     logMsg << tSearch.initalDepthLMR << ", // Initial LMR Depth\n"; // Remember, there's a typo here in the original struct definition: "inital" should be "initial"
     logMsg << tSearch.initialMoveCountLMR << ", // Initial Move Counter\n";
+    logMsg << tSearch.lmpMoveCount << ", // LMP Move Count\n";
+    logMsg << tSearch.nullMovePruningInitialReduction << ", // Null Move Pruning Initial Reduction\n";
+    logMsg << tSearch.nullMovePruningDepthFactor << ", // Null Move Pruning Depth Factor\n";
     logMsg << "};\n";
     Logger::getInstance().log(logMsg.str());
     std::cout << logMsg.str();

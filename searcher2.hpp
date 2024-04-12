@@ -55,6 +55,7 @@ class Searcher2 {
         start_t = std::chrono::high_resolution_clock::now();
         // fill in piece values with our tuned values
         // a little hacky, but it works
+        std::memset(piece_values, 0, sizeof(piece_values));
         piece_values[0][0] = evalParams.pawn.middleGame;
         piece_values[0][1] = evalParams.knight.middleGame;
         piece_values[0][2] = evalParams.bishop.middleGame;
@@ -73,6 +74,13 @@ class Searcher2 {
 
     }
 
+    void setVerbose(bool v){
+        verbose = v;
+    }
+
+    std::string getPV() {
+        return uci::moveToUci(pvTable[0][0]);
+    }
     
     SearchState iterativeDeepening(int timeLeft, int timeIncrement, int movesToGo) {
         initSearchState();
@@ -111,13 +119,15 @@ class Searcher2 {
                 break;
             }
 
-            searchState.bestMove = searchState.currentIterationBestMove;
-            searchState.bestScore = searchState.currentIterationBestScore;
+            searchState.bestMove = pvTable[0][0];
+            searchState.bestScore = score;
 
             auto now = std::chrono::high_resolution_clock::now();
             auto dtime = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_t).count();
 
-            std::cout << "info depth " << depth << " score cp " << searchState.bestScore << " nodes " << searchState.nodes   << " nps " << signed((searchState.nodes / (dtime + 1)) * 1000) << " time " << dtime << " pv " << uci::moveToUci(searchState.bestMove) << std::endl;
+            if (verbose){
+                std::cout << "info depth " << depth << " score cp " << searchState.bestScore << " nodes " << searchState.nodes   << " nps " << signed((searchState.nodes / (dtime + 1)) * 1000) << " time " << dtime << " pv " << getPV() << std::endl;
+            }
             
         }
         if (searchState.bestMove == Move::NO_MOVE) {
@@ -138,6 +148,10 @@ class Searcher2 {
     TranspositionTable tt;
     SearchState searchState;
 
+    // for storing the pvs
+    Move pvTable[MAXDEPTH + 1][MAXDEPTH + 1]{};
+    int pvLength[MAXDEPTH + 1]{};
+
     int history[2][6][64]; // history heuristic table
     
     
@@ -147,12 +161,14 @@ class Searcher2 {
     const int MATE_SCORE = 10000;
 
     // for move ordering and piece values
-    int piece_values[2][7]; // 6 piece types + empty square
+    int piece_values[2][7]{}; // 6 piece types + empty square
 
     // for Time Management
     std::chrono::high_resolution_clock::time_point start_t;  // search start time
     int timeForThisMove = 0;
     bool stopSearching = false;
+
+    bool verbose = true;
 
 
     bool isTimeOver() {
@@ -203,7 +219,7 @@ class Searcher2 {
 
         int stand_pat = evaluate(false);
         
-        if (ply > MAXDEPTH){
+        if (ply >= MAXDEPTH){
             return stand_pat;
         }
         
@@ -279,13 +295,12 @@ class Searcher2 {
             return 0; // Draw score (can add contempt later)
         }
 
-        if (depth <= 0 || ply > MAXDEPTH) {
+        if (depth <= 0 || ply >= MAXDEPTH) {
             return quiescence(alpha, beta, ply); 
         }
         
 
         
-
         bool isRoot = (ply == 0);
         bool isInCheck = board.inCheck();
         bool isPvs = beta - alpha > 1;
@@ -301,7 +316,6 @@ class Searcher2 {
         uint64_t zobristKey = board.zobrist();
         optional<TTEntry> ttEntry = tt.retrieve(zobristKey);
         NodeType nodeType = NodeType::UPPERBOUND;
-        Move localBestMove = Move::NO_MOVE;
         int best = neg_infinity;
         bool useTT = false;
         Move ttMove = Move::NO_MOVE;
@@ -341,7 +355,12 @@ class Searcher2 {
         // revisit if time, because I'm not confident in this implementation
         if (!nullMove && !isPvs && !isInCheck && staticEval >= beta && depth >= 3 && board.hasNonPawnMaterial(board.sideToMove())){
             board.makeNullMove();
-            int r = 2; // make sure we use at least 2 depths less for early searches (consider adding + depth / 6)
+            // to avoid divide by zero issues in tuner
+            // (0 or 1 is unlikely to be the final tuned value)
+            if (searchParams.nullMovePruningDepthFactor == 0){
+                searchParams.nullMovePruningDepthFactor = 1;
+            }
+            int r = searchParams.nullMovePruningInitialReduction + depth / searchParams.nullMovePruningDepthFactor; // make sure we use at least 2 depths less for early searches (consider adding + depth / 6)
             int nullMoveScore = -negamax(depth - 1 - r, -beta, -beta + 1, ply + 1, true);
             board.unmakeNullMove();
             if (nullMoveScore >= beta){ // add a small tempo bonus 
@@ -388,7 +407,7 @@ class Searcher2 {
             board.makeMove(move);
 
             // late move pruning (probably need to expose to tuner)
-            if (!isCapture && !isPromotion && !board.inCheck() && !isPvs && !isInCheck && depth <= 1 && moveCount > 10){
+            if (!isCapture && !isPromotion && !board.inCheck() && !isPvs && !isInCheck && depth <= 1 && moveCount > searchParams.lmpMoveCount){
                 board.unmakeMove(move);
                 continue;
             }
@@ -432,14 +451,12 @@ class Searcher2 {
              
             if (score > best){
                 best = score;
-                localBestMove = move;
-                nodeType = NodeType::EXACT;
-                
-
-                if (isRoot) {
-                    searchState.currentIterationBestMove = move;
-                    searchState.currentIterationBestScore = score;
+                // update the PV
+                pvTable[ply][ply] = move;
+                for (int next_ply = ply + 1; next_ply < pvLength[ply + 1]; next_ply++) {
+                    pvTable[ply][next_ply] = pvTable[ply + 1][next_ply];
                 }
+                pvLength[ply] = pvLength[ply + 1];
                 
             
                 // we found a move that scores higher than the current best move for us
@@ -464,11 +481,11 @@ class Searcher2 {
             }
         }
 
-        nodeType = best >= beta ? NodeType::LOWERBOUND : (isPvs && localBestMove != Move::NO_MOVE ? NodeType::EXACT : NodeType::UPPERBOUND);
+        nodeType = best >= beta ? NodeType::LOWERBOUND : (isPvs && pvTable[0][ply] != Move::NO_MOVE ? NodeType::EXACT : NodeType::UPPERBOUND);
 
         // make sure we don't store a mate score, or a in the tt
         if ((best < MATE_SCORE - MAXDEPTH) && !stopSearching){
-            tt.save(zobristKey, depth, best, nodeType, localBestMove);
+            tt.save(zobristKey, depth, best, nodeType, pvTable[0][ply]);
         }
 
         
@@ -485,7 +502,7 @@ class Searcher2 {
 
     // score the move based on MVV/LVA
     void scoreMove(Move& move, int ply, Move ttMove = Move::NO_MOVE) {
-        if (move == searchState.bestMove){
+        if (move == pvTable[0][ply]){
             move.setScore(INT16_MAX);
         }
         else if (move == ttMove){
@@ -551,4 +568,7 @@ class Searcher2 {
         }
         return eval;
     }
+
+    
+
 };

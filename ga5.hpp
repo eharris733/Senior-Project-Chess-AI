@@ -5,7 +5,8 @@
 #include <random>
 #include "baselines.hpp"
 #include "ga_util.hpp"
-#include "searcher.hpp"
+#include "searcher2.hpp"
+#include "polyglot.hpp"
 #include <atomic>
 #include <thread>
 #include <vector>
@@ -15,7 +16,9 @@
 #include <cassert>
 #include "logger.hpp"
 #include "ga3and5results.hpp"
+#include "ga1results.hpp"
 #include "baselines.hpp"
+#pragma once
 
 
 
@@ -109,7 +112,7 @@ private:
     size_t archiveSize; // N: Maximum size of the archive
     size_t reintroduceCount; // X: Number of solutions to reintroduce from the archive to each new generation
     PolyglotBook book;
-    TunableSearch opponent = baseSearch; // initialize to a value much better than base search
+    TunableSearch opponent = initializeRandomTunableSearch(); // initialize to a value much better than base search
     int opponentCount = 0;
     std::vector<chromosome> population; // a vector of pairs of chromosomes and their fitness levels
     std::random_device rd;
@@ -124,7 +127,7 @@ private:
 
 
     // Function to simulate a game between two searchers
-int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board) {
+int simulateGame(Searcher2& whiteSearcher, Searcher2& blackSearcher, Board& board) {
     int result = 0;
     int moveCount = 0;
     board.setFen(constants::STARTPOS); // Set the board to the starting position
@@ -148,9 +151,9 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
         SearchState searchResult;
 
         if (board.sideToMove() == Color::WHITE) {
-            searchResult = whiteSearcher.search(60, 0, 1); //1000ms, 0ms increment, 1 move to go
+            searchResult = whiteSearcher.iterativeDeepening(60, 0, 1); //1000ms, 0ms increment, 1 move to go
         } else {
-            searchResult = blackSearcher.search(60, 0, 1); // should reach max depth first, but just in case, call cutoff after one fourth of a second in bad circumstances
+            searchResult = blackSearcher.iterativeDeepening(60, 0, 1); // should reach max depth first, but just in case, call cutoff after one fourth of a second in bad circumstances
         }
         // very aggresive early end to games for the sake of time
         if (searchResult.bestScore < -350){
@@ -195,20 +198,18 @@ int simulateGame(Searcher& whiteSearcher, Searcher& blackSearcher, Board& board)
 }
 
     // Example of TunableEval to Searcher conversion not shown, assuming direct use
-double calculateFitnessSingleGame(const TunableSearch& params) {
+double calculateFitnessSingleGame(TunableSearch& params, bool color) {
     double totalPoints = 0.0;
     Board board = Board();
-// Generate a random true or false (50/50)
-bool randomBool = rand() % 2 == 0;
-// Use an if-else statement based on the random boolean
-if (randomBool) {
-    Searcher white = Searcher(board, params, ga1result10); 
-    Searcher black = Searcher(board, opponent, ga1result10);
-   return simulateGame(white, black, board);
-} 
-    Searcher white = Searcher(board, opponent, ga1result10); 
-    Searcher black = Searcher(board, params, ga1result10);
-    return simulateGame(white, black, board) == 1 ? -1 : 1;
+    // Use an if-else statement based on the random boolean
+    if (color) {
+        Searcher2 white = Searcher2(board, params, ga1result10); 
+        Searcher2 black = Searcher2(board, opponent, ga1result10);
+    return simulateGame(white, black, board);
+    } 
+    Searcher2 white = Searcher2(board, opponent, ga1result10); 
+    Searcher2 black = Searcher2(board, params, ga1result10);
+    return -simulateGame(white, black, board); // flip the sign sice the params player is now black
 }
 
 
@@ -225,11 +226,17 @@ void calculateFitness() {
     for (int i = 0; i < populationSize; i++) {
         threads.emplace_back([&, i] {
             double playerScore = 0.0; // Player's total score
-
+            bool color = true;
             // Iterate 100 games
-            for (int j = 0; j < 100; j++) {
+            for (int j = 0; j < 10; j++) {
+                if (j % 2 == 0) {
+                    color = true;
+                } else {
+                    color = false;
+                }
                 // Assuming calculateFitnessForSingleMatch handles a match between two players
-                double matchResult = calculateFitnessSingleGame(convertChromosomeToSearch(population[i].chromosome));
+                TunableSearch params = convertChromosomeToSearch(population[i].chromosome);
+                int matchResult = calculateFitnessSingleGame(params, color);
                 std::lock_guard<std::mutex> guard(updateMutex);
                 fitnessScores[i] += (matchResult); 
             }
@@ -245,7 +252,7 @@ void calculateFitness() {
     int maxFitness = population.front().fitness;
     for (size_t i = 0; i < populationSize; ++i) {
         population[i].fitness = fitnessScores[i];
-        if (population[i].fitness >= 15 && population[i].fitness > maxFitness) {  // if we are net +15, we're probably better than the current opponent
+        if (population[i].fitness >= 9 && population[i].fitness > maxFitness) {  // if we are net +15, we're probably better than the current opponent
             maxFitness = population[i].fitness;
             opponentCount ++;
             opponent = convertChromosomeToSearch(population[i].chromosome);     
@@ -387,12 +394,7 @@ void crossover() {
 
     // Adjusted sorting: If fitness is 8 or better, prioritize by recency; otherwise, by fitness
     std::sort(combined.begin(), combined.end(), [](const chromosome& a, const chromosome& b) {
-        if(a.opponent == b.opponent){
-            return a.fitness > b.fitness;
-        }
-        else{
-            return a.opponent > b.opponent;
-        }
+        return a.opponent + a.fitness > b.opponent + b.fitness;
     });
 
     if (combined.size() > archiveSize) {

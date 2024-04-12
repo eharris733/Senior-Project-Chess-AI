@@ -72,6 +72,13 @@ struct TunableSearch{
     //for late move reductions
     int initalDepthLMR = 0;
     int initialMoveCountLMR = 0;
+
+    // for late move pruning
+    int lmpMoveCount = 0;
+
+    // for null move pruning
+    int nullMovePruningInitialReduction = 0;
+    int nullMovePruningDepthFactor = 0;
 };
 
 // Global instance
@@ -117,7 +124,7 @@ TunableEval baseEval = {
 TunableSearch baseSearch = {
         //tuneable search parameters
         25, //aspiration window initial delta
-        5, // use aspiration window depth (temporarily set to 10 so GA doesn't use it)
+        5, // use aspiration window depth 
         true, // use lazy eval for static eval pruning methods
         100, // futility margin
         150, // razoring margin
@@ -125,6 +132,9 @@ TunableSearch baseSearch = {
         100, // killer move score
         3, // initial depth for late move reductions
         3, // initial move count for late move reductions
+        10, // late move pruning move count
+        2, // null move pruning initial reduction
+        10 // null move pruning depth factor
     };
 
 TunableEval zeroEval = {
