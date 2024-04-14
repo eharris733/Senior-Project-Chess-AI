@@ -2,7 +2,7 @@
 #include "baselines.hpp"
 #include "evaluator.hpp"
 #include "t_table.hpp"
-
+#include "math.h"
 #include <chrono>
 #include <map>
 
@@ -424,7 +424,7 @@ class Searcher2 {
 
             // late move reduction
             if (depth >= searchParams.initalDepthLMR && !isPvs && !isInCheck && !isCapture && !isPromotion && moveCount > searchParams.initialMoveCountLMR) {
-                int r = 1 + (log(moveCount) + log(depth)) / 1.75;
+                int r = 1 + (std::log(moveCount) + std::log(depth)) / 1.75;
                 if (r > depth - 1) {
                     r = depth - 1; // clamp to a reasonable value
                 }
@@ -566,7 +566,7 @@ class Searcher2 {
     }
 
     int evaluate(bool isLazy) {
-        int eval = evaluator.evaluate(isLazy);
+        int eval = evaluator.evaluate(true);
         if (board.sideToMove() == Color::BLACK){
             return -eval;
         }

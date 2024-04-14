@@ -231,15 +231,21 @@ Bitboard detectPassedPawns(Color col, Bitboard ownPawns, const Bitboard& enemyPa
 
 int detectDoubledPawns(Color color, const Bitboard& wpawns, const Bitboard& bpawns) {
     const auto& pawns = (color == Color::WHITE) ? wpawns : bpawns;
+    Bitboard filaA = Bitboard(File::FILE_A);
+    Bitboard filaB = Bitboard(File::FILE_B);
+    Bitboard filaC = Bitboard(File::FILE_C);
+    Bitboard filaD = Bitboard(File::FILE_D);
+    Bitboard filaE = Bitboard(File::FILE_E);
+    Bitboard filaF = Bitboard(File::FILE_F);
+    Bitboard filaG = Bitboard(File::FILE_G);
+    Bitboard filaH = Bitboard(File::FILE_H);
     int doubledPawns = 0;
 
-    for (int file = 0; file < 8; ++file) {
-        Bitboard fileMask = fileBitboard(file);
-        Bitboard pawnsOnFile = pawns & fileMask;
-
-        int count = chess::builtin::popcount(pawnsOnFile);
+    const Bitboard fileMasks[] = {filaA, filaB, filaC, filaD, filaE, filaF, filaG, filaH};
+    for (const auto& fileMask : fileMasks) {
+        int count = builtin::popcount(pawns & fileMask);
         if (count > 1) {
-            doubledPawns += count - 1; // this way tripled pawns will be counted twice
+            doubledPawns += count - 1;
         }
     }
     return doubledPawns;

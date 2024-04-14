@@ -1,19 +1,21 @@
 // this class will be the main class for the genetic algorithm
+#pragma once
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <random>
 #include "baselines.hpp"
 #include "ga_util.hpp"
-#include "searcher.hpp"
+#include "evaluator.hpp"
+#include "chess.hpp"
 #include <atomic>
 #include <thread>
 #include <vector>
 #include <mutex>
 
 
-
-atomic<bool> stop(false); // so the searcher works
+using namespace std;
+using namespace chess;
 
 class GeneticAlgorithm {
 public:
