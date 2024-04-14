@@ -16,10 +16,12 @@
 #include <map>
 #include <string>
 #include "chess.hpp" // Include your Board class header
-#include "searcher.hpp" // Include your Searcher class header
+#include "searcher2.hpp" // Include your Searcher class header
 #include <atomic>
+#include <chrono>
+#include "ga3and5results.hpp"
+#include "ga1results.hpp"
 
-std::atomic<bool> stop(false);
 
 
 int main() {
@@ -55,7 +57,7 @@ int main() {
 
     // Create a new Board object
     Board board;
-    Searcher searcher(board); // Create a new Searcher object
+    Searcher2 searcher(board, resultX, ga1result10); // Create a new Searcher object
 
     long totalTotalNodes = 0;
     long totalTotalTime = 0;
@@ -65,15 +67,15 @@ int main() {
 
         auto startTime = std::chrono::high_resolution_clock::now();
 
-        Move b = searcher.search(4000, 0, 1).bestMove; // Adjust parameters as needed, should take one second to reach max depth, 
+        SearchState sMetrics = searcher.iterativeDeepening(1000, 0, 1); // Adjust parameters as needed, should take one second to reach max depth, 
+        Move m = sMetrics.bestMove;
         // then finish search on that depth
 
-        SearchState sMetrics = searcher.getState();
 
         auto endTime = std::chrono::high_resolution_clock::now();
         auto searchDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 
-        std::string suggestedMove = uci::moveToUci(b); // Convert the suggested move to UCI format
+        std::string suggestedMove = uci::moveToUci(m); // Convert the suggested move to UCI format
 
         // Access the searcher's metrics
         unsigned long long totalNodes = sMetrics.nodes;
@@ -90,7 +92,6 @@ int main() {
         totalTotalTime += searchDuration;
 
         // Reset metrics and search parameters as necessary
-        stop = false; // Reset the stop flag if used for search termination
         searcher.clear(); // Clear the TT table if necessary
 }
 

@@ -418,16 +418,16 @@ std::string mirrorFen(const std::string& fen) {
 
 
 int main() {
-    std::string fen = "8/8/3KPr2/8/4P3/8/8/1k6 w - -";
+    std::string fen = "2Rb2k1/3q1rpp/p3Q3/2N1p3/4P3/3Pp3/1P4PP/1K6 b - - 1 2";
     std::string fenMirror = mirrorFen(fen);
     std::cout << "original fen: " << fen << std::endl;
     std::cout << "mirrored fen: " << fenMirror << std::endl;
     Board board = Board(fen);
 
     Evaluator evalauator = Evaluator(board, baseEval);
-    std::cout << "" << evalauator.evaluate(0, false) << std::endl;
+    std::cout << "" << evalauator.evaluate(false) << std::endl;
     board.setFen(fenMirror);
-    std::cout << "" << evalauator.evaluate(0, false) << std::endl;
+    std::cout << "" << evalauator.evaluate(false) << std::endl;
 
 
     board.setFen(fen);

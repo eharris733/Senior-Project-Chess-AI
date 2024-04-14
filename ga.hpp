@@ -149,7 +149,7 @@ double calculateFitnessSubset(const std::vector<PositionEvaluation>& evalsSubset
         Board board = Board();
         Evaluator evaluator = Evaluator(board, params);
         board.setFen(eval.fen);
-        double predictedScore = evaluator.evaluate(0, false);
+        double predictedScore = evaluator.evaluate(false);
         totalDifference += std::abs(predictedScore - eval.actualScore);
     }
     return totalDifference;

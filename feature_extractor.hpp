@@ -26,49 +26,49 @@ using namespace std;
 
 
 //helper functions
-Color opposite_color(Color color) {
+inline constexpr Color opposite_color(Color color) {
     return (color == Color::WHITE) ? Color::BLACK : Color::WHITE;
 }
 
-Bitboard square_to_bitmap(Square sq) {
+inline constexpr Bitboard square_to_bitmap(Square sq) {
     return Bitboard(1) << sq; // Shifts the 1 to the position of the square
 }
 
-constexpr int rank_of(Square sq) {
+inline constexpr int rank_of(Square sq) {
     return static_cast<int>(sq) / 8; // Divide the square index by 8 to get the rank
 }
 
-constexpr int file_of(Square sq) {
+inline constexpr int file_of(Square sq) {
     return static_cast<int>(sq) % 8; // Modulo the square index by 8 to get the file
 }
 
 // Helper function to convert file index to string representation (a-h)
-std::string fileToString(int file) {
+inline  std::string fileToString(int file) {
     // Assuming file is 0-7 for a-h
     return std::string(1, 'a' + file);
 }
 
 // Helper function to create a bitboard for a specific file
-Bitboard fileBitboard(int file) {
+inline Bitboard fileBitboard(int file) {
     Bitboard mask = 0x0101010101010101; // Bitboard with the a-file set
     return mask << file; // Shift to the appropriate file
 }
 
-Bitboard rankBitboard(int rank) {
+inline constexpr Bitboard rankBitboard(int rank) {
     // Bitboard with the 1s on the 1st rank
     Bitboard mask = 0xFF;
     return mask << (rank * 8); // Shift to the appropriate rank
 }
 
-Square int_to_square(int sq) {
+inline constexpr Square int_to_square(int sq) {
     return static_cast<Square>(sq);
 }
 
-Square bitboard_to_square(Bitboard bitboard) {
+inline constexpr Square bitboard_to_square(const Bitboard& bitboard) {
     return int_to_square(__builtin_ctzll(bitboard));
 }
 
-Bitboard inBetween(Square sq1, Square sq2) {
+inline constexpr Bitboard inBetween(Square sq1, Square sq2) {
     Bitboard between = 0ULL;
     int rank1 = rank_of(sq1), file1 = file_of(sq1);
     int rank2 = rank_of(sq2), file2 = file_of(sq2);
@@ -88,7 +88,7 @@ Bitboard inBetween(Square sq1, Square sq2) {
     return between;
 }
 
-Bitboard wAttackFrontSpans(Bitboard pawnAttacks) {
+inline constexpr Bitboard wAttackFrontSpans(const Bitboard& pawnAttacks) {
     // Assuming pawnAttacks represents immediate attack squares,
     // and you need to extend this to cover all forward spans.
     Bitboard attackSpan = pawnAttacks;
@@ -100,7 +100,7 @@ Bitboard wAttackFrontSpans(Bitboard pawnAttacks) {
     return attackSpan;
 }
 
-Bitboard bAttackFrontSpans(Bitboard pawnAttacks) {
+inline constexpr Bitboard bAttackFrontSpans(const Bitboard& pawnAttacks) {
     // Assuming pawnAttacks represents immediate attack squares,
     // and you need to extend this to cover all forward spans.
     Bitboard attackSpan = pawnAttacks;
@@ -114,43 +114,45 @@ Bitboard bAttackFrontSpans(Bitboard pawnAttacks) {
 
 
 
-Bitboard blocking_squares(Square sq, Color col, Bitboard enemyPawns) {
-    Bitboard mask = 0;
+inline constexpr Bitboard blocking_squares(Square sq, Color col, const Bitboard& enemyPawns) {
     int rank = rank_of(sq), file = file_of(sq);
+    Bitboard fileMask = 0x0101010101010101ULL << file; // Vertical mask for the current file
 
-    // Calculate squares in front of the pawn including the file and adjacent files
-    int startRank = col == Color::WHITE ? rank + 1 : rank - 1;
-    int endRank = col == Color::WHITE ? 7 : 0;
-    int rankStep = col == Color::WHITE ? 1 : -1;
+    // Create masks for adjacent files if they exist
+    Bitboard leftFileMask = file > 0 ? (fileMask >> 1) : 0;
+    Bitboard rightFileMask = file < 7 ? (fileMask << 1) : 0;
 
-    for (int r = startRank; (col == Color::WHITE ? r <= endRank : r >= endRank); r += rankStep) {
-        for (int f = std::max(0, file - 1); f <= std::min(7, file + 1); ++f) {
-            if (file != f || r != rank) { // Skip the pawn's own square
-                mask |= square_to_bitmap(Square(r * 8 + f));
-            }
-        }
+    // Combine masks for the current and adjacent files
+    Bitboard combinedMask = fileMask | leftFileMask | rightFileMask;
+
+    // Calculate the range mask based on the color and position
+    if (col == Color::WHITE) {
+        Bitboard northMask = (0xFFFFFFFFFFFFFFFFULL << ((rank + 1) * 8));
+        return northMask & combinedMask;
+    } else {
+        Bitboard southMask = (0xFFFFFFFFFFFFFFFFULL >> ((8 - rank) * 8));
+        return southMask & combinedMask;
     }
-
-    return mask;
 }
 
 
-Bitboard shiftNorth(Bitboard b) { return b << 8; }
-Bitboard shiftSouth(Bitboard b) { return b >> 8; }
-Bitboard shiftEast(Bitboard b) { return (b & 0xFEFEFEFEFEFEFEFEULL) << 1; } // Prevent wraparound
-Bitboard shiftWest(Bitboard b) { return (b & 0x7F7F7F7F7F7F7F7FULL) >> 1; }
+inline constexpr Bitboard shiftNorth(const Bitboard& b) { return b << 8; }
+inline constexpr Bitboard shiftSouth(const Bitboard& b) { return b >> 8; }
+inline constexpr Bitboard shiftEast(const Bitboard& b) { return (b & 0xFEFEFEFEFEFEFEFEULL) << 1; } // Prevent wraparound
+inline constexpr Bitboard shiftWest(const Bitboard& b) { return (b & 0x7F7F7F7F7F7F7F7FULL) >> 1; }
 // Function to calculate eastward attacks for white pawns
-Bitboard wPawnEastAttacks(Bitboard wpawns) {
+
+Bitboard wPawnEastAttacks(const Bitboard& wpawns) {
     return (wpawns << 9) & ~0x0101010101010101; // Avoid wraparound from H to A file
 }
 
 // Function to calculate westward attacks for white pawns
-Bitboard wPawnWestAttacks(Bitboard wpawns) {
+inline constexpr Bitboard wPawnWestAttacks(const Bitboard& wpawns) {
     return (wpawns << 7) & ~0x8080808080808080; // Avoid wraparound from A to H file
 }
 
 // Function to calculate eastward attack spans for white pawns
-Bitboard wEastAttackFrontSpans(Bitboard wpawns) {
+Bitboard wEastAttackFrontSpans(const Bitboard& wpawns) {
     Bitboard spans = 0;
     Bitboard attacks = wPawnEastAttacks(wpawns);
     while (attacks) {
@@ -161,7 +163,7 @@ Bitboard wEastAttackFrontSpans(Bitboard wpawns) {
 }
 
 // Function to calculate westward attack spans for white pawns
-Bitboard wWestAttackFrontSpans(Bitboard wpawns) {
+Bitboard wWestAttackFrontSpans(const Bitboard& wpawns) {
     Bitboard spans = 0;
     Bitboard attacks = wPawnWestAttacks(wpawns);
     while (attacks) {
@@ -172,12 +174,12 @@ Bitboard wWestAttackFrontSpans(Bitboard wpawns) {
 }
 
 // Function to calculate eastward attacks for black pawns
-Bitboard bPawnEastAttacks(Bitboard bpawns) {
+Bitboard bPawnEastAttacks(const Bitboard& bpawns) {
     return (bpawns >> 7) & ~0x0101010101010101; // Avoid wraparound from H to A file
 }
 
 // Function to calculate westward attacks for black pawns
-Bitboard bPawnWestAttacks(Bitboard bpawns) {
+Bitboard bPawnWestAttacks(const Bitboard& bpawns) {
     return (bpawns >> 9) & ~0x8080808080808080; // Avoid wraparound from A to H file
 }
 
@@ -186,7 +188,7 @@ Bitboard bPawnWestAttacks(Bitboard bpawns) {
 // bPawnWestAttacks: Calculates westward attacks for black pawns
 
 // Function to calculate eastward attack spans for black pawns
-Bitboard bEastAttackFrontSpans(Bitboard bpawns) {
+Bitboard bEastAttackFrontSpans(const Bitboard& bpawns) {
     Bitboard spans = 0;
     Bitboard attacks = bPawnEastAttacks(bpawns);
     while (attacks) {
@@ -197,7 +199,7 @@ Bitboard bEastAttackFrontSpans(Bitboard bpawns) {
 }
 
 // Function to calculate westward attack spans for black pawns
-Bitboard bWestAttackFrontSpans(Bitboard bpawns) {
+Bitboard bWestAttackFrontSpans(const Bitboard& bpawns) {
     Bitboard spans = 0;
     Bitboard attacks = bPawnWestAttacks(bpawns);
     while (attacks) {
@@ -207,7 +209,7 @@ Bitboard bWestAttackFrontSpans(Bitboard bpawns) {
     return spans;
 }
 
-Bitboard detectPassedPawns(Color col, Bitboard ownPawns, Bitboard enemyPawns) {
+Bitboard detectPassedPawns(Color col, Bitboard ownPawns, const Bitboard& enemyPawns) {
     Bitboard passedPawns = 0;
 
     while (ownPawns) {
@@ -227,7 +229,7 @@ Bitboard detectPassedPawns(Color col, Bitboard ownPawns, Bitboard enemyPawns) {
 
 
 
-int detectDoubledPawns(Color color, Bitboard wpawns, Bitboard bpawns) {
+int detectDoubledPawns(Color color, const Bitboard& wpawns, const Bitboard& bpawns) {
     const auto& pawns = (color == Color::WHITE) ? wpawns : bpawns;
     int doubledPawns = 0;
 
@@ -244,7 +246,7 @@ int detectDoubledPawns(Color color, Bitboard wpawns, Bitboard bpawns) {
 }
 
 
-Bitboard detectIsolatedPawns(Bitboard pawns) {
+Bitboard detectIsolatedPawns(const Bitboard& pawns) {
     Bitboard isolatedPawns = 0;
 
     // Iterate through each square on the board to check for isolated pawns
@@ -266,38 +268,23 @@ Bitboard detectIsolatedPawns(Bitboard pawns) {
 }
 
 
-Bitboard detectCentralPawns(Bitboard pawns) {
-    Bitboard centralPawns = 0;
+Bitboard detectCentralPawns(const Bitboard& pawns) {
     Bitboard centerMask = 0x0000001818000000; // Mask for the central 4 squares (e4, d4, e5, d5)
-
-    // Iterate through each square on the board to check for central pawns
-    for (int sq = 0; sq < 64; ++sq) {
-        Bitboard squareBitboard = Bitboard(1) << sq; // Create a bitboard for the current square
-        if (!(squareBitboard & pawns)) continue; // Skip if there's no pawn of the given color on this square
-
-        // If the pawn is on one of the central squares, mark it as a central pawn
-        if (squareBitboard & centerMask) {
-            centralPawns |= squareBitboard;
-        }
-    }
-    return centralPawns;
+    return pawns & centerMask; // Directly return the intersection of pawns and the central squares
 }
-
-
-
 
 
 
 // Assuming `enemyAttacks` correctly represents squares attacked by all enemy pieces,
 // not just enemy pawns. If it only represents enemy pawn attacks, adjust accordingly.
-Bitboard wBackward(Bitboard wpawns, Bitboard bpawns) {
+Bitboard wBackward(const Bitboard& wpawns, const Bitboard& bpawns) {
     Bitboard stops = wpawns << 8;
     Bitboard wAttackSpans = wEastAttackFrontSpans(wpawns) | wWestAttackFrontSpans(wpawns);
     Bitboard bAttacks = bPawnEastAttacks(bpawns) | bPawnWestAttacks(bpawns);
     return (stops & bAttacks & ~wAttackSpans) >> 8;
 }
 
-Bitboard bBackward(Bitboard bpawns, Bitboard wpawns) {
+Bitboard bBackward(const Bitboard& bpawns, const Bitboard& wpawns) {
     Bitboard stops = bpawns >> 8;
     Bitboard bAttackSpans = bEastAttackFrontSpans(bpawns) | bWestAttackFrontSpans(bpawns);
     Bitboard wAttacks = wPawnEastAttacks(wpawns) | wPawnWestAttacks(wpawns);
@@ -361,7 +348,7 @@ Bitboard detectWeakSquares(Color color, Bitboard pawns) {
 
 
 
-int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
+int ruleOfTheSquare(Color color, Bitboard passedPawns, const Bitboard& king) {
     Square kSquare = bitboard_to_square(king);
 
     int count = 0;
@@ -403,9 +390,7 @@ int ruleOfTheSquare(Color color, Bitboard passedPawns, Bitboard king) {
 
 
 // weak squares are the opposite of the color
-int knightOutposts(Bitboard weakSquares, Bitboard knightSquares, Bitboard friendlyPawnAttacks) {
-    int count = 0;
-
+int knightOutposts(const Bitboard& weakSquares, const Bitboard& knightSquares, const Bitboard& friendlyPawnAttacks) {
     Bitboard validOutposts = weakSquares & friendlyPawnAttacks & knightSquares; // Outposts are weak squares guarded by pawns
     validOutposts &= ~fileBitboard(0) & ~fileBitboard(7) & ~rankBitboard(1) & ~rankBitboard(6);
 
@@ -414,17 +399,17 @@ int knightOutposts(Bitboard weakSquares, Bitboard knightSquares, Bitboard friend
 }
 
 // more mobility features
-int knightMobility(Bitboard knightAttacks){
+int knightMobility(const Bitboard& knightAttacks){
     return chess::builtin::popcount(knightAttacks);
 }
 
 // more mobility features
-int queenMobility(Bitboard queenAttacks){
+int queenMobility(const Bitboard& queenAttacks){
     return chess::builtin::popcount(queenAttacks);
 }
 
 // bishop mobility is the number of squares the bishop can move to
-int bishopMobility(Bitboard bAttacks){
+int bishopMobility(const Bitboard& bAttacks){
     return chess::builtin::popcount(bAttacks);
 }
 
@@ -432,14 +417,14 @@ int bishopMobility(Bitboard bAttacks){
 // 1 if white has bishop pair and black doesn't, 
 // -1 if black has bishop pair and white doesn't
 // 0 if neither side has bishop pair
-int bishopPair(Bitboard bishops){
+int bishopPair(const Bitboard& bishops){
     if (builtin::popcount(bishops) >= 2){
         return 1;
     }
     return 0;
 }
 
-int rookAttackKingFile(Color color, Bitboard rooks, Bitboard king) {
+int rookAttackKingFile(Color color, const Bitboard& rooks, const Bitboard& king) {
     Square kingSquare = bitboard_to_square(king);
     int kingFile = file_of(kingSquare);
 
@@ -458,7 +443,7 @@ int rookAttackKingFile(Color color, Bitboard rooks, Bitboard king) {
 
 
 
-int rookAttackKingAdjFile(Color color, Bitboard rooks, Bitboard king) {
+int rookAttackKingAdjFile(Color color, const Bitboard& rooks, const Bitboard& king) {
     Square kingSquare = bitboard_to_square(king);
     int kingFile = file_of(kingSquare);
 
@@ -479,7 +464,7 @@ int rookAttackKingAdjFile(Color color, Bitboard rooks, Bitboard king) {
 }
 
 
-int rookSeventhRank(Color color, Bitboard rooks) {
+int rookSeventhRank(Color color, const Bitboard& rooks) {
     
     // Define masks for the 7th rank for white and the 2nd rank for black
     Bitboard seventhRankMask = color == Color::WHITE ? rankBitboard(6) : rankBitboard(1);
@@ -492,7 +477,7 @@ int rookSeventhRank(Color color, Bitboard rooks) {
 }
 
 
-int rookConnected(Color color, Bitboard rooks, Bitboard allPieces) {
+int rookConnected(Color color, Bitboard rooks, const Bitboard& allPieces) {
 
     if (builtin::popcount(rooks) < 2) {
         return 0;
@@ -522,12 +507,12 @@ int rookConnected(Color color, Bitboard rooks, Bitboard allPieces) {
 }
 
 
-int rookMobility(Bitboard rookAttacks){
+int rookMobility(const Bitboard& rookAttacks){
     return chess::builtin::popcount(rookAttacks);
 }
 
 // we only care about file based mobility
-int rookBehindPassedPawn(Color color, Bitboard rooks, Bitboard passedPawns) {
+int rookBehindPassedPawn(Color color, Bitboard rooks, const Bitboard& passedPawns) {
 
     int count = 0;
 
@@ -557,13 +542,10 @@ int rookBehindPassedPawn(Color color, Bitboard rooks, Bitboard passedPawns) {
 
 
 
-int rookOpenFile(Color color, Bitboard rooks, Bitboard allPawns) {
+int rookOpenFile(Color color, Bitboard rooks, const Bitboard &allPawns) {
     int count = 0;
-
-    // Iterate over each rook in the bitboard
-    Bitboard rooksCopy = rooks; // Make a copy to preserve original bitboard
-    while (rooksCopy) {
-        int rookSquare = builtin::poplsb(rooksCopy); // This function also modifies rooksCopy
+    while (rooks) {
+        int rookSquare = builtin::poplsb(rooks); // This function also modifies rooksCopy
         int rookFile = file_of(Square(rookSquare));
         Bitboard fileMask = fileBitboard(rookFile); // Assuming fileBB[] is an array of bitboards for each file
 
@@ -577,12 +559,10 @@ int rookOpenFile(Color color, Bitboard rooks, Bitboard allPawns) {
 }
 
 
-int rookSemiOpenFile(Color color, Bitboard rooks, Bitboard friendlyPawns, Bitboard enemyPawns) {
+int rookSemiOpenFile(Color color, Bitboard rooks, const Bitboard& friendlyPawns, const Bitboard& enemyPawns) {
     int count = 0;
-
-    Bitboard rooksCopy = rooks; // Make a copy to preserve the original bitboard
-    while (rooksCopy) {
-        int rookSquare = builtin::poplsb(rooksCopy); // Adjust rooksCopy and get the next rook square
+    while (rooks) {
+        int rookSquare = builtin::poplsb(rooks); // Adjust rooksCopy and get the next rook square
         int rookFile = file_of(Square(rookSquare));
         Bitboard fileMask = fileBitboard(rookFile); // Assuming fileBB[] is an array of bitboards for each file
 
@@ -596,13 +576,11 @@ int rookSemiOpenFile(Color color, Bitboard rooks, Bitboard friendlyPawns, Bitboa
 }
 
 
-int rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, Bitboard weakPawns) {
+int rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, const Bitboard& weakPawns) {
     
     int count = 0;
-
-    Bitboard rooksCopy = rooks; // Make a copy to preserve the original bitboard
-    while (rooksCopy) {
-        int rookSquare = builtin::poplsb(rooksCopy); // Adjust rooksCopy and get the next rook square
+    while (rooks) {
+        int rookSquare = builtin::poplsb(rooks); // Adjust rooksCopy and get the next rook square
         int rookFile = file_of(Square(rookSquare));
         Bitboard fileMask = fileBitboard(rookFile); // Assuming fileBB[] is an array of bitboards for each file
 
@@ -616,18 +594,17 @@ int rookAtckWeakPawnOpenColumn(Color color, Bitboard rooks, Bitboard weakPawns) 
 }
 
 
-int kingFriendlyPawn(Bitboard friendlyPawns, Bitboard king) {
+int kingFriendlyPawn(Bitboard friendlyPawns, const Bitboard& king) {
     
     Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
     int count = 0;
     
-    Bitboard pawnsCopy = friendlyPawns; // Make a copy to preserve the original bitboard
     int pawnCount = 0; // Track the number of relevant pawns
 
-    while (pawnsCopy) {
-        int pawnSquare = builtin::poplsb(pawnsCopy); // Adjust pawnsCopy and get the next pawn square
+    while (friendlyPawns) {
+        int pawnSquare = builtin::poplsb(friendlyPawns); // Adjust pawnsCopy and get the next pawn square
         int pawnRank = rank_of(Square(pawnSquare));
         int pawnFile = file_of(Square(pawnSquare)); // these rank and file functions are redundant tbh
 
@@ -650,16 +627,14 @@ int kingFriendlyPawn(Bitboard friendlyPawns, Bitboard king) {
 // if there is not pawns within a certain radius, it should not affect us
 
 
-int kingNoEnemyPawnNear(Bitboard enemyPawns, Bitboard king) {
+int kingNoEnemyPawnNear(Bitboard enemyPawns, const Bitboard& king) {
     Square kingSquare = bitboard_to_square(king);
     int kingRank = rank_of(kingSquare);
     int kingFile = file_of(kingSquare);
     int count = 0;
 
-    Bitboard pawnsCopy = enemyPawns; // Make a copy to preserve the original bitboard
-
-    while (pawnsCopy) {
-        int pawnSquare = builtin::poplsb(pawnsCopy); // Adjust pawnsCopy and get the next pawn square
+    while (enemyPawns) {
+        int pawnSquare = builtin::poplsb(enemyPawns); // Adjust pawnsCopy and get the next pawn square
         int pawnRank = rank_of(Square(pawnSquare));
         int pawnFile = file_of(Square(pawnSquare));
 
@@ -680,23 +655,23 @@ const Bitboard NOT_A_FILE = 0xfefefefefefefefe; // ~0x0101010101010101
 const Bitboard NOT_H_FILE = 0x7f7f7f7f7f7f7f7f; // ~0x8080808080808080
 
 
-Bitboard shiftNE(Bitboard bitboard) {
+constexpr Bitboard shiftNE( const Bitboard& bitboard) {
     return (bitboard << 9) & NOT_A_FILE;
 }
 
-Bitboard shiftNW(Bitboard bitboard) {
+constexpr Bitboard shiftNW(const Bitboard& bitboard) {
     return (bitboard << 7) & NOT_H_FILE;
 }
 
-Bitboard shiftSE(Bitboard bitboard) {
+constexpr Bitboard shiftSE(const Bitboard& bitboard) {
     return (bitboard >> 7) & NOT_A_FILE;
 }
 
-Bitboard shiftSW(Bitboard bitboard) {
+constexpr Bitboard shiftSW(const Bitboard& bitboard) {
     return (bitboard >> 9) & NOT_H_FILE;
 }
 
-Bitboard expandToAdjacentSquares(Bitboard bitboard) {
+Bitboard expandToAdjacentSquares(const Bitboard& bitboard) {
     Bitboard expanded = bitboard;
     expanded |= shiftNorth(bitboard) | shiftSouth(bitboard);
     expanded |= shiftEast(bitboard) | shiftWest(bitboard);
@@ -706,7 +681,7 @@ Bitboard expandToAdjacentSquares(Bitboard bitboard) {
 }
 
 
-Bitboard calculateKingsZone(Bitboard kingPosition, Color color) {
+Bitboard calculateKingsZone(const Bitboard& kingPosition, Color color) {
     Bitboard kingZone = 0;
 
     // Expand to include all adjacent squares in the king's zone.
@@ -717,10 +692,7 @@ Bitboard calculateKingsZone(Bitboard kingPosition, Color color) {
 }
 
 
-
-
-
-int kingPressureScore(Bitboard king, Bitboard enemyKnights, Bitboard enemyBishops, Bitboard enemyRooks, Bitboard enemyQueens, Color color, const Board& board) {
+int kingPressureScore(const Bitboard& king, const Bitboard& enemyKnights, const Bitboard& enemyBishops, const Bitboard& enemyRooks, const Bitboard& enemyQueens, Color color, const Board& board) {
     int score = 0;
     Bitboard kingZone = calculateKingsZone(king, color); // Assume a function similar to calculateKingsZone but more nuanced
 

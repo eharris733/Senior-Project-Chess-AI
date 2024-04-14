@@ -319,17 +319,23 @@ class Evaluator {
         return score;
         }
 
-    // used for testing only, comma delimited string of features, 
-    // format: 
-    // featurename[WVALUE:BVALUE]:totalchangeinevaluation, 
-
     private:
         TunableEval featureWeights;
         float gamePhase;
         Board& board;
 
-        static Color color(Piece piece) {
+        // added some inline stuff to hopefully speed it up
+        constexpr inline static Color color(Piece piece) {
             return static_cast<Color>(static_cast<int>(piece) / 6);
+        }
+
+        constexpr inline Bitboard square_to_bitmap(Square sq) {
+             return Bitboard(1) << sq;
+        }
+
+        
+        constexpr inline Square int_to_square(int sq) {
+            return static_cast<Square>(sq);
         }
 
 

@@ -78,6 +78,10 @@ class Searcher2 {
         verbose = v;
     }
 
+    void clear(){
+        tt.clear();
+    }
+
     std::string getPV() {
         return uci::moveToUci(pvTable[0][0]);
     }
