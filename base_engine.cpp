@@ -12,6 +12,7 @@
 //#include "searcher.hpp"
 #include "searcher2.hpp"
 #include "ga3and5results.hpp"
+#include "ga1results.hpp"
 #include "baselines.hpp"
 
 using namespace chess;
@@ -84,7 +85,7 @@ vector<string> splitstr(const std::string& str, const char delim) {
 }
 
 int main() {
-    searcher = make_unique<Searcher2>(board, baseSearch, baseEval); // Use fully qualified name
+    searcher = make_unique<Searcher2>(board, resultX, ga1result10); // Use fully qualified name
     string uci;
     bool quit = false;
     bool isWhiteTurn = board.sideToMove() == Color::WHITE;
