@@ -566,7 +566,7 @@ class Searcher2 {
     }
 
     int evaluate(bool isLazy) {
-        int eval = evaluator.evaluate(true);
+        int eval = evaluator.evaluate(isLazy);
         if (board.sideToMove() == Color::BLACK){
             return -eval;
         }
