@@ -88,29 +88,6 @@ inline constexpr Bitboard inBetween(Square sq1, Square sq2) {
     return between;
 }
 
-inline constexpr Bitboard wAttackFrontSpans(const Bitboard& pawnAttacks) {
-    // Assuming pawnAttacks represents immediate attack squares,
-    // and you need to extend this to cover all forward spans.
-    Bitboard attackSpan = pawnAttacks;
-    Bitboard shifts = pawnAttacks;
-    while (shifts) {
-        shifts <<= 8; // Move one rank forward
-        attackSpan |= shifts;
-    }
-    return attackSpan;
-}
-
-inline constexpr Bitboard bAttackFrontSpans(const Bitboard& pawnAttacks) {
-    // Assuming pawnAttacks represents immediate attack squares,
-    // and you need to extend this to cover all forward spans.
-    Bitboard attackSpan = pawnAttacks;
-    Bitboard shifts = pawnAttacks;
-    while (shifts) {
-        shifts >>= 8; // Move one rank backward
-        attackSpan |= shifts;
-    }
-    return attackSpan;
-}
 
 
 
@@ -252,25 +229,22 @@ int detectDoubledPawns(Color color, const Bitboard& wpawns, const Bitboard& bpaw
 }
 
 
-Bitboard detectIsolatedPawns(const Bitboard& pawns) {
-    Bitboard isolatedPawns = 0;
+Bitboard detectIsolatedPawns(Bitboard pawns) {
+    Bitboard isolated = 0;
+    const auto allPawns = pawns;
 
-    // Iterate through each square on the board to check for isolated pawns
-    for (int sq = 0; sq < 64; ++sq) {
-        Bitboard squareBitboard = Bitboard(1) << sq; // Create a bitboard for the current square
-        if (!(squareBitboard & pawns)) continue; // Skip if there's no pawn of the given color on this square
-
-        int file = sq % 8; // Calculate file index (0-7) from square index (0-63)
+    while (pawns != 0) {
+        const auto sq = builtin::poplsb(pawns);
+        int file = file_of(sq);
         Bitboard leftFileMask = file > 0 ? fileBitboard(file - 1) : 0;
         Bitboard rightFileMask = file < 7 ? fileBitboard(file + 1) : 0;
-        Bitboard adjacentPawns = pawns & (leftFileMask | rightFileMask);
 
-        // If there are no pawns on adjacent files, mark this pawn as isolated
-        if (adjacentPawns == 0) {
-            isolatedPawns |= squareBitboard;
+        if ((allPawns & (leftFileMask | rightFileMask)) == 0) {
+            isolated |= Bitboard(1) << sq;
         }
     }
-    return isolatedPawns;
+
+    return isolated;
 }
 
 
@@ -278,8 +252,6 @@ Bitboard detectCentralPawns(const Bitboard& pawns) {
     Bitboard centerMask = 0x0000001818000000; // Mask for the central 4 squares (e4, d4, e5, d5)
     return pawns & centerMask; // Directly return the intersection of pawns and the central squares
 }
-
-
 
 // Assuming `enemyAttacks` correctly represents squares attacked by all enemy pieces,
 // not just enemy pawns. If it only represents enemy pawn attacks, adjust accordingly.

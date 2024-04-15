@@ -470,7 +470,7 @@ class Searcher2 {
                     if (score >= beta) {
                         nodeType = NodeType::LOWERBOUND;
                         // update killer bc beta cutoff
-                        if (!isCapture && move != searchState.killerMoves[0][ply]){
+                        if (!isCapture && move != searchState.killerMoves[0][ply] || move != searchState.killerMoves[1][ply]){
                             searchState.killerMoves[1][ply] = searchState.killerMoves[0][ply];
                             searchState.killerMoves[0][ply] = move;   
                         }

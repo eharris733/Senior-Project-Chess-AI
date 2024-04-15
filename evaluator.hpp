@@ -337,7 +337,4 @@ class Evaluator {
         constexpr inline Square int_to_square(int sq) {
             return static_cast<Square>(sq);
         }
-
-
-
 };
