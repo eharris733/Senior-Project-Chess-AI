@@ -70,8 +70,6 @@ class Searcher2 {
         piece_values[1][4] = evalParams.queen.endGame;
         piece_values[1][5] = 20000; // for king
         piece_values[1][6] = 0; // for empty square
-    
-
     }
 
     void setVerbose(bool v){
@@ -498,8 +496,8 @@ class Searcher2 {
     
 
 
-    Move pickMove(const int moveNum, Movelist& moves) {
-        Move temp;
+    constexpr Move pickMove(const int moveNum, Movelist& moves) {
+        Move temp = Move::NO_MOVE;
         int index = 0;
         int bestscore = -1; // our score is always positive
         int bestnum = moveNum;
@@ -556,7 +554,7 @@ class Searcher2 {
         }
     }
 
-    void scoreMoves(Movelist& moves, int ply, Move ttMove = Move::NO_MOVE){
+    constexpr void scoreMoves(Movelist& moves, int ply, Move ttMove = Move::NO_MOVE){
         for (Move& move : moves){
             scoreMove(move, ply, ttMove);
         }
