@@ -400,9 +400,9 @@ class Searcher2 {
             }
 
         scoreMoves(moves, ply, ttMove);
-        sortMoves(moves);
+        Move move = Move::NO_MOVE;
 
-        for (const Move& move : moves) {
+        while(( move = pickMove(moveCount, moves)) != Move::NO_MOVE) {
             bool isCapture = board.at<PieceType>(move.to()) != PieceType::NONE;
             bool isPromotion = move.typeOf() == move.PROMOTION;
 
@@ -498,11 +498,34 @@ class Searcher2 {
     
 
 
+    Move pickMove(const int moveNum, Movelist& moves) {
+        Move temp;
+        int index = 0;
+        int bestscore = -1; // our score is always positive
+        int bestnum = moveNum;
+        Move bestMove = moves[moveNum];
+
+        for (index = moveNum; index < moves.size(); ++index) {
+
+            if (moves[index].score() > bestscore) {
+                bestscore = moves[index].score();
+                bestnum = index;
+                bestMove = moves[index];
+            }
+        }
+
+        temp = moves[moveNum];
+        moves[moveNum] = moves[bestnum]; // Sort the highest score move to highest.
+        moves[bestnum] = temp;
+        return bestMove;
+    }
+
     void sortMoves(Movelist& moves) {
         std::sort(moves.begin(), moves.end(), [](const Move& a, const Move& b) {
             return a.score() > b.score();
         });  
     }
+
 
     // score the move based on MVV/LVA
     void scoreMove(Move& move, int ply, Move ttMove = Move::NO_MOVE) {

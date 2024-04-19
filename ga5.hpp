@@ -228,7 +228,7 @@ void calculateFitness() {
             double playerScore = 0.0; // Player's total score
             bool color = true;
             // Iterate 100 games
-            for (int j = 0; j < 100; j++) {
+            for (int j = 0; j < 200; j++) {
                 if (j % 2 == 0) {
                     color = true;
                 } else {
@@ -252,7 +252,7 @@ void calculateFitness() {
     int maxFitness = population.front().fitness;
     for (size_t i = 0; i < populationSize; ++i) {
         population[i].fitness = fitnessScores[i];
-        if (population[i].fitness >= 28 && population[i].fitness > maxFitness) {  // if we are net +30, we're 99.18% sure we're better
+        if (population[i].fitness >= 43 && population[i].fitness > maxFitness) {  // if we are net +43, we're 99.99% sure we're better
             maxFitness = population[i].fitness;
             opponentCount ++;
             opponent = convertChromosomeToSearch(population[i].chromosome);     

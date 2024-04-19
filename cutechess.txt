@@ -8,3 +8,27 @@ Rank Name                          Elo     +/-   Games   Score    Draw
    1 tuned_search_eval              66      13    2000   59.4%   26.7% 
    2 tuned_eval                     42      13    2000   56.0%   28.3% 
    3 base                         -110      14    2000   34.7%   22.1% 
+   
+   
+New results:
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   1 tuned_search_eval              96      14    2000   63.5%   24.2% 
+   2 tuned_eval                     34      13    2000   54.9%   25.7% 
+   3 base                         -134      14    2000   31.6%   21.8% 
+
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+3000 of 3000 games finished.
+
+
+Score of tuned_search_eval vs stash-12.0-linux-x86_64: 476 - 402 - 122 [0.537]
+...      tuned_search_eval playing White: 264 - 186 - 50  [0.578] 500
+...      tuned_search_eval playing Black: 212 - 216 - 72  [0.496] 500
+...      White vs Black: 480 - 398 - 122  [0.541] 1000
+Elo difference: 25.8 +/- 20.2, LOS: 99.4 %, DrawRatio: 12.2 %
+
+
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   0 stash-12.0-linux-x86_64        21       8    6000   53.0%   12.3% 
+   1 tuned_search_eval              42      14    2000   56.0%   10.7% 
+   2 tuned_eval                      2      14    2000   50.2%   14.0% 
+   3 base                         -108      15    2000   34.9%   12.4% 

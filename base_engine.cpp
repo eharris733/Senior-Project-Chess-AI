@@ -85,7 +85,7 @@ vector<string> splitstr(const std::string& str, const char delim) {
 }
 
 int main() {
-    searcher = make_unique<Searcher2>(board, resultX, ga1result10); // Use fully qualified name
+    searcher = make_unique<Searcher2>(board, resultX2, ga1result10); // Use fully qualified name
     string uci;
     bool quit = false;
     bool isWhiteTurn = board.sideToMove() == Color::WHITE;

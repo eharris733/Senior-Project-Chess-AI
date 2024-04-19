@@ -43,3 +43,19 @@ TunableSearch resultX = {
 2, // Null Move Pruning Initial Reduction
 7, // Null Move Pruning Depth Factor
 };
+
+TunableSearch resultX2 = {
+53, // Aspiration Window initial delta
+0, // Use Aspiration Window Depth
+0, // Use Lazy Eval Static
+75, // Futility Margin 
+167, // Razoring Margin 
+194, // Delta Margin
+841, // Killer Move Score
+3, // Initial LMR Depth
+5, // Initial Move Counter
+8, // LMP Move Count
+2, // Null Move Pruning Initial Reduction
+9, // Null Move Pruning Depth Factor
+};
+
