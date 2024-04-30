@@ -1,5 +1,6 @@
 **/*.dSYM/
 **/*.dSYM/*
+**/*.dSYM/
 /gamelogs/
 /openingbook/
 /galogs
