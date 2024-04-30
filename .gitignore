@@ -1,11 +1,11 @@
 *.dSYM/
+/contents/*
 /gamelogs/
 /openingbook/
 /galogs
 
 /dbs/.idea/
 dbs/epd_testsuites
-/dbs/lichess_db_eval.json.zst
 /shelf/
 /workspace.xml
-unix_temp_base
+/contents/
