@@ -10,7 +10,6 @@ This repository contains the relevant code that was instrumental in my senior th
 - `/ga` - Genetic algorithm implementations. Ga1 is for tuning the evaluation function. Ga2 is for the search function. 
 - `/dbs` - All code and files used for data cleaning, pre-processing, and visualizing. Super messy rn -- read at your own 
 risk
-- `/openingbook` - Opening books that were used or tried. I do not take any credit for their creation.
 - `/literature` - Contains the most relevant literature that guided this senior thesis. More is found in the actual paper, which is also in this directory. 
 - `/engines` - Contains all the relevant executables. v1-6 are for a mac, any final version has a 1., and is compiled for linux
 
