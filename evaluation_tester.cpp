@@ -418,7 +418,7 @@ std::string mirrorFen(const std::string& fen) {
 
 
 int main() {
-    std::string fen = "2Rb2k1/3q1rpp/p3Q3/2N1p3/4P3/3Pp3/1P4PP/1K6 b - - 1 2";
+    std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
     std::string fenMirror = mirrorFen(fen);
     std::cout << "original fen: " << fen << std::endl;
     std::cout << "mirrored fen: " << fenMirror << std::endl;
