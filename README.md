@@ -3,6 +3,10 @@
 ## Introduction
 This repository contains the relevant code that was instrumental in my senior thesis (titled above). It is really a UCI compliant chess engine written in C++, but it also includes all code that was used for data processing and genetic algorithm running. To read the thesis, please see this public link: (Insert Link here)
 
+## Play GERALD
+If you are interested in playing against GERALD on lichess, use this link: https://lichess.org/@/GERALD_EVOLVED
+Since I have to be running a process for one to play him, feel free to email (given below) if you would like to play and Gerald is not online. 
+
 ## Project Structure
 - `/chess` - Contains the source code for the main chess engine.
     - `/engine` - Includes all code that is needed for the chess engine to run

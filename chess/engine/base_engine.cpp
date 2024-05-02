@@ -55,9 +55,8 @@ void startSearch(int timeLeft, int timeIncrement, int movesToGo) {
         // Create a new thread for the search operation
         // Capture time control parameters by value in the lambda
         searchThread = make_unique<thread>([=]() {
-            cout << "timeLeft: " << timeLeft << " timeIncrement: " << timeIncrement << " movesToGo: " << movesToGo << endl;
             SearchState result = searcher->iterativeDeepening(timeLeft, timeIncrement, movesToGo); 
-            cout << " bestmove " << uci::moveToUci(result.bestMove) << endl;
+            cout << "bestmove " << uci::moveToUci(result.bestMove) << endl;
         });
     }
 }
@@ -118,7 +117,6 @@ while (!quit) {
     int movesToGo = 30; // Default value, assuming a sudden death time control
 
     for (size_t i = 1; i < tokens.size(); ++i) {
-        std::cout << "Parsing token: " << tokens[i] << std::endl; // Debug print
 
         if (tokens[i] == "wtime" && isWhiteTurn) {
             timeLeft = std::stoi(tokens[i + 1]);
