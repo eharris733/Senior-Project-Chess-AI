@@ -18,9 +18,38 @@ risk
 - `/engines` - Contains all the relevant executables. v1-6 are for a mac, any final version has a 1., and is compiled for linux
 
 ## Setup and Installation
-Most likely, you will have to compile and build stuff on your own. If you want just the chess engine, you can compile base_engine.cpp found in chess/engine. An example compilation command:
+Most likely, you will have to compile and build stuff on your own. If you want just the chess engine, you can compile base_engine.cpp found in chess/engine with the `./chess/build.sh` script:
 
-/usr/bin/g++ -fdiagnostics-color=always -g ~/senior_project/chess/engine/base_engine.cpp -o ~/senior_project/chess/engine/base_engine -std=c++17 -O3 -march=native
+    % ./chess/build.sh
+    Building...
+    
+    Success!
+    
+    Run './chess/engine/base_engine' and type (w/ ENTER after each line):
+    uci
+    ucinewgame
+    isready
+    position startpos moves e2e4
+    go
+    quit
+    % ./chess/engine/base_engine
+    uci
+    id name Gerald Current
+    id author Elliot Harris
+    uciok
+    ucinewgame
+    isready
+    readyok
+    position startpos moves e2e3
+    go
+    info depth 1 score cp 10 nodes 20 nps 10000 time 1 pv e7e5
+    info depth 2 score cp -132 nodes 337 nps 168000 time 1 pv d7d5
+    info depth 3 score cp 22 nodes 886 nps 295000 time 2 pv d7d5
+    info depth 4 score cp -22 nodes 2157 nps 539000 time 3 pv d7d5
+    info depth 5 score cp -25 nodes 11309 nps 706000 time 15 pv d7d5
+    info depth 6 score cp -43 nodes 24234 nps 781000 time 30 pv d7d5
+    bestmove d7d5
+    quit
 
 ## License
 MIT License, see LICENSE file
