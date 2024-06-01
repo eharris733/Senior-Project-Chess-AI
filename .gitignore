@@ -10,3 +10,5 @@ dbs/epd_testsuites
 /shelf/
 /workspace.xml
 /contents/
+
+**/.DS_Store
